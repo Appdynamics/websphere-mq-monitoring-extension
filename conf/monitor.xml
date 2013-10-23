@@ -51,8 +51,8 @@
 			-->
 		</task-arguments>
 		<java-task>
-			<classpath>mqqueuemonitor.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;dhbcore.jar;com.ibm.mq.headers.jar;connector.jar</classpath>
-			<impl-class>com.singularity.ee.agent.systemagent.monitors.messaging.mq.MqQueueMonitor</impl-class>
+			<classpath>MQMonitor.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;dhbcore.jar;com.ibm.mq.headers.jar;connector.jar</classpath>
+			<impl-class>com.appdynamics.monitors.mqmonitor.MQMonitor</impl-class>
 		</java-task>
 	</monitor-run-task>
 </monitor>
