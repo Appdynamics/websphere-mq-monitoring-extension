@@ -4,14 +4,14 @@ WebSphere MQ Monitoring Extension
 Use Case
 -------- 
 
-The WebSphere MQ Queue monitoring extension can monitor multiple queues in multiple Websphere MQ queue managers.  
+The WebSphere MQ monitoring extension can monitor multiple queues in multiple Websphere MQ queue managers.  
  
 This monitor reports the following metrics for each queue manager:
  
 Maximum queue depth
 Current queue depth for each queue.
  
-The MQ Queue Monitor currently supports IBM Websphere MQ version 7.x. It may work with other Websphere MQ versions but it has not been tested in those environments.
+The MQ Monitor currently supports IBM Websphere MQ version 7.x. It may work with other Websphere MQ versions but it has not been tested in those environments.
  
 Prerequisites
  
@@ -22,13 +22,15 @@ The machine where you install the monitor must have firewall access to each queu
 Dependencies
   
 The monitor has a dependency on the following six JAR files from the IBM MQ distribution:
- 
+
+``` 
 com.ibm.mq.commonservices.jar
 com.ibm.mq.jar
 com.ibm.mq.jmqi.jar
 dhbcore.jar
 com.ibm.mq.headers.jar
 connector.jar
+```
 
 These jar files are typically found in /opt/mqm/java/lib on a UNIX server but may be found in an alternate location depending upon your environment.
  
@@ -56,26 +58,28 @@ The following instructions assume that you have installed the AppDynamics Machin
 1. Unzip MQMonitor.zip file on the file system of the machine running the AppDynamics Machine Agent under the monitors directory:
  
     Unix/Linux:    /AppDynamics/MachineAgent/monitors
-    Windows:     C:\AppDynamics\MachineAgent/monitors
+    Windows:     C:\AppDynamics\MachineAgent\monitors
  
-3. Copy the following files to the MQMonitor directory
- 
+2. Copy the following files to the MQMonitor directory
+
+``` 
 com.ibm.mq.commonservices.jar
 com.ibm.mq.jar
 com.ibm.mq.jmqi.jar
 dhbcore.jar
 com.ibm.mq.headers.jar
 connector.jar
+```
 
-4. Edit the monitor.xml file. The configuration supports defining multiple queue managers to connect to as well as multiple queues for a given queue manager.  An example monitor.xml file follows these installation instructions.
+3. Edit the monitor.xml file. The configuration supports defining multiple queue managers to connect to as well as multiple queues for a given queue manager.  An example monitor.xml file follows these installation instructions.
  
-5. Follow the numbering convention when adding or removing queue managers and or queues.
+4. Follow the numbering convention when adding or removing queue managers and or queues.
  
 Note: Do not create multiple instances of the queue monitor running that monitor the same queues inside the same queue managers.  This causes duplication data with in the AppDynamics Controller.
  
-6. Restart the Machine Agent.
+5. Restart the Machine Agent.
  
-Example monitor.xml
+Sample monitor.xml
  
 The following is a sample monitor.xml file that depicts two different queue managers defined and two queues defined for each queue manager.
  
@@ -141,7 +145,6 @@ The following is a sample monitor.xml file that depicts two different queue mana
 
 <!-- The password for the connection if required -->
 <argument name="queue_mgr_password_2" is-required="true" default-value="" />
-
 
 <!-- The number of configured queues to be monitored for the queue manager -->
 <argument name="queue_mgr_2_number_of_queues" is-required="true" default-value="2" />
