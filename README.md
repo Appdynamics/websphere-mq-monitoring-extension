@@ -14,12 +14,14 @@ Current queue depth for each queue.
 The MQ Monitor currently supports IBM Websphere MQ version 7.x. It may work with other Websphere MQ versions but it has not been tested in those environments.
  
 Prerequisites
+-------------
  
 The machine where you install the monitor must have the AppDynamics Machine Agent installed and running.
  
 The machine where you install the monitor must have firewall access to each queue manager (host and port) you define in the monitor.xml file.
  
 Dependencies
+------------
   
 The monitor has a dependency on the following six JAR files from the IBM MQ distribution:
 
