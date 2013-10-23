@@ -49,17 +49,20 @@ Rebuilding the Project
  
 
 Installation
+------------
  
 The following instructions assume that you have installed the AppDynamics Machine Agent in the following directory:
  
     Unix/Linux:    /AppDynamics/MachineAgent
     Windows:     C:\AppDynamics\MachineAgent
  
-1. Unzip MQMonitor.zip file on the file system of the machine running the AppDynamics Machine Agent under the monitors directory:
+1. Unzip MQMonitor.zip file on the file system of the machine running the AppDynamics Machine Agent under the monitors 
+directory:
  
     Unix/Linux:    /AppDynamics/MachineAgent/monitors
     Windows:     C:\AppDynamics\MachineAgent\monitors
  
+
 2. Copy the following files to the MQMonitor directory
 
 ``` 
@@ -80,19 +83,17 @@ Note: Do not create multiple instances of the queue monitor running that monitor
 5. Restart the Machine Agent.
  
 Sample monitor.xml
+------------------
  
 The following is a sample monitor.xml file that depicts two different queue managers defined and two queues defined for each queue manager.
  
 
 ```
-
 <!-- The name of the root folder where the metrics will appear under the tier -->
 <argument name="root_category_name" is-required="true" default-value="Queue Monitoring" />
 
 <!-- The number of queue managers that are configured -->
 <argument name="number_of_queue_managers" is-required="true" default-value="2" />
-
-
 
 <!-- the host or IP address of the queue manager -->
 <argument name="queue_mgr_host_1" is-required="true" default-value="127.0.0.1" />
@@ -114,7 +115,6 @@ The following is a sample monitor.xml file that depicts two different queue mana
 
 <!-- The password for the connection if required -->
 <argument name="queue_mgr_password_1" is-required="true" default-value="" />
-
 
 <!-- The number of configured queues to be monitored for the queue manager -->
 <argument name="queue_mgr_1_number_of_queues" is-required="true" default-value="2" />
