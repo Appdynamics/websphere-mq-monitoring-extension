@@ -79,7 +79,9 @@ Example monitor.xml
  
 The following is a sample monitor.xml file that depicts two different queue managers defined and two queues defined for each queue manager.
  
- 
+
+```
+
 <!-- The name of the root folder where the metrics will appear under the tier -->
 <argument name="root_category_name" is-required="true" default-value="Queue Monitoring" />
 
@@ -149,6 +151,8 @@ The following is a sample monitor.xml file that depicts two different queue mana
 
 <!-- The name of the second queue -->
 <argument name="queue_mgr_2_queue_2" is-required="true" default-value="CREWDATA04" />
+
+```
   
 WebSphere MQ Queue Worker
 
