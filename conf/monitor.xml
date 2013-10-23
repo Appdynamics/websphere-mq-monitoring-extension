@@ -1,0 +1,58 @@
+<monitor>
+	<name>MqQueueMonitor</name>
+	<type>managed</type>
+        <enabled>true</enabled>
+	<description>Monitors MQ Queues</description>
+	<monitor-configuration>
+	</monitor-configuration>
+	<monitor-run-task>
+		<execution-style>periodic</execution-style>
+		<execution-frequency-in-seconds>5</execution-frequency-in-seconds>
+		<name>MQ Queue Monitor Run Task</name>
+		<display-name>MQ Queue Monitor Task</display-name>
+		<description>MQ Queue Monitor Task</description>
+		<type>java</type>
+		<execution-timeout-in-secs>60</execution-timeout-in-secs>
+		<task-arguments>
+		    <!-- The name of the root folder where the metrics will appear under the tier -->
+			<argument name="root_category_name" is-required="true" default-value="Queue Monitoring" />
+			<!-- The number of queue managers that are configured -->
+			<argument name="number_of_queue_managers" is-required="true" default-value="1" />
+			<!-- the host or IP address of the queue manager -->
+			<argument name="queue_mgr_host_1" is-required="true" default-value="127.0.0.1" />
+			<!-- The port number of the queue manager -->
+			<argument name="queue_mgr_port_1" is-required="true" default-value="1414" />	
+			<!-- The actual name of the queue manager -->	
+			<argument name="queue_mgr_name_1" is-required="true" default-value="QUEUEMGR01" />
+			<!-- The channel name of the queue manager -->
+			<argument name="queue_mgr_channel_name_1" is-required="true" default-value="SYSTEM.ADMIN.SVRCONN" />
+			<!-- The transport type for the queue manager connection, the default is 1 for a client type connection -->
+			<argument name="queue_mgr_transport_type_1" is-required="true" default-value="1" />
+			<!-- The user name for the connection if required -->
+			<argument name="queue_mgr_user_1" is-required="true" default-value="" />
+			<!-- The password for the connection if required -->
+			<argument name="queue_mgr_password_1" is-required="true" default-value="" />
+			<!-- The number of configured queues to be monitored for the queue manager -->
+			<argument name="queue_mgr_1_number_of_queues" is-required="true" default-value="4" />
+			<!-- The name of the first queue -->
+			<argument name="queue_mgr_1_queue_1" is-required="true" default-value="CREWDATA01" />
+			<!-- The name of the second queue -->
+			<argument name="queue_mgr_1_queue_2" is-required="true" default-value="CREWDATA02" />
+			<!-- The name of the third queue -->
+			<argument name="queue_mgr_1_queue_3" is-required="true" default-value="FLIGHTDATA01" />
+			<!-- The name of the fourth queue -->
+			<argument name="queue_mgr_1_queue_4" is-required="true" default-value="FLIGHTDATA02" />
+			
+			<!-- The fully qualified path to the directory where stats files are written to, one file per queue, this is now turned off -->
+			<argument name="write_stats_directory" is-required="true" default-value="C:\Data\queue_stats" />
+			<!-- 
+			Enable AWR / ASH metric collection if it is licensed
+			<argument name="ash_licensed" is-required="false" default-value="true" />
+			-->
+		</task-arguments>
+		<java-task>
+			<classpath>mqqueuemonitor.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;dhbcore.jar;com.ibm.mq.headers.jar;connector.jar</classpath>
+			<impl-class>com.singularity.ee.agent.systemagent.monitors.messaging.mq.MqQueueMonitor</impl-class>
+		</java-task>
+	</monitor-run-task>
+</monitor>
