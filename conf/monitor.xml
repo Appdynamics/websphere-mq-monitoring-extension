@@ -15,7 +15,7 @@
 		<execution-timeout-in-secs>60</execution-timeout-in-secs>
 		<task-arguments>
 		    <!-- The name of the root folder where the metrics will appear under the tier -->
-			<argument name="root_category_name" is-required="true" default-value="Queue Monitoring" />
+			<argument name="root_category_name" is-required="true" default-value="Custom Metrics" />
 			<!-- The number of queue managers that are configured -->
 			<argument name="number_of_queue_managers" is-required="true" default-value="1" />
 			<!-- the host or IP address of the queue manager -->
