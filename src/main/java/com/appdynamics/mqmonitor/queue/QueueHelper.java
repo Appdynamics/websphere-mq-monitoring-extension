@@ -1,5 +1,6 @@
-package com.appdynamics.monitors.mqmonitor.queue;
+package com.appdynamics.mqmonitor.queue;
 
+import com.ibm.mq.MQC;
 import com.ibm.mq.MQEnvironment;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueue;
@@ -107,9 +108,7 @@ public class QueueHelper {
 				MQEnvironment.password = password;				
 			}
 		}
-		
 		MQQueueManager queueManager = new MQQueueManager(queueManagerName);
-		
 		return queueManager;
 		
 	}

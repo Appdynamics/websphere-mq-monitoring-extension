@@ -1,23 +1,30 @@
 /**
  * 
  */
-package com.appdynamics.monitors.mqmonitor;
+package com.appdynamics.mqmonitor;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.appdynamics.mqmonitor.common.JavaServersMonitor;
+import com.appdynamics.mqmonitor.common.StringUtils;
+import com.appdynamics.mqmonitor.queue.Channel;
+import com.appdynamics.mqmonitor.queue.Queue;
+import com.appdynamics.mqmonitor.queue.QueueHelper;
+import com.appdynamics.mqmonitor.queue.QueueManager;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
+import com.ibm.mq.constants.CMQC;
+import com.ibm.mq.pcf.CMQCFC;
+import com.ibm.mq.pcf.PCFException;
+import com.ibm.mq.pcf.PCFMessage;
+import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.TaskExecutionContext;
 import com.singularity.ee.agent.systemagent.api.TaskOutput;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
-import com.appdynamics.monitors.mqmonitor.common.JavaServersMonitor;
-import com.appdynamics.monitors.mqmonitor.common.StringUtils;
-import com.appdynamics.monitors.mqmonitor.queue.QueueManager;
-import com.appdynamics.monitors.mqmonitor.queue.QueueHelper;
-import com.appdynamics.monitors.mqmonitor.queue.Queue;
 
 /**
  * @author James Schneider
@@ -44,6 +51,7 @@ public class MQMonitor extends JavaServersMonitor {
 	protected String rootCategoryName = "Backends";
 	protected String writeStatsDirectory = "";
 	
+	
 	/**
 	 * 
 	 */
@@ -64,7 +72,6 @@ public class MQMonitor extends JavaServersMonitor {
 			List<Queue> queues;
 		
 			for (QueueManager mgr : this.queueManagers) {
-				
 				queues = mgr.getQueues();
 				for (Queue q : queues) {
 					
@@ -75,8 +82,6 @@ public class MQMonitor extends JavaServersMonitor {
 				    printMetric(this.rootCategoryName + "|Websphere MQ|" + mgr.getManagerName() + "|" + q.getQueueName() + "|Current Queue Depth", q.getCurrentDepth() + "",
 					        MetricWriter.METRIC_AGGREGATION_TYPE_OBSERVATION, MetricWriter.METRIC_TIME_ROLLUP_TYPE_CURRENT,
 					        MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
-
-					
 				}
 			}
 			
@@ -85,6 +90,104 @@ public class MQMonitor extends JavaServersMonitor {
 		}
 				
 	} 
+
+	private void printAndPopulateChennalStatus(){
+		for(QueueManager queueManager: this.queueManagers){
+			MQQueueManager mqQueueManager = queueManager.getQueueManager();
+			try {
+				PCFMessageAgent agent = new PCFMessageAgent();
+				agent.connect(mqQueueManager);
+				if(agent != null){
+					List<Channel> channels = loadPCFAgentStats(agent);
+					for (Channel channel : channels) {
+						printChannelMetrics(channel, queueManager);
+					}
+				}
+			} catch (MQException e) {
+				logger.error("Issues while getting PCF Message Agent", e);
+			}
+			
+		}
+	}
+	
+	private void printChannelMetrics(Channel channel, QueueManager queueManager) {
+		if(logger.isDebugEnabled()){
+			logger.debug("Started printing channel metrics...");
+		}
+		
+		printMetric(this.rootCategoryName + "|Websphere MQ|" + queueManager.getManagerName() + "|Channels|" + channel.getChannelName() + "|Messages", channel.getMessages() + "",
+		        MetricWriter.METRIC_AGGREGATION_TYPE_OBSERVATION, MetricWriter.METRIC_TIME_ROLLUP_TYPE_CURRENT,
+		        MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+		
+		printMetric(this.rootCategoryName + "|Websphere MQ|" + queueManager.getManagerName() + "|Channels|" + channel.getChannelName() + "|Status", channel.getChennalStatus() + "",
+		        MetricWriter.METRIC_AGGREGATION_TYPE_OBSERVATION, MetricWriter.METRIC_TIME_ROLLUP_TYPE_CURRENT,
+		        MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+		
+		printMetric(this.rootCategoryName + "|Websphere MQ|" + queueManager.getManagerName() + "|Channels|" + channel.getChannelName() + "|Byte Sent", channel.getByteSent() + "",
+		        MetricWriter.METRIC_AGGREGATION_TYPE_OBSERVATION, MetricWriter.METRIC_TIME_ROLLUP_TYPE_CURRENT,
+		        MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+		
+		printMetric(this.rootCategoryName + "|Websphere MQ|" + queueManager.getManagerName() + "|Channels|" + channel.getChannelName() + "|Byte Received", channel.getByteReceived() + "",
+		        MetricWriter.METRIC_AGGREGATION_TYPE_OBSERVATION, MetricWriter.METRIC_TIME_ROLLUP_TYPE_CURRENT,
+		        MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+		
+		printMetric(this.rootCategoryName + "|Websphere MQ|" + queueManager.getManagerName() + "|Channels|" + channel.getChannelName() + "|Buffers Sent", channel.getBuffersSent() + "",
+		        MetricWriter.METRIC_AGGREGATION_TYPE_OBSERVATION, MetricWriter.METRIC_TIME_ROLLUP_TYPE_CURRENT,
+		        MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+		
+		printMetric(this.rootCategoryName + "|Websphere MQ|" + queueManager.getManagerName() + "|Channels|" + channel.getChannelName() + "|Buffers Sent", channel.getBuffersReceived() + "",
+		        MetricWriter.METRIC_AGGREGATION_TYPE_OBSERVATION, MetricWriter.METRIC_TIME_ROLLUP_TYPE_CURRENT,
+		        MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("Fininshed printing channel metrics...");
+		}
+	}
+
+
+
+	private List<Channel> loadPCFAgentStats(PCFMessageAgent agent) {
+		List<Channel> channels = new ArrayList<Channel>();
+		PCFMessage request;
+		PCFMessage[] response;
+		int[] attrs = {
+					CMQCFC.MQCACH_CHANNEL_NAME,
+					CMQCFC.MQCACH_CONNECTION_NAME,
+					CMQCFC.MQIACH_CHANNEL_STATUS,
+					CMQCFC.MQIACH_MSGS,
+					CMQCFC.MQIACH_BYTES_SENT,
+					CMQCFC.MQIACH_BYTES_RECEIVED,
+					CMQCFC.MQIACH_BUFFERS_SENT,
+					CMQCFC.MQIACH_BUFFERS_RECEIVED
+					};
+		request  = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS);
+		request.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, "*");
+		request.addParameter(CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE, CMQC.MQOT_CURRENT_CHANNEL);
+		request.addParameter(CMQCFC.MQIACH_CHANNEL_INSTANCE_ATTRS, attrs);
+		try {
+			response = agent.send(request);
+			for (int i = 0; i < response.length; i++) {
+				Channel channel = new Channel();
+				channel.setChannelName(response[i].getStringParameterValue(CMQCFC.MQCACH_CHANNEL_NAME));
+				channel.setChennalStatus(response[i].getIntParameterValue(CMQCFC.MQIACH_CHANNEL_STATUS));
+				channel.setMessages(response[i].getIntParameterValue(CMQCFC.MQIACH_MSGS));
+				channel.setByteSent(response[i].getIntParameterValue(CMQCFC.MQIACH_BYTES_SENT));
+				channel.setByteReceived(response[i].getIntParameterValue(CMQCFC.MQIACH_BYTES_RECEIVED));
+				channel.setBuffersSent(response[i].getIntParameterValue(CMQCFC.MQIACH_BUFFERS_SENT));
+				channel.setBuffersReceived(response[i].getIntParameterValue(CMQCFC.MQIACH_BUFFERS_RECEIVED));
+				channels.add(channel);
+			}
+		} catch (PCFException e) {
+			logger.error("PCFException",e);
+		} catch (MQException e) {
+			logger.error("MQException",e);
+		} catch (IOException e) {
+			logger.error("IOException",e);
+		}
+		return channels;
+	}
+
+
 
 	protected void writeQueueStats() throws TaskExecutionException {
 		
@@ -250,6 +353,7 @@ public class MQMonitor extends JavaServersMonitor {
 		this.connectToQueues();
 		this.populateQueueStats();
 		this.printQueueStats();
+		this.printAndPopulateChennalStatus();
 		//this.writeQueueStats();
 		this.disconnectFromQueues();
 		return new TaskOutput("Success");

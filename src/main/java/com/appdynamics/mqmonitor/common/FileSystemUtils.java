@@ -2,7 +2,7 @@
  * FileSystemUtils.java
  */
 
-package com.appdynamics.monitors.mqmonitor.common;
+package com.appdynamics.mqmonitor.common;
 
 import java.io.BufferedReader;
 import java.io.File;

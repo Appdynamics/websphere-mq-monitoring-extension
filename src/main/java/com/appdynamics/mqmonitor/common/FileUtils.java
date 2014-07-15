@@ -1,7 +1,7 @@
 /**
  *
  */
-package com.appdynamics.monitors.mqmonitor.common;
+package com.appdynamics.mqmonitor.common;
 
 import java.io.File;
 import java.io.IOException;

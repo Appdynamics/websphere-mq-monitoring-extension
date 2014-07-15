@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.appdynamics.monitors.mqmonitor.queue;
+package com.appdynamics.mqmonitor.queue;
 
 import java.util.List;
 

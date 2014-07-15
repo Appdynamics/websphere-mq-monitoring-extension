@@ -1,4 +1,4 @@
-package com.appdynamics.monitors.mqmonitor.common;
+package com.appdynamics.mqmonitor.common;
 
 import java.util.Map;
 
