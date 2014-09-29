@@ -1,7 +1,11 @@
-/bin
+target
+*.iml
+.settings
+.classpath
+.project
+*.log
+*.ipr
+*.iws
+.idea
+.DS_Store
 
-*.classpath
-*.class
-*.name
-.idea/*
-.settings/org.eclipse.jdt.core.prefs
