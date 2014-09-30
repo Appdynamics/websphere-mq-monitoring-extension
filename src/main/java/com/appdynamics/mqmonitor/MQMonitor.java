@@ -5,9 +5,11 @@ package com.appdynamics.mqmonitor;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.appdynamics.extensions.crypto.CryptoUtil;
 import com.appdynamics.mqmonitor.common.JavaServersMonitor;
 import com.appdynamics.mqmonitor.common.StringUtils;
 import com.appdynamics.mqmonitor.queue.Channel;
@@ -32,7 +34,7 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
  */
 public class MQMonitor extends JavaServersMonitor {
 
-	protected static final String ROOT_CATEGORY = "root_category_name";
+    protected static final String ROOT_CATEGORY = "root_category_name";
 	protected static final String WRITE_STATS_DIR = "write_stats_directory";
 	protected static final String QMGR_NUMBER = "number_of_queue_managers";
 	protected static final String QMGR_PFX = "queue_mgr_";
@@ -46,8 +48,12 @@ public class MQMonitor extends JavaServersMonitor {
 	protected static final String QMGR_TRANSPORT_TYPE_PFX = "queue_mgr_transport_type_";
 	protected static final String QMGR_USER_PFX = "queue_mgr_user_";
 	protected static final String QMGR_PASSWORD_PFX = "queue_mgr_password_";
-	
-	protected List<QueueManager> queueManagers;
+
+    protected static final String QMGR_PASSWORD_ENCRYPTED_PFX= "queue_mgr_password_encrypted_";
+    public static final String PASSWORD_ENCRYPTED = "password-encrypted";
+    public static final String ENCRYPTION_KEY = "encryption-key";
+
+    protected List<QueueManager> queueManagers;
 	protected String rootCategoryName = "Backends";
 	protected String writeStatsDirectory = "";
 	
@@ -318,7 +324,8 @@ public class MQMonitor extends JavaServersMonitor {
 				qMgr.setChannelName(taskArguments.get(QMGR_CHANNEL_NAME_PFX + mgrs));
 				qMgr.setTransportType(taskArguments.get(QMGR_TRANSPORT_TYPE_PFX + mgrs));
 				qMgr.setUserId(taskArguments.get(QMGR_USER_PFX + mgrs));
-				qMgr.setPassword(taskArguments.get(QMGR_PASSWORD_PFX + mgrs));
+
+				qMgr.setPassword(getPassword(taskArguments, mgrs));
 				
 				int numOfQueues = Integer.parseInt(taskArguments.get(QMGR_PFX + mgrs + QMGR_QUEUES));
 				numOfQueues++;
@@ -345,7 +352,20 @@ public class MQMonitor extends JavaServersMonitor {
 		}
 		
 	}
-	
+
+    private String getPassword(Map<String,String> taskArguments,int mgr){
+        if(taskArguments.get(QMGR_PASSWORD_PFX + mgr) != null){
+            return taskArguments.get(QMGR_PASSWORD_PFX + mgr);
+        }
+        else if(taskArguments.containsKey(QMGR_PASSWORD_ENCRYPTED_PFX + mgr)){
+            Map<String,String> argsForDecryption = new HashMap<String, String>();
+            argsForDecryption.put(PASSWORD_ENCRYPTED,taskArguments.get(QMGR_PASSWORD_ENCRYPTED_PFX + mgr));
+            argsForDecryption.put(ENCRYPTION_KEY,taskArguments.get(ENCRYPTION_KEY));
+            return CryptoUtil.getPassword(argsForDecryption);
+        }
+        return "";
+    }
+
 	@Override
 	public TaskOutput execute(Map<String, String> taskArguments, TaskExecutionContext taskContext) throws TaskExecutionException {
 

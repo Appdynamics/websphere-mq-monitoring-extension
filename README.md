@@ -158,6 +158,24 @@ The following is a sample monitor.xml file that depicts two different queue mana
 <argument name="queue_mgr_2_queue_2" is-required="true" default-value="CREWDATA04" />
 
 ```
+
+Password Encryption Support
+ 
+To avoid setting the clear text password in the monitor.xml. Please follow the process to encrypt the password and set the encrypted password and 
+the key in the monitor.xml
+
+1. Download the util jar to encrypt the password from here https://github.com/Appdynamics/maven-repo/blob/master/releases/com/appdynamics/appd-exts-commons/1.1.2/appd-exts-commons-1.1.2.jar
+
+2. Encrypt password from the commandline
+java -cp "appd-exts-commons-1.1.2.jar" com.appdynamics.extensions.crypto.Encryptor myKey myPassword
+
+3. Use the same encryption key for each queue's password. In the monitor.xml, add the encryption key as below
+<argument name="encryption-key" is-required="false" default-value="myKey"/>  
+
+4. For every queue manager, you can specify an encrypted password as below
+<argument name="queue_mgr_password_encrypted_1" is-required="true" default-value="<ENCRYPTED_PASSWORD>"/>
+
+
   
 WebSphere MQ Queue Worker
 
