@@ -16,6 +16,7 @@
         </jar>
         <copy todir="${build.dir}/MQMonitor">
             <fileset dir="${conf.dir}" includes="monitor.xml"/>
+            <fileset dir="${lib.dir}/commons" includes="*.jar"/>
         </copy>
         <delete dir="${build.dir}/classes"/>
     </target>
