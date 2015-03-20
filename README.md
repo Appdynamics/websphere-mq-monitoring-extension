@@ -44,46 +44,35 @@ Alternatively, you may download either the Websphere MQ Server and or Client tha
  
 Rebuilding the Project
 ----------------------
+1. Clone the repo websphere-mq-monitoring-extension from GitHub https://github.com/Appdynamics
+2. Copy the seven MQ jar files listed above into the websphere-mq-monitoring-extension/lib/ directory. Create a lib folder if not already present.
+3. Run 'mvn clean install' from the cloned websphere-mq-monitoring-extension directory.
+4. The MQMonitor.zip should get built and found in the 'target' directory.
 
- 1. Clone the repo websphere-mq-monitoring-extension from GitHub https://github.com/Appdynamics
- 2. Copy the seven MQ jar files listed above into the websphere-mq-monitoring-extension/lib/ directory
- 2. Run 'mvn clean install' from the cloned websphere-mq-monitoring-extension directory.
- 3. The MQMonitor.zip should get built and found in the 'target' directory.
- 
 
 Installation
 ------------
- 
 The following instructions assume that you have installed the AppDynamics Machine Agent in the following directory:
  
     Unix/Linux:    /AppDynamics/MachineAgent
     Windows:     C:\AppDynamics\MachineAgent
  
-1. Unzip MQMonitor.zip file on the file system of the machine running the AppDynamics Machine Agent under the monitors 
-directory:
- 
-    Unix/Linux:    /AppDynamics/MachineAgent/monitors
-    Windows:     C:\AppDynamics\MachineAgent\monitors
- 
+1. Unzip MQMonitor.zip file and copy to MachineAgent/monitors directory
+2. Copy the following jars to the MQMonitor directory
 
-2. Copy the following files to the MQMonitor directory
-
-``` 
-com.ibm.mq.commonservices.jar
-com.ibm.mq.jar
-com.ibm.mq.jmqi.jar
-dhbcore.jar
-com.ibm.mq.headers.jar
-connector.jar
-com.ibm.mq.pcf.jar
-```
-
+ ``` 
+  com.ibm.mq.commonservices.jar
+  com.ibm.mq.jar
+  com.ibm.mq.jmqi.jar
+  dhbcore.jar
+  com.ibm.mq.headers.jar
+  connector.jar
+  com.ibm.mq.pcf.jar
+ ```
 3. Edit the monitor.xml file. The configuration supports defining multiple queue managers to connect to as well as multiple queues for a given queue manager.  An example monitor.xml file follows these installation instructions.
- 
 4. Follow the numbering convention when adding or removing queue managers and or queues.
- 
-Note: Do not create multiple instances of the queue monitor running that monitor the same queues inside the same queue managers.  This causes duplication data with in the AppDynamics Controller.
- 
+
+    Note: Do not create multiple instances of the queue monitor running that monitor the same queues inside the       same queue managers.  This causes duplication data with in the AppDynamics Controller.
 5. Restart the Machine Agent.
  
 Sample monitor.xml
@@ -162,28 +151,25 @@ The following is a sample monitor.xml file that depicts two different queue mana
 ```
 
 Password Encryption Support
- 
+---------------------------
 To avoid setting the clear text password in the monitor.xml. Please follow the process to encrypt the password and set the encrypted password and 
 the key in the monitor.xml
 
 1. Download the util jar to encrypt the password from https://github.com/Appdynamics/maven-repo/blob/master/releases/com/appdynamics/appd-exts-commons/1.1.2/appd-exts-commons-1.1.2.jar and navigate to downloaded directory
-
 2. Encrypt password from the commandline
-```
-java -cp appd-exts-commons-1.1.2.jar com.appdynamics.extensions.crypto.Encryptor myKey myPassword
-```
 
-3. Use the same encryption key for each queue's password. In the monitor.xml, add the encryption key as below
-```
-<argument name="encryption-key" is-required="false" default-value="myKey"/>
-```
+   ```
+   java -cp appd-exts-commons-1.1.2.jar com.appdynamics.extensions.crypto.Encryptor myKey myPassword
+   ```
+3. Use the same encryption key for each queue's password. In the monitor.xml, add the encryption key as below.
 
+   ```
+   <argument name="encryption-key" is-required="false" default-value="myKey"/>
+   ```
 4. For every queue manager, you can specify an encrypted password as below
-```
-<argument name="queue_mgr_password_encrypted_1" is-required="true" default-value="<ENCRYPTED_PASSWORD>"/>
-```
-
-
+   ```
+   <argument name="queue_mgr_password_encrypted_1" is-required="true" default-value="<ENCRYPTED_PASSWORD>"/>
+   ```
 
 
 
@@ -212,6 +198,6 @@ WebSphere MQ Queue Policy Remediation
 ![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/127iF9FD2336797A0D2E/image-size/original?v=mpbl-1&px=-1)
 
 Support
- 
+------- 
 For any questions or feature request, please contact James Schneider (james.schneider@appdynamics.com)
 
