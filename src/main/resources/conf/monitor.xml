@@ -51,7 +51,7 @@
 			-->
 		</task-arguments>
 		<java-task>
-			<classpath>MQMonitor.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;dhbcore.jar;com.ibm.mq.headers.jar;connector.jar;com.ibm.mq.pcf.jar;appd-exts-commons-1.1.2.jar</classpath>
+			<classpath>websphere-mq-monitoring-extension.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;dhbcore.jar;com.ibm.mq.headers.jar;connector.jar;com.ibm.mq.pcf.jar</classpath>
 			<impl-class>com.appdynamics.mqmonitor.MQMonitor</impl-class>
 		</java-task>
 	</monitor-run-task>

@@ -3,12 +3,6 @@
  */
 package com.appdynamics.mqmonitor;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.appdynamics.extensions.crypto.CryptoUtil;
 import com.appdynamics.mqmonitor.common.JavaServersMonitor;
 import com.appdynamics.mqmonitor.common.StringUtils;
@@ -27,6 +21,12 @@ import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.TaskExecutionContext;
 import com.singularity.ee.agent.systemagent.api.TaskOutput;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Schneider
@@ -62,6 +62,10 @@ public class MQMonitor extends JavaServersMonitor {
 	 * 
 	 */
 	public MQMonitor() throws ClassNotFoundException {
+        String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
+        logger.info(msg);
+        System.out.println(msg);
+
 		Class.forName("com.ibm.mq.MQEnvironment");
 		Class.forName("com.ibm.mq.MQException");
 		Class.forName("com.ibm.mq.MQQueue");
@@ -400,6 +404,8 @@ public class MQMonitor extends JavaServersMonitor {
 		return "";
 	}
 
-	
-	
+    public static String getImplementationVersion() {
+        return MQMonitor.class.getPackage().getImplementationTitle();
+    }
+
 }

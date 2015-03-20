@@ -23,7 +23,7 @@ The machine where you install the monitor must have firewall access to each queu
 Dependencies
 ------------
   
-The monitor has a dependency on the following six JAR files from the IBM MQ distribution:
+The monitor has a dependency on the following seven JAR files from the IBM MQ distribution:
 
 ``` 
 com.ibm.mq.commonservices.jar
@@ -32,6 +32,7 @@ com.ibm.mq.jmqi.jar
 dhbcore.jar
 com.ibm.mq.headers.jar
 connector.jar
+com.ibm.mq.pcf.jar
 ```
 
 These jar files are typically found in /opt/mqm/java/lib on a UNIX server but may be found in an alternate location depending upon your environment.
@@ -44,10 +45,10 @@ Alternatively, you may download either the Websphere MQ Server and or Client tha
 Rebuilding the Project
 ----------------------
 
- 1. Clone the repo mq-monitoring-extension from GitHub https://github.com/Appdynamics
- 2. Copy the six MQ jar files listed above into the mq-monitoring-extension/lib/mq directory
- 2. Run 'ant package' from the cloned mq-monitoring-extension directory.
- 3. The MQMonitor.zip should get built and found in the 'dist' directory.
+ 1. Clone the repo websphere-mq-monitoring-extension from GitHub https://github.com/Appdynamics
+ 2. Copy the seven MQ jar files listed above into the websphere-mq-monitoring-extension/lib/ directory
+ 2. Run 'mvn clean install' from the cloned websphere-mq-monitoring-extension directory.
+ 3. The MQMonitor.zip should get built and found in the 'target' directory.
  
 
 Installation
@@ -74,6 +75,7 @@ com.ibm.mq.jmqi.jar
 dhbcore.jar
 com.ibm.mq.headers.jar
 connector.jar
+com.ibm.mq.pcf.jar
 ```
 
 3. Edit the monitor.xml file. The configuration supports defining multiple queue managers to connect to as well as multiple queues for a given queue manager.  An example monitor.xml file follows these installation instructions.
@@ -164,19 +166,28 @@ Password Encryption Support
 To avoid setting the clear text password in the monitor.xml. Please follow the process to encrypt the password and set the encrypted password and 
 the key in the monitor.xml
 
-1. Download the util jar to encrypt the password from here https://github.com/Appdynamics/maven-repo/blob/master/releases/com/appdynamics/appd-exts-commons/1.1.2/appd-exts-commons-1.1.2.jar
+1. Download the util jar to encrypt the password from https://github.com/Appdynamics/maven-repo/blob/master/releases/com/appdynamics/appd-exts-commons/1.1.2/appd-exts-commons-1.1.2.jar and navigate to downloaded directory
 
 2. Encrypt password from the commandline
-java -cp "appd-exts-commons-1.1.2.jar" com.appdynamics.extensions.crypto.Encryptor myKey myPassword
+```
+java -cp appd-exts-commons-1.1.2.jar com.appdynamics.extensions.crypto.Encryptor myKey myPassword
+```
 
 3. Use the same encryption key for each queue's password. In the monitor.xml, add the encryption key as below
-<argument name="encryption-key" is-required="false" default-value="myKey"/>  
+```
+<argument name="encryption-key" is-required="false" default-value="myKey"/>
+```
 
 4. For every queue manager, you can specify an encrypted password as below
+```
 <argument name="queue_mgr_password_encrypted_1" is-required="true" default-value="<ENCRYPTED_PASSWORD>"/>
+```
 
 
-  
+
+
+
+
 WebSphere MQ Queue Worker
 
 ![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/111i0BBFBE1938EF2BA2/image-size/original?v=mpbl-1&px=-1)
