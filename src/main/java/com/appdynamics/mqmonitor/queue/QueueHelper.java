@@ -72,13 +72,6 @@ public class QueueHelper {
 
 	}
 	
-	public static void populateQueueStats(Queue queue) throws MQException {
-		
-		queue.setCurrentDepth(queue.getMQ().getCurrentDepth());
-		queue.setMaximumDepth(queue.getMQ().getMaximumDepth());
-		
-	}
-	
 	public static Queue getQueueStats(MQQueue mqQueue) throws MQException {
 		
 		Queue stats = new Queue();
@@ -115,7 +108,8 @@ public class QueueHelper {
 	
 	public static MQQueue getQueue(MQQueueManager queueManager, String queueName) throws MQException {
 		
-		MQQueue mqQueue = queueManager.accessQueue(queueName, CMQC.MQOO_INQUIRE);
+		MQQueue mqQueue = queueManager.accessQueue(queueName, CMQC.MQOO_INQUIRE
+				+CMQC.MQOO_FAIL_IF_QUIESCING+CMQC.MQOO_INPUT_SHARED);
 		
 		//mqQueue.
 		

@@ -24,6 +24,8 @@ public class QueueManager {
 	
 	private List<Queue> queues;
 	
+	private QueueFilter queueFilter;
+	
 	/**
 	 * 
 	 */
@@ -104,6 +106,16 @@ public class QueueManager {
 
 	public void setQueues(List<Queue> queueStats) {
 		this.queues = queueStats;
+	}
+
+
+	public QueueFilter getQueueFilter() {
+		return queueFilter;
+	}
+
+
+	public void setQueueFilter(QueueFilter queueFilter) {
+		this.queueFilter = queueFilter;
 	}
 
 	

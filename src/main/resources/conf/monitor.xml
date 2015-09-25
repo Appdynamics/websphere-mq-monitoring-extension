@@ -32,16 +32,13 @@
 			<argument name="queue_mgr_user_1" is-required="true" default-value="" />
 			<!-- The password for the connection if required -->
 			<argument name="queue_mgr_password_1" is-required="true" default-value="" />
-			<!-- The number of configured queues to be monitored for the queue manager -->
-			<argument name="queue_mgr_1_number_of_queues" is-required="true" default-value="4" />
-			<!-- The name of the first queue -->
-			<argument name="queue_mgr_1_queue_1" is-required="true" default-value="CREWDATA01" />
-			<!-- The name of the second queue -->
-			<argument name="queue_mgr_1_queue_2" is-required="true" default-value="CREWDATA02" />
-			<!-- The name of the third queue -->
-			<argument name="queue_mgr_1_queue_3" is-required="true" default-value="FLIGHTDATA01" />
-			<!-- The name of the fourth queue -->
-			<argument name="queue_mgr_1_queue_4" is-required="true" default-value="FLIGHTDATA02" />
+			<!-- queue filter type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues)  -->
+			<argument name="queue_filter_type" is-required="true" default-value="NONE" />
+			<!-- The name of the queue or queue name pattern as per queue filter-->
+			<argument name="queue_filter_value" is-required="false" default-value="" />
+			
+			<!-- exclude pattern startswith-->
+			<argument name="queue_filter_exclude_internal_queues" is-required="false" default-value="AMQ." />
 			
 			<!-- The fully qualified path to the directory where stats files are written to, one file per queue, this is now turned off -->
 			<argument name="write_stats_directory" is-required="true" default-value="C:\Data\queue_stats" />
