@@ -34,7 +34,7 @@
 			<argument name="queue_mgr_password_1" is-required="true" default-value="" />
 			<!-- queue filter type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues)  -->
 			<argument name="queue_filter_type" is-required="true" default-value="NONE" />
-			<!-- The name of the queue or queue name pattern as per queue filter-->
+			<!-- The name of the queue or queue name pattern as per queue filter, comma separated values are allowed-->
 			<argument name="queue_filter_value" is-required="false" default-value="" />
 			
 			<!-- exclude pattern startswith-->

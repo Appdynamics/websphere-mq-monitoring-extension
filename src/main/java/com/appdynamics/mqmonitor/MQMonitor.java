@@ -317,7 +317,18 @@ public class MQMonitor extends JavaServersMonitor {
 			}
 			return monitorEnabled;
 		}
+		
+		//handle comma separated values
+		String[] filterValues =  filterQueueValue.split(",");
+		for (int i = 0; i < filterValues.length; i++) {
+			monitorEnabled = checkQueueNameFilter(filterQueueType, filterValues[i], queueName);
+		}
+		return monitorEnabled;
+	}
 
+	private boolean checkQueueNameFilter(String filterQueueType, String filterQueueValue,
+			String queueName) {
+		boolean monitorEnabled = false;
 		switch(Filters.valueOf(filterQueueType)){
 		case CONTAINS:
 			if(queueName.contains(filterQueueValue))
