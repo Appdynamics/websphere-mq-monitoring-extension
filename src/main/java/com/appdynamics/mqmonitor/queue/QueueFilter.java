@@ -6,7 +6,9 @@ public class QueueFilter {
 	
 	private String queueFilterValue;
 	
-	private String excludeInternalQueuesPattern;
+	private String queueFilterExcludeType;
+	
+	private String queueFilterExcludeValue;
 
 	public String getQueueFilterType() {
 		return queueFilterType;
@@ -24,14 +26,21 @@ public class QueueFilter {
 		this.queueFilterValue = queueFilterValue;
 	}
 
-	public String getExcludeInternalQueuesPattern() {
-		return excludeInternalQueuesPattern;
+	public String getQueueFilterExcludeType() {
+		return queueFilterExcludeType;
 	}
 
-	public void setExcludeInternalQueuesPattern(String excludeInternalQueuesPattern) {
-		this.excludeInternalQueuesPattern = excludeInternalQueuesPattern;
+	public void setQueueFilterExcludeType(String queueFilterExcludeType) {
+		this.queueFilterExcludeType = queueFilterExcludeType;
+	}
+
+	public String getQueueFilterExcludeValue() {
+		return queueFilterExcludeValue;
+	}
+
+	public void setQueueFilterExcludeValue(String queueFilterExcludeValue) {
+		this.queueFilterExcludeValue = queueFilterExcludeValue;
 	}
 
 	
-
 }

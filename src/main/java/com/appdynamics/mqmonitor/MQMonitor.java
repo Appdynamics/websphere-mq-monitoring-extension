@@ -52,7 +52,8 @@ public class MQMonitor extends JavaServersMonitor {
 	protected static final String QUEUE_FILTER_TYPE = "queue_filter_type";
 	protected static final String QUEUE_FILTER_VALUE = "queue_filter_value";
 
-	protected static final String QUEUE_FILTER_EXCLUDE_INTERNAL_QUEUES = "queue_filter_exclude_internal_queues";
+	protected static final String QUEUE_EXCLUDE_FILTER_TYPE = "queue_exclude_filter_type";
+	protected static final String QUEUE_EXCLUDE_FILTER_VALUE = "queue_exclude_filter_value";
 
 
 	protected static final String QMGR_PASSWORD_ENCRYPTED_PFX= "queue_mgr_password_encrypted_";
@@ -121,7 +122,7 @@ public class MQMonitor extends JavaServersMonitor {
 			} catch (MQException e) {
 				logger.error("Issues while getting PCF Message Agent", e);
 				throw new TaskExecutionException(e);
-				
+
 			}
 		}
 	}
@@ -310,18 +311,31 @@ public class MQMonitor extends JavaServersMonitor {
 			logger.info("Filter queue name: "+ queueName+" filter type: "+filterQueueType+ " filter value: "+filterQueueValue);
 			return monitorEnabled;
 		}
-		String excludePattern = queueFilter.getExcludeInternalQueuesPattern();
-		if(queueName.startsWith(excludePattern)){
-			if(logger.isDebugEnabled()){// temp for debugging
-			logger.debug("Queue: "+queueName+" Monitoring is: "+monitorEnabled);
+		String excludeFilterType = queueFilter.getQueueFilterExcludeType();
+		String excludeFilterValue = queueFilter.getQueueFilterExcludeValue();
+		boolean excludeFilterResult = false;
+		if(excludeFilterType != null && !excludeFilterType.equals("NONE") &&  !excludeFilterType.isEmpty()
+				&& excludeFilterValue != null && !excludeFilterValue.isEmpty()){
+			String[] excludeValues = excludeFilterValue.split(",");
+			for (int i = 0; i < excludeValues.length; i++) {
+				excludeFilterResult = checkQueueNameFilter(excludeFilterType, excludeFilterValue, queueName);
+				if(excludeFilterResult){
+					if(logger.isDebugEnabled()){
+						logger.debug("Queue "+ queueName+" excluded from monitor by exclude filter type "
+								+excludeFilterType+" value "+excludeFilterValue);
+					}
+					return monitorEnabled; // if exclude filter match means queue should not be monitored
+				}
 			}
-			return monitorEnabled;
 		}
-		
+
 		//handle comma separated values
 		String[] filterValues =  filterQueueValue.split(",");
 		for (int i = 0; i < filterValues.length; i++) {
 			monitorEnabled = checkQueueNameFilter(filterQueueType, filterValues[i], queueName);
+			if(monitorEnabled == true){
+				return true;
+			}
 		}
 		return monitorEnabled;
 	}
@@ -478,11 +492,11 @@ public class MQMonitor extends JavaServersMonitor {
 				QueueFilter queueFilter = new QueueFilter();
 				queueFilter.setQueueFilterType(taskArguments.get(QUEUE_FILTER_TYPE));
 				queueFilter.setQueueFilterValue(taskArguments.get(QUEUE_FILTER_VALUE));
-				queueFilter.setExcludeInternalQueuesPattern(taskArguments.get(QUEUE_FILTER_EXCLUDE_INTERNAL_QUEUES));
+				queueFilter.setQueueFilterExcludeType(taskArguments.get(QUEUE_EXCLUDE_FILTER_TYPE));
+				queueFilter.setQueueFilterExcludeValue(taskArguments.get(QUEUE_EXCLUDE_FILTER_VALUE));
 				qMgr.setQueueFilter(queueFilter);
 
 				queueManagers.add(qMgr);
-
 			}
 
 

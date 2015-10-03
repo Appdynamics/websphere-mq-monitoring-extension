@@ -36,9 +36,11 @@
 			<argument name="queue_filter_type" is-required="true" default-value="NONE" />
 			<!-- The name of the queue or queue name pattern as per queue filter, comma separated values are allowed-->
 			<argument name="queue_filter_value" is-required="false" default-value="" />
+			<!-- queue exclude filter type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues)  -->
+			<argument name="queue_exclude_filter_type" is-required="false" default-value="STARTSWITH" />
 			
 			<!-- exclude pattern startswith-->
-			<argument name="queue_filter_exclude_internal_queues" is-required="false" default-value="AMQ." />
+			<argument name="queue_exclude_filter_value" is-required="false" default-value="SYSTEM,AMQ,KMQ" />
 			
 			<!-- The fully qualified path to the directory where stats files are written to, one file per queue, this is now turned off -->
 			<argument name="write_stats_directory" is-required="true" default-value="C:\Data\queue_stats" />
