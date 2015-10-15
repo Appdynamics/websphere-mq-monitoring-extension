@@ -116,6 +116,18 @@ public class QueueHelper {
 		return mqQueue;
 		
 	}
+
+	public static MQQueue getRemoteQueue(MQQueueManager mqQueueManager, String remoteQueueManagerName,
+			String remoteQueueName) {
+	
+		try {
+			return mqQueueManager.accessQueue(remoteQueueName,8208, remoteQueueManagerName, "", "mqm");
+		} catch (MQException e) {
+			e.printStackTrace();
+		}
+		return null;
+		
+	}
 	
 	
 	

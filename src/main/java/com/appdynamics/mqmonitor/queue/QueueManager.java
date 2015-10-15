@@ -26,6 +26,8 @@ public class QueueManager {
 	
 	private QueueFilter queueFilter;
 	
+	private List<RemoteQueue> remoteQueues;
+	
 	/**
 	 * 
 	 */
@@ -118,5 +120,13 @@ public class QueueManager {
 		this.queueFilter = queueFilter;
 	}
 
-	
+
+	public List<RemoteQueue> getRemoteQueues() {
+		return remoteQueues;
+	}
+
+
+	public void setRemoteQueues(List<RemoteQueue> remoteQueues) {
+		this.remoteQueues = remoteQueues;
+	}
 }

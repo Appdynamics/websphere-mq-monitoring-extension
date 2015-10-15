@@ -16,6 +16,7 @@ import com.appdynamics.mqmonitor.queue.Queue;
 import com.appdynamics.mqmonitor.queue.QueueFilter;
 import com.appdynamics.mqmonitor.queue.QueueHelper;
 import com.appdynamics.mqmonitor.queue.QueueManager;
+import com.appdynamics.mqmonitor.queue.RemoteQueue;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
 import com.ibm.mq.constants.CMQC;
@@ -55,12 +56,18 @@ public class MQMonitor extends JavaServersMonitor {
 	protected static final String QUEUE_EXCLUDE_FILTER_TYPE = "queue_exclude_filter_type";
 	protected static final String QUEUE_EXCLUDE_FILTER_VALUE = "queue_exclude_filter_value";
 
+	
+	protected static final String REMOTE_QUEUE_NUMBER = "number_of_remote_queues";
+	protected static final String REMOTE_QUEUE_MANAGER_NAME = "remote_queue_mgr_name_";
+	protected static final String REMOTE_QUEUE_NAME = "remote_queue_name_";
 
 	protected static final String QMGR_PASSWORD_ENCRYPTED_PFX= "queue_mgr_password_encrypted_";
 	public static final String PASSWORD_ENCRYPTED = "password-encrypted";
 	public static final String ENCRYPTION_KEY = "encryption-key";
 
 	protected List<QueueManager> queueManagers;
+	protected List<RemoteQueue> remoteQueues;
+	
 	protected String rootCategoryName = "Backends";
 	protected String writeStatsDirectory = "";
 
@@ -124,6 +131,20 @@ public class MQMonitor extends JavaServersMonitor {
 				throw new TaskExecutionException(e);
 
 			}
+		}
+		
+		QueueManager localQueueManager = this.queueManagers.get(0);
+		for(RemoteQueue remoteQueue : this.remoteQueues){
+			PCFMessageAgent pcfMessageAgent = new PCFMessageAgent();
+				try {
+					String remoteQueueName = remoteQueue.getRemoteQueueName();
+					pcfMessageAgent.connect(localQueueManager.getQueueManager(), 
+							remoteQueue.getRemoteQueueName(), remoteQueue.getRemoteQueueManagerName());
+					printQueueStats(pcfMessageAgent, localQueueManager, remoteQueueName);
+				} catch (MQException e) {
+					logger.error("Exception while connecting to remote queue",e);
+					throw new TaskExecutionException("Exception while connecting to remote queue",e);
+				}
 		}
 	}
 
@@ -498,7 +519,17 @@ public class MQMonitor extends JavaServersMonitor {
 
 				queueManagers.add(qMgr);
 			}
-
+			String remoteQNumber = taskArguments.get(REMOTE_QUEUE_NUMBER);
+			if(remoteQNumber != null && !remoteQNumber.equals("")){
+				int  numberRemoteQueue = Integer.parseInt(remoteQNumber);
+				remoteQueues = new ArrayList<RemoteQueue>();
+				for (int i = 0; i < numberRemoteQueue; i++) {
+					RemoteQueue remoteQueue = new RemoteQueue();
+					remoteQueue.setRemoteQueueManagerName(taskArguments.get(REMOTE_QUEUE_MANAGER_NAME+i));
+					remoteQueue.setRemoteQueueName(taskArguments.get(REMOTE_QUEUE_NUMBER+i));
+					remoteQueues.add(remoteQueue);
+				}
+			}
 
 		} catch (Throwable ex) {
 			throw new TaskExecutionException(ex);

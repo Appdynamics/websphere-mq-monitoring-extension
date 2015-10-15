@@ -21,8 +21,8 @@
 			<!-- the host or IP address of the queue manager -->
 			<argument name="queue_mgr_host_1" is-required="true" default-value="127.0.0.1" />
 			<!-- The port number of the queue manager -->
-			<argument name="queue_mgr_port_1" is-required="true" default-value="1414" />	
-			<!-- The actual name of the queue manager -->	
+			<argument name="queue_mgr_port_1" is-required="true" default-value="1414" />
+			<!-- The actual name of the queue manager -->
 			<argument name="queue_mgr_name_1" is-required="true" default-value="QUEUEMGR01" />
 			<!-- The channel name of the queue manager -->
 			<argument name="queue_mgr_channel_name_1" is-required="true" default-value="SYSTEM.ADMIN.SVRCONN" />
@@ -32,22 +32,37 @@
 			<argument name="queue_mgr_user_1" is-required="true" default-value="" />
 			<!-- The password for the connection if required -->
 			<argument name="queue_mgr_password_1" is-required="true" default-value="" />
+
+			<!-- The number of queue managers that are configured -->
+			<argument name="number_of_remote_queues" is-required="true" default-value="2" />
+
+			<!-- Define in set of queue manager name and queue name -->
+			<argument name="remote_queue_mgr_name_1" is-required="true" default-value="" />
+			<argument name="remote_queue_name_1" is-required="true" default-value="" />
+
+			<argument name="remote_queue_mgr_name_2" is-required="true" default-value="" />
+			<argument name="remote_queue_name_2" is-required="true" default-value="" />
+
 			<!-- queue filter type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues)  -->
 			<argument name="queue_filter_type" is-required="true" default-value="NONE" />
 			<!-- The name of the queue or queue name pattern as per queue filter, comma separated values are allowed-->
 			<argument name="queue_filter_value" is-required="false" default-value="" />
 			<!-- queue exclude filter type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues)  -->
 			<argument name="queue_exclude_filter_type" is-required="false" default-value="STARTSWITH" />
-			
+
 			<!-- exclude pattern startswith-->
 			<argument name="queue_exclude_filter_value" is-required="false" default-value="SYSTEM,AMQ,KMQ" />
-			
+
 			<!-- The fully qualified path to the directory where stats files are written to, one file per queue, this is now turned off -->
 			<argument name="write_stats_directory" is-required="true" default-value="C:\Data\queue_stats" />
-			<!-- 
+			<!--
 			Enable AWR / ASH metric collection if it is licensed
 			<argument name="ash_licensed" is-required="false" default-value="true" />
 			-->
+			<task-arguments>
+        	<!--<argument name="config-file" is-required="true" default-value="monitors/MQMonitor/config.yaml" />-->
+        	</task-arguments>
+
 		</task-arguments>
 		<java-task>
 			<classpath>websphere-mq-monitoring-extension.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;dhbcore.jar;com.ibm.mq.headers.jar;connector.jar;com.ibm.mq.pcf.jar</classpath>
