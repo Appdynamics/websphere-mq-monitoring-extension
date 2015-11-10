@@ -134,17 +134,19 @@ public class MQMonitor extends JavaServersMonitor {
 		}
 		
 		QueueManager localQueueManager = this.queueManagers.get(0);
-		for(RemoteQueue remoteQueue : this.remoteQueues){
-			PCFMessageAgent pcfMessageAgent = new PCFMessageAgent();
+		if(remoteQueues != null) {
+			for (RemoteQueue remoteQueue : this.remoteQueues) {
+				PCFMessageAgent pcfMessageAgent = new PCFMessageAgent();
 				try {
 					String remoteQueueName = remoteQueue.getRemoteQueueName();
-					pcfMessageAgent.connect(localQueueManager.getQueueManager(), 
+					pcfMessageAgent.connect(localQueueManager.getQueueManager(),
 							remoteQueue.getRemoteQueueName(), remoteQueue.getRemoteQueueManagerName());
 					printQueueStats(pcfMessageAgent, localQueueManager, remoteQueueName);
 				} catch (MQException e) {
-					logger.error("Exception while connecting to remote queue",e);
-					throw new TaskExecutionException("Exception while connecting to remote queue",e);
+					logger.error("Exception while connecting to remote queue", e);
+					throw new TaskExecutionException("Exception while connecting to remote queue", e);
 				}
+			}
 		}
 	}
 
