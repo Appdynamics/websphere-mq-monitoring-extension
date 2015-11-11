@@ -19,15 +19,12 @@ import com.appdynamics.mqmonitor.queue.QueueManager;
 import com.appdynamics.mqmonitor.queue.RemoteQueue;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
-import com.ibm.mq.constants.CMQC;
-import com.ibm.mq.pcf.CMQCFC;
-import com.ibm.mq.pcf.PCFException;
-import com.ibm.mq.pcf.PCFMessage;
-import com.ibm.mq.pcf.PCFMessageAgent;
+import com.ibm.mq.pcf.*;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.TaskExecutionContext;
 import com.singularity.ee.agent.systemagent.api.TaskOutput;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
+
 
 /**
  * @author James Schneider
@@ -91,7 +88,7 @@ public class MQMonitor extends JavaServersMonitor {
 		CONTAINS, STARTSWITH, EQUALS, ENDSWITH, NONE
 	}
 
-	private void printAndPopulateStats() throws TaskExecutionException{
+	private void printAndPopulateStats() throws TaskExecutionException {
 		for(QueueManager queueManager: this.queueManagers){
 			MQQueueManager mqQueueManager = queueManager.getQueueManager();
 			PCFMessageAgent agent = new PCFMessageAgent();
@@ -157,7 +154,7 @@ public class MQMonitor extends JavaServersMonitor {
 
 		request = new PCFMessage(161);
 		request.addParameter(1229, new int [] { CMQCFC.MQIACF_ALL });
-		System.out.println("Sending PCF request... " + agent.getQManagerName());
+		//System.out.println("Sending PCF request... " + agent.getQManagerName());
 		try {
 			responses = agent.send(request);
 
@@ -179,7 +176,7 @@ public class MQMonitor extends JavaServersMonitor {
 	}
 
 	private void printQueueStats(PCFMessageAgent agent,QueueManager queueManager, String queueName) throws TaskExecutionException {
-		int[] attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH, CMQC.MQIA_MAX_Q_DEPTH, 
+		int[] attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH, CMQC.MQIA_MAX_Q_DEPTH,
 				CMQC.MQIA_OPEN_INPUT_COUNT, CMQC.MQIA_OPEN_OUTPUT_COUNT };
 		PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_Q);
 		request.addParameter(CMQC.MQCA_Q_NAME, queueName);
