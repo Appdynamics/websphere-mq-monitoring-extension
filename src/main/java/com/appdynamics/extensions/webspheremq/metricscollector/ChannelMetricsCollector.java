@@ -28,7 +28,7 @@ import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 
 public class ChannelMetricsCollector extends MetricsCollector {
-	
+
 	public static final Logger logger = Logger.getLogger(ChannelMetricsCollector.class);
 	private final String artifact = "Channels";
 	private List<String> channelList;
@@ -99,16 +99,17 @@ public class ChannelMetricsCollector extends MetricsCollector {
 					WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
 					int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
 					if (logger.isDebugEnabled()) {
-						logger.debug("Metric: " + wmqOverride.getMetricKey() + "=" + metricVal);
+						logger.debug("Metric: " + wmqOverride.getAlias() + "=" + metricVal);
 					}
 					StringBuilder metricNameBuilder = new StringBuilder(this.metricPrefix);
 					metricNameBuilder.append(queueManager.getName());
 					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(getAtrifact());//Channels in this case
+					metricNameBuilder.append(getAtrifact());// Channels
+
 					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
 					metricNameBuilder.append(channelName);
 					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(wmqOverride.getMetricKey());
+					metricNameBuilder.append(wmqOverride.getAlias());
 					String metricName = metricNameBuilder.toString();
 					BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
 					printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup(), monitor);
@@ -124,7 +125,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 				logger.debug("Invalid metrics passed while collecting channel metrics, check config.yaml: Reason '2067'");
 			}
 		} catch (Exception e) {
-			logger.debug("Unexpected Error occoured while collecting metrics for channel "+channelName+" "+e);
+			logger.debug("Unexpected Error occoured while collecting metrics for channel " + channelName + " " + e);
 		}
 	}
 
@@ -133,7 +134,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 	}
 
 	private List<String> getChannelList(QueueManager queueManager) throws TaskExecutionException {
-		
+
 		List<String> channels = new ArrayList<String>();
 		try {
 
@@ -173,8 +174,6 @@ public class ChannelMetricsCollector extends MetricsCollector {
 				// attempting to parse the object.
 				if (names != null) {
 					int[] types = (int[]) pcfResponse[responseNumber].getParameterValue(MQConstants.MQIACH_CHANNEL_TYPES);
-
-					
 
 					for (int index = 0; index < names.length; index++) {
 

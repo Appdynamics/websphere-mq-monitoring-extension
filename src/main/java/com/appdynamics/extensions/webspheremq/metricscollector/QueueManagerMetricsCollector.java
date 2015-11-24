@@ -17,21 +17,20 @@ import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 
 public class QueueManagerMetricsCollector extends MetricsCollector {
-	
+
 	public static final Logger logger = Logger.getLogger(QueueManagerMetricsCollector.class);
 	private final String artifact = "Queue Manager";
 
-	
-	public QueueManagerMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, AManagedMonitor monitor,PCFMessageAgent agent,QueueManager queueManager, String metricPrefix){
+	public QueueManagerMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, AManagedMonitor monitor, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
 		this.metricsToReport = metricsToReport;
 		this.monitor = monitor;
 		this.agent = agent;
 		this.metricPrefix = metricPrefix;
 		this.queueManager = queueManager;
 	}
-	
+
 	public void processFilter() {
-		//Filters are not applicable for Queue manager
+		// Filters are not applicable for Queue manager
 	}
 
 	public String getAtrifact() {
@@ -49,7 +48,7 @@ public class QueueManagerMetricsCollector extends MetricsCollector {
 			// Note that agent.send() method is synchronized
 			logger.info("Sending PCF request... " + agent.getQManagerName());
 			responses = agent.send(request);
-			if(responses == null || responses.length<=0){
+			if (responses == null || responses.length <= 0) {
 				logger.debug("Unexpected Error while PCFMessage.send(), response is either null or empty");
 				return;
 			}
@@ -59,9 +58,9 @@ public class QueueManagerMetricsCollector extends MetricsCollector {
 				WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
 				int metricVal = responses[0].getIntParameterValue(wmqOverride.getConstantValue());
 				if (logger.isDebugEnabled()) {
-					logger.debug("Metric: " + wmqOverride.getMetricKey() + "=" + metricVal);
+					logger.debug("Metric: " + wmqOverride.getAlias() + "=" + metricVal);
 				}
-				String metricName = this.metricPrefix + queueManager.getName() + MetricConstants.METRICS_SEPARATOR + wmqOverride.getMetricKey();
+				String metricName = this.metricPrefix + queueManager.getName() + MetricConstants.METRICS_SEPARATOR + wmqOverride.getAlias();
 				BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
 				printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup(), monitor);
 			}

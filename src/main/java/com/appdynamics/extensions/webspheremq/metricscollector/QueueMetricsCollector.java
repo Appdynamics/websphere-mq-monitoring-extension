@@ -31,7 +31,7 @@ import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 
 public class QueueMetricsCollector extends MetricsCollector {
-	
+
 	public static final Logger logger = Logger.getLogger(QueueMetricsCollector.class);
 	private final String artifact = "Queues";
 	List<String> queueList;
@@ -43,8 +43,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 		this.metricPrefix = metricPrefix;
 		this.queueManager = queueManager;
 	}
-	
-	
+
 	@Override
 	protected void processFilter() throws TaskExecutionException {
 		List<String> allQueues = getQueueList();
@@ -64,32 +63,34 @@ public class QueueMetricsCollector extends MetricsCollector {
 			logger.debug("queue List empty");
 			return;
 		}
-		for(String queueName:queueList){
+		for (String queueName : queueList) {
 			publishQueueMetrics(queueName);
 		}
 	}
-	
-	
-	private void publishQueueMetrics(String queueName){
-		/*attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH, CMQC.MQIA_MAX_Q_DEPTH, 
-				CMQC.MQIA_OPEN_INPUT_COUNT, CMQC.MQIA_OPEN_OUTPUT_COUNT };*/
-		if(getMetricsToReport()==null || getMetricsToReport().isEmpty()){
+
+	private void publishQueueMetrics(String queueName) {
+		/*
+		 * attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH,
+		 * CMQC.MQIA_MAX_Q_DEPTH, CMQC.MQIA_OPEN_INPUT_COUNT,
+		 * CMQC.MQIA_OPEN_OUTPUT_COUNT };
+		 */
+		if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
 			logger.debug("Queue metrics to report is null or empty, nothing to publish");
 		}
 		int[] attrs = new int[getMetricsToReport().size() + 1];
-		attrs[0]= CMQC.MQCA_Q_NAME;
-		
+		attrs[0] = CMQC.MQCA_Q_NAME;
+
 		PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_Q);
 		request.addParameter(CMQC.MQCA_Q_NAME, queueName);
 		request.addParameter(CMQC.MQIA_Q_TYPE, CMQC.MQQT_ALL);
-		
+
 		Iterator<String> overrideItr = getMetricsToReport().keySet().iterator();
 		for (int count = 1; overrideItr.hasNext() && count < attrs.length; count++) {
 			String metrickey = overrideItr.next();
 			WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
 			attrs[count] = wmqOverride.getConstantValue();
 		}
-		
+
 		request.addParameter(CMQCFC.MQIACF_Q_ATTRS, attrs);
 		PCFMessage[] response;
 
@@ -103,33 +104,31 @@ public class QueueMetricsCollector extends MetricsCollector {
 					WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
 					int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
 					if (logger.isDebugEnabled()) {
-						logger.debug("Metric: " + wmqOverride.getMetricKey() + "=" + metricVal);
+						logger.debug("Metric: " + wmqOverride.getAlias() + "=" + metricVal);
 					}
 					StringBuilder metricNameBuilder = new StringBuilder(this.metricPrefix);
 					metricNameBuilder.append(queueManager.getName());
 					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(getAtrifact());//Queues in this case
+					metricNameBuilder.append(getAtrifact());// Queues
 					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
 					metricNameBuilder.append(queueName);
 					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(wmqOverride.getMetricKey());
+					metricNameBuilder.append(wmqOverride.getAlias());
 					String metricName = metricNameBuilder.toString();
 					BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
 					printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup(), monitor);
 				}
 			}
-		}
-		catch (PCFException pcfe) {
-			logger.error("PCFException caught Queue"+queueName, pcfe);
+		} catch (PCFException pcfe) {
+			logger.error("PCFException caught Queue" + queueName, pcfe);
 			PCFMessage[] msgs = (PCFMessage[]) pcfe.exceptionSource;
 			for (int i = 0; i < msgs.length; i++) {
 				logger.error(msgs[i]);
 			}
-			//Dont throw exception as it will stop queuemetric colloection
-		}
-		catch (Exception mqe) {
+			// Dont throw exception as it will stop queuemetric colloection
+		} catch (Exception mqe) {
 			logger.error("MQException caught", mqe);
-			//Dont throw exception as it will stop queuemetric colloection
+			// Dont throw exception as it will stop queuemetric colloection
 		}
 	}
 
@@ -142,40 +141,41 @@ public class QueueMetricsCollector extends MetricsCollector {
 	public Map<String, ? extends MetricOverride> getMetricsToReport() {
 		return this.metricsToReport;
 	}
-	
-	
-	private List<String> getQueueList() throws TaskExecutionException{
-			
-			List<String> allQueueList = new ArrayList<String>();			
-			List<String> localQueueList = getQueueListByType(MQConstants.MQQT_LOCAL);
-			List<String> aliasQueueList = getQueueListByType(MQConstants.MQQT_ALIAS);
-			List<String> remoteQueueList = getQueueListByType(MQConstants.MQQT_REMOTE);
-				
-			allQueueList.addAll(localQueueList);
-			allQueueList.addAll(aliasQueueList);
-			allQueueList.addAll(remoteQueueList);
-			
-			return allQueueList;
-			
+
+	private List<String> getQueueList() throws TaskExecutionException {
+
+		List<String> allQueueList = new ArrayList<String>();
+		List<String> localQueueList = getQueueListByType(MQConstants.MQQT_LOCAL);
+		List<String> aliasQueueList = getQueueListByType(MQConstants.MQQT_ALIAS);
+		List<String> remoteQueueList = getQueueListByType(MQConstants.MQQT_REMOTE);
+
+		allQueueList.addAll(localQueueList);
+		allQueueList.addAll(aliasQueueList);
+		allQueueList.addAll(remoteQueueList);
+
+		return allQueueList;
+
 	}
-	
+
 	/**
-	 * @param queueType may be one of following types type MQConstants.MQQT_LOCAL, MQConstants.MQQT_ALIAS, MQConstants.MQQT_REMOTE
+	 * @param queueType
+	 *            May be one of following types type MQConstants.MQQT_LOCAL,
+	 *            MQConstants.MQQT_ALIAS, MQConstants.MQQT_REMOTE
 	 * @return List of queues of specified type
 	 * @throws TaskExecutionException
 	 */
-	private List<String> getQueueListByType(int queueType) throws TaskExecutionException{
+	private List<String> getQueueListByType(int queueType) throws TaskExecutionException {
 		List<String> queueList = new ArrayList<String>();
-		
+
 		try {
-			
+
 			PCFMessage inquireNames = new PCFMessage(CMQCFC.MQCMD_INQUIRE_Q_NAMES);
-			
+
 			inquireNames.addParameter(CMQC.MQCA_Q_NAME, "*");
-			
+
 			// TODO see if this filters out the model queues
-			inquireNames.addParameter (CMQC.MQIA_Q_TYPE, queueType);
-			
+			inquireNames.addParameter(CMQC.MQIA_Q_TYPE, queueType);
+
 			PCFMessage[] responseMsgs = agent.send(inquireNames);
 
 			if (responseMsgs == null || responseMsgs.length == 0) {
@@ -185,20 +185,20 @@ public class QueueMetricsCollector extends MetricsCollector {
 
 			for (int i = 0; i < names.length; i++) {
 				names[i] = names[i].trim();
-				
+
 				if (!queueList.contains(names[i])) {
 					queueList.add(names[i]);
 				}
-				
+
 			}
-		}catch (PCFException e) {
+		} catch (PCFException e) {
 			throw new TaskExecutionException(e);
 		} catch (MQException e) {
 			throw new TaskExecutionException(e);
 		} catch (IOException e) {
 			throw new TaskExecutionException(e);
 		}
-		
+
 		return queueList;
 	}
 

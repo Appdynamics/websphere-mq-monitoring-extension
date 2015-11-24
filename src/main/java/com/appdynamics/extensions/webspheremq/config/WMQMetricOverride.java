@@ -46,4 +46,23 @@ public class WMQMetricOverride extends MetricOverride {
 		this.constantValue = constantValue;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder stringRep = new StringBuilder();
+
+		stringRep.append("[");
+		stringRep.append("Metric Key=" + getMetricKey() + ",");
+		stringRep.append("Alias=" + getAlias() + ",");
+		stringRep.append("IbmConstant=" + getIbmConstant() + ",");
+		stringRep.append("ConstantVal=" + getConstantValue() + ",");
+		stringRep.append("Aggregator=" + getAggregator() + ",");
+		stringRep.append("TimeRollup=" + getTimeRollup() + ",");
+		stringRep.append("ClusterRollup=" + getClusterRollup() + ",");
+		stringRep.append("Multiplier=" + getMultiplier() + ",");
+		stringRep.append("Disabled=" + isDisabled());
+		stringRep.append("]");
+
+		return stringRep.toString();
+	}
+
 }
