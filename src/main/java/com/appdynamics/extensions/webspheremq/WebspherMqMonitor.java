@@ -67,6 +67,7 @@ public class WebspherMqMonitor extends AManagedMonitor {
 			//read the config.
 			final String configFilePath = taskArgs.get(CONFIG_ARG);
 			File configFile = PathResolver.getFile(configFilePath, AManagedMonitor.class);
+			logger.debug("config file path:"+configFilePath );
 			if(configFile != null && configFile.exists()){
 				FileLoader.load(new FileLoader.Listener() {
 					public void load(File file) {
@@ -90,6 +91,8 @@ public class WebspherMqMonitor extends AManagedMonitor {
 						taskArgs.get(CONFIG_ARG), configFile != null ? configFile.getAbsolutePath() : null);
 			}
 			initialized = true;
+		}else{
+			logger.debug("config already initialized" );
 		}
 	}
 	
@@ -138,6 +141,8 @@ public class WebspherMqMonitor extends AManagedMonitor {
 					logger.debug("executorService is already shutdown");
 				}
 			}
+		}else{
+			throw new IllegalArgumentException("The config cannot be null");
 		}
 	}
 	

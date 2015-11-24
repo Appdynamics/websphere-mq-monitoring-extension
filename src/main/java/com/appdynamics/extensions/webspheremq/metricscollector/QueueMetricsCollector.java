@@ -71,9 +71,11 @@ public class QueueMetricsCollector extends MetricsCollector {
 	
 	
 	private void publishQueueMetrics(String queueName){
-		/*int[] attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH, CMQC.MQIA_MAX_Q_DEPTH, 
+		/*attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH, CMQC.MQIA_MAX_Q_DEPTH, 
 				CMQC.MQIA_OPEN_INPUT_COUNT, CMQC.MQIA_OPEN_OUTPUT_COUNT };*/
-		
+		if(getMetricsToReport()==null || getMetricsToReport().isEmpty()){
+			logger.debug("Queue metrics to report is null or empty, nothing to publish");
+		}
 		int[] attrs = new int[getMetricsToReport().size() + 1];
 		attrs[0]= CMQC.MQCA_Q_NAME;
 		
@@ -101,7 +103,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 					WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
 					int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
 					if (logger.isDebugEnabled()) {
-						logger.debug("Metric: " + wmqOverride.getName() + "=" + metricVal);
+						logger.debug("Metric: " + wmqOverride.getMetricKey() + "=" + metricVal);
 					}
 					StringBuilder metricNameBuilder = new StringBuilder(this.metricPrefix);
 					metricNameBuilder.append(queueManager.getName());
@@ -110,7 +112,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
 					metricNameBuilder.append(queueName);
 					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(wmqOverride.getName());
+					metricNameBuilder.append(wmqOverride.getMetricKey());
 					String metricName = metricNameBuilder.toString();
 					BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
 					printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup(), monitor);
@@ -138,8 +140,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 
 	@Override
 	public Map<String, ? extends MetricOverride> getMetricsToReport() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.metricsToReport;
 	}
 	
 	

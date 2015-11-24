@@ -59,9 +59,9 @@ public class QueueManagerMetricsCollector extends MetricsCollector {
 				WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
 				int metricVal = responses[0].getIntParameterValue(wmqOverride.getConstantValue());
 				if (logger.isDebugEnabled()) {
-					logger.debug("Metric: " + wmqOverride.getName() + "=" + metricVal);
+					logger.debug("Metric: " + wmqOverride.getMetricKey() + "=" + metricVal);
 				}
-				String metricName = this.metricPrefix + queueManager.getName() + MetricConstants.METRICS_SEPARATOR + wmqOverride.getName();
+				String metricName = this.metricPrefix + queueManager.getName() + MetricConstants.METRICS_SEPARATOR + wmqOverride.getMetricKey();
 				BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
 				printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup(), monitor);
 			}

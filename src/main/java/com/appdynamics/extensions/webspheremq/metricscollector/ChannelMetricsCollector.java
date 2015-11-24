@@ -99,7 +99,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 					WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
 					int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
 					if (logger.isDebugEnabled()) {
-						logger.debug("Metric: " + wmqOverride.getName() + "=" + metricVal);
+						logger.debug("Metric: " + wmqOverride.getMetricKey() + "=" + metricVal);
 					}
 					StringBuilder metricNameBuilder = new StringBuilder(this.metricPrefix);
 					metricNameBuilder.append(queueManager.getName());
@@ -108,7 +108,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
 					metricNameBuilder.append(channelName);
 					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(wmqOverride.getName());
+					metricNameBuilder.append(wmqOverride.getMetricKey());
 					String metricName = metricNameBuilder.toString();
 					BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
 					printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup(), monitor);

@@ -5,15 +5,17 @@ queueManagers:
     port: 1414
     #Actual name of the queue manager
     name: 
-    #Channel name of the queue manager
+    #Channel name of the queue manager, channel should be server-conn type.
     channelName: "SYSTEM.ADMIN.SVRCONN"
-    #The transport type for the queue manager connection, the default is 0 for a binding type connection
-    #for client type connection change it to 1
-    transportType: 0
-    #user with admin level access 
+    #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
+    #For bindings type connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
+    #for client type connection change it to "Client".
+    transportType: "Bindings"
+    #user with admin level access, no need to provide credentials in case of bindings transport type, it is only applicable for client type
     username:
     password:
     
+    # First Include filter is applied and on the result of include filter exclude filter is applied.  
     queueIncludeFilters:
         #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
         type: "NONE"
@@ -37,78 +39,52 @@ queueManagers:
         type: "STARTSWITH"
         #The name of the channel or channel name pattern as per channel filter, comma separated values
         values: ["SYSTEM", "AMQ", "KMQ"]
-
-    #Fully qualified path to the directory where stats files are written to, one file per queue, this is now turned off
-    #-writeStatsDirectory:
     
 mqMertics:
   # This Object will extract queue manager metrics
-  #Foo.class.getDeclaredField("THIS_IS_MY_CONST").get(String.class)
   - metricsType: "queueMgrMetrics"
     metrics:
       include:
         - Status: "Status"
-          name: "Status"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
-          constantValue: 1149
       
   # This Object will extract channel metrics    
-  - metricsType: "queueMetics"
+  - metricsType: "queueMetrics"
     metrics:
       include:
-        - MaxQueueDepth: "MaxQueueDepth"
-          name: "Max Queue Depth"
+        - MaxQueueDepth: "Max Queue Depth"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
-          constantValue: 3
           
-        - CurrentQueueDepth: "CurrentQueueDepth"
-          name: "Current Queue Depth"
+        - CurrentQueueDepth: "Current Queue Depth"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
-          constantValue: 15
           
-        - OpenInputCount: "OpenInputCount"
-          name: "Open Input Count"
+        - OpenInputCount: "Open Input Count"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
-          constantValue: 17
           
-        - OpenOutputCount: "OpenOutputCount"
-          name: "Open Output Count"
+        - OpenOutputCount: "Open Output Count"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
-          constantValue: 18
       
   # This Object will extract queue metrics    
   - metricsType: "channelMetrics"
     metrics:
       include:
         - Messages: "Messages"
-          name: "Messages"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
-          constantValue: 1534
           
         - Status: "Status"
-          name: "Status"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"
-          constantValue: 1527
           
-        - ByteSent: "ByteSent"
-          name: "Byte Sent"
+        - ByteSent: "Byte Sent"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
-          constantValue: 1535
           
-        - ByteReceived: "ByteReceived"
-          name: "Byte Received"
+        - ByteReceived: "Byte Received"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
-          constantValue: 1536
           
-        - BuffersSent: "BuffersSent"
-          name: "Buffers Sent"
+        - BuffersSent: "Buffers Sent"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
-          constantValue: 1538
           
-        - BuffersReceived: "BuffersReceived"
-          name: "Buffers Received"
+        - BuffersReceived: "Buffers Received"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
-          constantValue: 1539
   
 numberOfThreads: 10
           

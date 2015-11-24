@@ -13,7 +13,7 @@ public class QueueManager {
 	private int port;
 	private String name;
 	private String channelName;
-	private int transportType;
+	private String transportType;
 	private String username;
 	private String password;
 	
@@ -57,11 +57,11 @@ public class QueueManager {
 		this.channelName = channelName;
 	}
 
-	public int getTransportType() {
+	public String getTransportType() {
 		return transportType;
 	}
 
-	public void setTransportType(int transportType) {
+	public void setTransportType(String transportType) {
 		this.transportType = transportType;
 	}
 

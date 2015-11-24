@@ -99,9 +99,8 @@ public class WebsphereMQMonitorTask implements Runnable {
 			override.setAggregator(metricTypes[0]);
 			override.setTimeRollup(metricTypes[1]);
 			override.setClusterRollup(metricTypes[2]);
-			override.setName((String)metric.get("name"));
+			override.setMetricKey(metricName);
 			override.setIbmConstant((String)metric.get("ibmConstant"));
-			override.setConstantValue((Integer)metric.get("constantValue"));
 			overrideMap.put(metricName,override);
 		}
 		return overrideMap;
@@ -114,10 +113,10 @@ public class WebsphereMQMonitorTask implements Runnable {
 		env.put(MQC.HOST_NAME_PROPERTY, queueManager.getHost());
 		env.put(MQC.PORT_PROPERTY, queueManager.getPort());
 		env.put(MQC.CHANNEL_PROPERTY, queueManager.getChannelName());
-		//TODO: make this configurable
-		if(queueManager.getTransportType()==1)
+
+		if(queueManager.getTransportType().equalsIgnoreCase(Constants.TRANSPORT_TYPE_CLIENT))
 			env.put(MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES_CLIENT);
-		else if(queueManager.getTransportType()==0)
+		else if(queueManager.getTransportType().equalsIgnoreCase(Constants.TRANSPORT_TYPE_BINGINGS))
 			env.put(MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES_BINDINGS);
 		else
 			env.put(MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES);
