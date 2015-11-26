@@ -1,20 +1,14 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.appdynamics.extensions.util.metrics.MetricConstants;
 import com.appdynamics.extensions.util.metrics.MetricOverride;
-import com.appdynamics.extensions.webspheremq.common.Util;
-import com.appdynamics.extensions.webspheremq.config.ChannelExcludeFilters;
-import com.appdynamics.extensions.webspheremq.config.ChannelIncludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueIncludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -27,7 +21,6 @@ import com.ibm.mq.pcf.PCFException;
 import com.ibm.mq.pcf.PCFMessage;
 import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
-import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 
 public class QueueMetricsCollector extends MetricsCollector {
@@ -70,9 +63,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 
 	private void publishQueueMetrics(String queueName) {
 		/*
-		 * attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH,
-		 * CMQC.MQIA_MAX_Q_DEPTH, CMQC.MQIA_OPEN_INPUT_COUNT,
-		 * CMQC.MQIA_OPEN_OUTPUT_COUNT };
+		 * attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH, CMQC.MQIA_MAX_Q_DEPTH, CMQC.MQIA_OPEN_INPUT_COUNT, CMQC.MQIA_OPEN_OUTPUT_COUNT };
 		 */
 		if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
 			logger.debug("Queue metrics to report is null or empty, nothing to publish");
@@ -96,7 +87,6 @@ public class QueueMetricsCollector extends MetricsCollector {
 
 		try {
 			response = agent.send(request);
-
 			for (int i = 0; i < response.length; i++) {
 				Iterator<String> itr = getMetricsToReport().keySet().iterator();
 				while (itr.hasNext()) {
@@ -106,21 +96,11 @@ public class QueueMetricsCollector extends MetricsCollector {
 					if (logger.isDebugEnabled()) {
 						logger.debug("Metric: " + wmqOverride.getAlias() + "=" + metricVal);
 					}
-					StringBuilder metricNameBuilder = new StringBuilder(this.metricPrefix);
-					metricNameBuilder.append(queueManager.getName());
-					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(getAtrifact());// Queues
-					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(queueName);
-					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(wmqOverride.getAlias());
-					String metricName = metricNameBuilder.toString();
-					BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
-					printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup(), monitor);
+					publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias());
 				}
 			}
 		} catch (PCFException pcfe) {
-			logger.error("PCFException caught Queue" + queueName, pcfe);
+			logger.error("PCFException caught while collecting metric for Queue: " + queueName, pcfe);
 			PCFMessage[] msgs = (PCFMessage[]) pcfe.exceptionSource;
 			for (int i = 0; i < msgs.length; i++) {
 				logger.error(msgs[i]);
@@ -159,8 +139,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 
 	/**
 	 * @param queueType
-	 *            May be one of following types type MQConstants.MQQT_LOCAL,
-	 *            MQConstants.MQQT_ALIAS, MQConstants.MQQT_REMOTE
+	 *            May be one of following types type MQConstants.MQQT_LOCAL, MQConstants.MQQT_ALIAS, MQConstants.MQQT_REMOTE
 	 * @return List of queues of specified type
 	 * @throws TaskExecutionException
 	 */

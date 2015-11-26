@@ -1,7 +1,6 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -10,9 +9,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.appdynamics.extensions.util.metrics.MetricConstants;
 import com.appdynamics.extensions.util.metrics.MetricOverride;
-import com.appdynamics.extensions.webspheremq.common.Util;
 import com.appdynamics.extensions.webspheremq.config.ChannelExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.ChannelIncludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -27,14 +24,23 @@ import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 
+/**
+ * This class is responsible for channel metric collection.
+ * 
+ * @author rajeevsingh ,James Schneider
+ * @version 2.0
+ *
+ */
 public class ChannelMetricsCollector extends MetricsCollector {
 
 	public static final Logger logger = Logger.getLogger(ChannelMetricsCollector.class);
 	private final String artifact = "Channels";
 	private List<String> channelList;
 
-	private String[] chStatusTextArr = { "", "MQCHS_BINDING", "MQCHS_STARTING", "MQCHS_RUNNING", "MQCHS_STOPPING", "MQCHS_RETRYING", "MQCHS_STOPPED", "MQCHS_REQUESTING", "MQCHS_PAUSED", "", "", "",
-			"", "MQCHS_INITIALIZING" };
+	/*
+	 * Keeping this array for doc purpose, to remember different statuses. private String[] chStatusTextArr = { "", "MQCHS_BINDING", "MQCHS_STARTING", "MQCHS_RUNNING", "MQCHS_STOPPING",
+	 * "MQCHS_RETRYING", "MQCHS_STOPPED", "MQCHS_REQUESTING", "MQCHS_PAUSED", "", "", "", "", "MQCHS_INITIALIZING" };
+	 */
 	private String[] channelTypes = { "", "SDR", "SVR", "RCVR", "RQSTR", "", "CLTCN", "SVRCN", "CLUSRCVR", "CLUSSDR", "" };
 
 	public ChannelMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, AManagedMonitor monitor, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
@@ -101,18 +107,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 					if (logger.isDebugEnabled()) {
 						logger.debug("Metric: " + wmqOverride.getAlias() + "=" + metricVal);
 					}
-					StringBuilder metricNameBuilder = new StringBuilder(this.metricPrefix);
-					metricNameBuilder.append(queueManager.getName());
-					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(getAtrifact());// Channels
-
-					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(channelName);
-					metricNameBuilder.append(MetricConstants.METRICS_SEPARATOR);
-					metricNameBuilder.append(wmqOverride.getAlias());
-					String metricName = metricNameBuilder.toString();
-					BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
-					printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup(), monitor);
+					publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), channelName, wmqOverride.getAlias());
 				}
 			}
 		} catch (PCFException pcfe) {
@@ -148,8 +143,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 			// Create the PCF message type for the channel names inquire.
 			PCFMessage pcfCmd = new PCFMessage(MQConstants.MQCMD_INQUIRE_CHANNEL_NAMES);
 
-			// Add the inquire rules.
-			// Queue name = wildcard.
+			// Add the inquire rules.Queue name = wildcard.
 			pcfCmd.addParameter(MQConstants.MQCACH_CHANNEL_NAME, "*");
 
 			// Channel type = ALL.
@@ -157,21 +151,16 @@ public class ChannelMetricsCollector extends MetricsCollector {
 
 			PCFMessage[] pcfResponse = agent.send(pcfCmd);
 
-			// For each returned message, extract the message from the array and
-			// display the
-			// required information.
+			// For each returned message, extract the message from the array and display the required information.
 			logger.debug("+-----+------------------------------------------------+----------+");
 			logger.debug("|Index|                  Channel Name                  |   Type   |");
 			logger.debug("+-----+------------------------------------------------+----------+");
 
-			// The Channel information is held in some array element of the
-			// response object (the
-			// contents of the response object is defined in the documentation).
+			// The Channel information is held in some array element of the response object (the contents of the response object is defined in the documentation).
 			for (int responseNumber = 0; responseNumber < pcfResponse.length; responseNumber++) {
 				String[] names = (String[]) pcfResponse[responseNumber].getParameterValue(MQConstants.MQCACH_CHANNEL_NAMES);
 
-				// There might not be any names, so test this first before
-				// attempting to parse the object.
+				// There might not be any names, so test this first before attempting to parse the object.
 				if (names != null) {
 					int[] types = (int[]) pcfResponse[responseNumber].getParameterValue(MQConstants.MQIACH_CHANNEL_TYPES);
 
@@ -186,19 +175,14 @@ public class ChannelMetricsCollector extends MetricsCollector {
 					break;
 				}
 			}
-
 			return channels;
 
 		} catch (PCFException ex) {
-			// TODO added logging to see if we may be getting errors that don't
-			// show up
-			// Change this to debug or remove after testing
-			logger.warn("Error getting channel list", ex);
+			logger.debug("Error getting channel list", ex);
 			throw new TaskExecutionException(ex);
 		} catch (IOException e) {
 			throw new TaskExecutionException(e);
 		} catch (MQException e) {
-			// TODO Auto-generated catch block
 			throw new TaskExecutionException(e);
 		}
 	}

@@ -1,12 +1,10 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.appdynamics.extensions.util.metrics.MetricConstants;
 import com.appdynamics.extensions.util.metrics.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
@@ -16,6 +14,13 @@ import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 
+/**
+ * This class is responsible for queue metric collection.
+ * 
+ * @author rajeevsingh ,James Schneider
+ * @version 2.0
+ *
+ */
 public class QueueManagerMetricsCollector extends MetricsCollector {
 
 	public static final Logger logger = Logger.getLogger(QueueManagerMetricsCollector.class);
@@ -60,9 +65,7 @@ public class QueueManagerMetricsCollector extends MetricsCollector {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Metric: " + wmqOverride.getAlias() + "=" + metricVal);
 				}
-				String metricName = this.metricPrefix + queueManager.getName() + MetricConstants.METRICS_SEPARATOR + wmqOverride.getAlias();
-				BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
-				printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup(), monitor);
+				publishMetric(wmqOverride, metricVal, queueManager.getName(), wmqOverride.getAlias());
 			}
 		} catch (Exception e) {
 			throw new TaskExecutionException(e);

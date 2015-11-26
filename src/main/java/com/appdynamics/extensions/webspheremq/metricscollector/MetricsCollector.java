@@ -10,16 +10,26 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.appdynamics.extensions.util.metrics.MetricConstants;
 import com.appdynamics.extensions.util.metrics.MetricOverride;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
+import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 
+/**
+ * MetricsCollector class is abstract and serves as superclass for all types of metric collection class.<br>
+ * It contains common methods to extract or transform metric value and names.
+ * 
+ * @author rajeevsingh
+ * @version 2.0
+ *
+ */
 public abstract class MetricsCollector {
-	
+
 	protected Map<String, ? extends MetricOverride> metricsToReport;
 	protected AManagedMonitor monitor;
 	protected PCFMessageAgent agent;
@@ -27,27 +37,41 @@ public abstract class MetricsCollector {
 	protected QueueManager queueManager;
 
 	public static final Logger logger = Logger.getLogger(MetricsCollector.class);
-	
+
 	protected abstract void processFilter() throws TaskExecutionException;
+
 	protected abstract void publishMetrics() throws TaskExecutionException;
-	
+
 	public abstract String getAtrifact();
-	public abstract Map<String,? extends MetricOverride> getMetricsToReport();
-	
-	public final void  processFilterAndPublishMetrics() throws TaskExecutionException{
+
+	public abstract Map<String, ? extends MetricOverride> getMetricsToReport();
+
+	/**
+	 * Applies include and exculde filters to the artifacts (i.e queue manager, q, or channel),<br>
+	 * extracts and published the metrics to controler
+	 * 
+	 * @throws TaskExecutionException
+	 */
+	public final void processFilterAndPublishMetrics() throws TaskExecutionException {
 		processFilter();
 		publishMetrics();
 	}
-	
-	public void printMetric(String name, String value, String aggType, String timeRollup, String clusterRollup, AManagedMonitor monitor) {
-		String metricName = getMetricPrefix() + name;
+
+	public void printMetric(String metricName, String value, String aggType, String timeRollup, String clusterRollup) {
 		MetricWriter metricWriter = monitor.getMetricWriter(metricName, aggType, timeRollup, clusterRollup);
 		metricWriter.printMetric(value);
-		logger.info("METRIC:  NAME:" + metricName + " VALUE:" + value + " :" + aggType + ":" + timeRollup + ":" + clusterRollup);
+		logger.info("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value + " :" + aggType + ":" + timeRollup + ":" + clusterRollup);
 	}
 
-	private String getMetricPrefix() {
-		return "";
+	protected String getMetricsName(String... pathelements) {
+		StringBuilder pathBuilder = new StringBuilder(this.metricPrefix);
+		for (int i = 0; i < pathelements.length; i++) {
+			pathBuilder.append(pathelements[i]);
+			if (i != pathelements.length - 1) {
+				pathBuilder.append(MetricConstants.METRICS_SEPARATOR);
+			}
+		}
+		return pathBuilder.toString();
 	}
 
 	public BigInteger toBigInteger(Object value, Double multiplier) {
@@ -67,6 +91,13 @@ public abstract class MetricsCollector {
 			return Constants.DEFAULT_MULTIPLIER;
 		}
 		return override.getMultiplier();
+	}
+	
+
+	protected void publishMetric(WMQMetricOverride wmqOverride, int metricVal, String... pathelements) {
+		BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
+		String metricName = getMetricsName(pathelements);
+		printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup());	
 	}
 
 	public static enum FilterType {

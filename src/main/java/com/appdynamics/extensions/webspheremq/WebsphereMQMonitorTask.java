@@ -16,7 +16,6 @@ import com.appdynamics.extensions.webspheremq.metricscollector.MetricsCollector;
 import com.appdynamics.extensions.webspheremq.metricscollector.QueueManagerMetricsCollector;
 import com.appdynamics.extensions.webspheremq.metricscollector.QueueMetricsCollector;
 import com.google.common.collect.Maps;
-import com.ibm.mq.MQC;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
 import com.ibm.mq.pcf.PCFMessageAgent;
@@ -24,7 +23,7 @@ import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 
 /**
- * This class is responsible
+ * Encapsulates all metrics collection for all artifacts related to a queue manager.
  * 
  * @author rajeevsingh
  * @version 2.0
@@ -33,7 +32,7 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 public class WebsphereMQMonitorTask implements Runnable {
 
 	public static final Logger logger = LoggerFactory.getLogger(WebsphereMQMonitorTask.class);
-	QueueManager queueManager;
+	private QueueManager queueManager;
 	private String metricPrefix;
 	private AManagedMonitor monitor;
 	private MqMetric[] mqMetrics;
@@ -61,15 +60,14 @@ public class WebsphereMQMonitorTask implements Runnable {
 
 	private void extractAndReportMetrics() throws MQException, TaskExecutionException {
 		Map<String, Map<String, WMQMetricOverride>> metricsMap = getMetricsToReport();
-		Hashtable env = getMQEnvironment();
+		WMQauthenticationAndAuthorization auth = new WMQauthenticationAndAuthorization(queueManager);
+		Hashtable env = auth.getMQEnvironment();
 		extractAndReportInternal(env, metricsMap);
 	}
 
 	/*
-	 * Returns master data structure,This map will contain only those metrics
-	 * which are to be reported to controller. It contains metric type as key
-	 * and a map of metric and WMQMetricOverride as value, entryset of internal
-	 * map implicitly represents metrics to be reported.
+	 * Returns master data structure,This map will contain only those metrics which are to be reported to controller. It contains metric type as key and a map of metric and WMQMetricOverride as value,
+	 * entryset of internal map implicitly represents metrics to be reported.
 	 */
 	private Map<String, Map<String, WMQMetricOverride>> getMetricsToReport() {
 		Map<String, Map<String, WMQMetricOverride>> metricsMap = Maps.newHashMap();
@@ -112,26 +110,6 @@ public class WebsphereMQMonitorTask implements Runnable {
 			logger.debug("Override Definition: " + override.toString());
 		}
 		return overrideMap;
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Hashtable getMQEnvironment() {
-		Hashtable env = new Hashtable();
-		env.put(MQC.HOST_NAME_PROPERTY, queueManager.getHost());
-		env.put(MQC.PORT_PROPERTY, queueManager.getPort());
-		env.put(MQC.CHANNEL_PROPERTY, queueManager.getChannelName());
-		env.put(MQC.USER_ID_PROPERTY, queueManager.getUsername());
-		env.put(MQC.PASSWORD_PROPERTY, queueManager.getPassword());
-
-		if (queueManager.getTransportType().equalsIgnoreCase(Constants.TRANSPORT_TYPE_CLIENT))
-			env.put(MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES_CLIENT);
-		else if (queueManager.getTransportType().equalsIgnoreCase(Constants.TRANSPORT_TYPE_BINGINGS))
-			env.put(MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES_BINDINGS);
-		else
-			env.put(MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES);
-
-		logger.debug("Transport property is " + env.get(MQC.TRANSPORT_PROPERTY));
-		return env;
 	}
 
 	private void extractAndReportInternal(Hashtable env, Map<String, Map<String, WMQMetricOverride>> metricsMap) throws MQException, TaskExecutionException {
