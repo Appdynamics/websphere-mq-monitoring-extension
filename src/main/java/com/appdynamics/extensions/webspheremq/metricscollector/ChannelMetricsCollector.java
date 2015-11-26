@@ -80,15 +80,9 @@ public class ChannelMetricsCollector extends MetricsCollector {
 	private void publishChannelMetrics(String channelName) {
 		PCFMessage request;
 		PCFMessage[] response;
-		int[] attrs = new int[getMetricsToReport().size() + 2];
-		attrs[0] = CMQCFC.MQCACH_CHANNEL_NAME;
-		attrs[1] = CMQCFC.MQCACH_CONNECTION_NAME;
-		Iterator<String> overrideItr = getMetricsToReport().keySet().iterator();
-		for (int count = 2; overrideItr.hasNext() && count < attrs.length; count++) {
-			String metrickey = overrideItr.next();
-			WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
-			attrs[count] = wmqOverride.getConstantValue();
-		}
+		int[] attrs = getIntArrtibutesArray(CMQCFC.MQCACH_CHANNEL_NAME,CMQCFC.MQCACH_CONNECTION_NAME);
+		
+		getIntArrtibutesArray(CMQCFC.MQCACH_CHANNEL_NAME, CMQCFC.MQCACH_CONNECTION_NAME);
 		logger.debug("Attributes being sent along PCF agent request to query channel metrics: " + Arrays.toString(attrs));
 		request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS);
 		request.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, channelName);

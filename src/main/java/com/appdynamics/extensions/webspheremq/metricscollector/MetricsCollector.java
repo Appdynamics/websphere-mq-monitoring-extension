@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +49,7 @@ public abstract class MetricsCollector {
 
 	/**
 	 * Applies include and exculde filters to the artifacts (i.e queue manager, q, or channel),<br>
-	 * extracts and published the metrics to controler
+	 * extracts and publishes the metrics to controller
 	 * 
 	 * @throws TaskExecutionException
 	 */
@@ -198,5 +199,25 @@ public abstract class MetricsCollector {
 		}
 
 		return filteredList;
+	}
+	
+	
+
+
+	protected int[] getIntArrtibutesArray(int... inputAttrs) {
+		int[] attrs = new int[inputAttrs.length+getMetricsToReport().size()];
+		// fill input attrs
+		for(int i=0 ; i< inputAttrs.length; i++){
+			attrs[i]=inputAttrs[i];
+		}
+		//fill attrs from metrics to report.
+		Iterator<String> overrideItr = getMetricsToReport().keySet().iterator();
+		for (int count = inputAttrs.length; overrideItr.hasNext() && count < attrs.length; count++) {
+			String metrickey = overrideItr.next();
+			WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
+			attrs[count] = wmqOverride.getConstantValue();
+		}
+		return attrs;
+		
 	}
 }

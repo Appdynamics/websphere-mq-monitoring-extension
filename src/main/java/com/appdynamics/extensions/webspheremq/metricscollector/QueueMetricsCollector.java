@@ -68,20 +68,11 @@ public class QueueMetricsCollector extends MetricsCollector {
 		if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
 			logger.debug("Queue metrics to report is null or empty, nothing to publish");
 		}
-		int[] attrs = new int[getMetricsToReport().size() + 1];
-		attrs[0] = CMQC.MQCA_Q_NAME;
+		int[] attrs = getIntArrtibutesArray(CMQC.MQCA_Q_NAME);
 
 		PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_Q);
 		request.addParameter(CMQC.MQCA_Q_NAME, queueName);
 		request.addParameter(CMQC.MQIA_Q_TYPE, CMQC.MQQT_ALL);
-
-		Iterator<String> overrideItr = getMetricsToReport().keySet().iterator();
-		for (int count = 1; overrideItr.hasNext() && count < attrs.length; count++) {
-			String metrickey = overrideItr.next();
-			WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
-			attrs[count] = wmqOverride.getConstantValue();
-		}
-
 		request.addParameter(CMQCFC.MQIACF_Q_ATTRS, attrs);
 		PCFMessage[] response;
 
