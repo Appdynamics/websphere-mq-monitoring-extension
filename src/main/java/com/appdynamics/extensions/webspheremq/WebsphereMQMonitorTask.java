@@ -102,10 +102,11 @@ public class WebsphereMQMonitorTask implements Runnable {
 			override.setClusterRollup(metricTypes[2]);
 			override.setMetricKey(metricName);
 			override.setIbmConstant((String) metric.get("ibmConstant"));
-			if (override.getConstantValue() != -1) {
+			if (override.getConstantValue() == -1) {
 				// Only add the metric which is valid, if constant value
 				// resolutes to -1 then it is invalid.
 				logger.warn("{} is not a valid valid metric, this metric will not be processed", override.getIbmConstant());
+			} else {
 				overrideMap.put(metricName, override);
 			}
 			logger.debug("Override Definition: " + override.toString());
@@ -119,6 +120,8 @@ public class WebsphereMQMonitorTask implements Runnable {
 		env.put(MQC.HOST_NAME_PROPERTY, queueManager.getHost());
 		env.put(MQC.PORT_PROPERTY, queueManager.getPort());
 		env.put(MQC.CHANNEL_PROPERTY, queueManager.getChannelName());
+		env.put(MQC.USER_ID_PROPERTY, queueManager.getUsername());
+		env.put(MQC.PASSWORD_PROPERTY, queueManager.getPassword());
 
 		if (queueManager.getTransportType().equalsIgnoreCase(Constants.TRANSPORT_TYPE_CLIENT))
 			env.put(MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES_CLIENT);
@@ -126,6 +129,8 @@ public class WebsphereMQMonitorTask implements Runnable {
 			env.put(MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES_BINDINGS);
 		else
 			env.put(MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES);
+
+		logger.debug("Transport property is " + env.get(MQC.TRANSPORT_PROPERTY));
 		return env;
 	}
 
