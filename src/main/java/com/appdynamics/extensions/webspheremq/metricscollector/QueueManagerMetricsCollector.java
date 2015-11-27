@@ -3,7 +3,8 @@ package com.appdynamics.extensions.webspheremq.metricscollector;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.appdynamics.extensions.util.metrics.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -23,7 +24,7 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
  */
 public class QueueManagerMetricsCollector extends MetricsCollector {
 
-	public static final Logger logger = Logger.getLogger(QueueManagerMetricsCollector.class);
+	public static final Logger logger = LoggerFactory.getLogger(QueueManagerMetricsCollector.class);
 	private final String artifact = "Queue Manager";
 
 	public QueueManagerMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, AManagedMonitor monitor, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
@@ -68,6 +69,7 @@ public class QueueManagerMetricsCollector extends MetricsCollector {
 				publishMetric(wmqOverride, metricVal, queueManager.getName(), wmqOverride.getAlias());
 			}
 		} catch (Exception e) {
+			logger.error(e.getMessage());
 			throw new TaskExecutionException(e);
 		}
 	}

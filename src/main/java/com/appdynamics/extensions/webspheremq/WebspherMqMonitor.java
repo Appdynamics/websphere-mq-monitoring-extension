@@ -142,6 +142,7 @@ public class WebspherMqMonitor extends AManagedMonitor {
 				}
 			}
 		}else{
+			logger.error("The config cannot be null");
 			throw new IllegalArgumentException("The config cannot be null");
 		}
 	}

@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.appdynamics.extensions.util.metrics.MetricConstants;
 import com.appdynamics.extensions.util.metrics.MetricOverride;
@@ -37,7 +38,7 @@ public abstract class MetricsCollector {
 	protected String metricPrefix;
 	protected QueueManager queueManager;
 
-	public static final Logger logger = Logger.getLogger(MetricsCollector.class);
+	public static final Logger logger = LoggerFactory.getLogger(MetricsCollector.class);
 
 	protected abstract void processFilter() throws TaskExecutionException;
 

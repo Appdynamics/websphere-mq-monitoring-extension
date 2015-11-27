@@ -6,7 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.appdynamics.extensions.util.metrics.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueExcludeFilters;
@@ -25,7 +26,7 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 
 public class QueueMetricsCollector extends MetricsCollector {
 
-	public static final Logger logger = Logger.getLogger(QueueMetricsCollector.class);
+	public static final Logger logger = LoggerFactory.getLogger(QueueMetricsCollector.class);
 	private final String artifact = "Queues";
 	List<String> queueList;
 
@@ -149,6 +150,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 			PCFMessage[] responseMsgs = agent.send(inquireNames);
 
 			if (responseMsgs == null || responseMsgs.length == 0) {
+				logger.debug("Unable to get response from PCF");
 				throw new TaskExecutionException("Unable to get response from PCF");
 			}
 			String[] names = (String[]) responseMsgs[0].getParameterValue(CMQCFC.MQCACF_Q_NAMES);
@@ -162,10 +164,13 @@ public class QueueMetricsCollector extends MetricsCollector {
 
 			}
 		} catch (PCFException e) {
+			logger.error(e.getMessage());
 			throw new TaskExecutionException(e);
 		} catch (MQException e) {
+			logger.error(e.getMessage());
 			throw new TaskExecutionException(e);
 		} catch (IOException e) {
+			logger.error(e.getMessage());
 			throw new TaskExecutionException(e);
 		}
 

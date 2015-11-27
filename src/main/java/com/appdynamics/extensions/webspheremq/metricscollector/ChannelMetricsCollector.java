@@ -7,7 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.appdynamics.extensions.util.metrics.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.ChannelExcludeFilters;
@@ -33,7 +34,7 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
  */
 public class ChannelMetricsCollector extends MetricsCollector {
 
-	public static final Logger logger = Logger.getLogger(ChannelMetricsCollector.class);
+	public static final Logger logger = LoggerFactory.getLogger(ChannelMetricsCollector.class);
 	private final String artifact = "Channels";
 	private List<String> channelList;
 
@@ -109,12 +110,12 @@ public class ChannelMetricsCollector extends MetricsCollector {
 			if (pcfe.getReason() == MQConstants.MQRCCF_CHL_STATUS_NOT_FOUND) {
 				errorMsg = "Could not collect channel information as channel is stopped or inactive, check config.yaml: Reason '3065'\n";
 				errorMsg += "If the channel type is MQCHT_RECEIVER, MQCHT_SVRCONN or MQCHT_CLUSRCVR, then the only action is to enable the channel, not start it.";
-				logger.debug(errorMsg);
+				logger.error(errorMsg);
 			} else if (pcfe.getReason() == MQConstants.MQRC_SELECTOR_ERROR) {
-				logger.debug("Invalid metrics passed while collecting channel metrics, check config.yaml: Reason '2067'");
+				logger.error("Invalid metrics passed while collecting channel metrics, check config.yaml: Reason '2067'");
 			}
 		} catch (Exception e) {
-			logger.debug("Unexpected Error occoured while collecting metrics for channel " + channelName + " " + e);
+			logger.error("Unexpected Error occoured while collecting metrics for channel " + channelName + " " + e);
 		}
 	}
 
