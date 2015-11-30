@@ -1,0 +1,92 @@
+# WebsphereMQ instance particulars
+
+queueManagers:
+  - host: "localhost"
+    port: 1414
+    #Actual name of the queue manager
+    name: 
+    #Channel name of the queue manager
+    channelName: "SYSTEM.ADMIN.SVRCONN"
+    #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
+    #For bindings type connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
+    #for client type connection change it to "Client".
+    transportType: "Bindings"
+    #user with admin level access, no need to provide credentials in case of bindings transport type, it is only applicable for client type
+    username:
+    password:
+    
+    # First Include filter is applied and on the result of include filter exclude filter is applied.  
+    queueIncludeFilters:
+        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
+        type: "NONE"
+        #The name of the queue or queue name pattern as per queue filter, comma separated values
+        values: ["SYSTEM", "AMQ", "KMQ"]
+          
+    queueExcludeFilters:
+        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
+        type: "STARTSWITH"
+        #The name of the queue or queue name pattern as per queue filter, comma separated values
+        values: ["SYSTEM", "AMQ", "KMQ"]
+
+    channelIncludeFilters:
+        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
+        type: "NONE"
+        #The name of the channel or channel name pattern as per channel filter, comma separated values
+        values: ["SYSTEM", "AMQ", "KMQ"]    
+
+    channelExcludeFilters:
+        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
+        type: "STARTSWITH"
+        #The name of the channel or channel name pattern as per channel filter, comma separated values
+        values: ["SYSTEM", "AMQ", "KMQ"]
+    
+mqMertics:
+  # This Object will extract queue manager metrics
+  - metricsType: "queueMgrMetrics"
+    metrics:
+      include:
+        - Status: "Status"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
+      
+  # This Object will extract channel metrics    
+  - metricsType: "queueMetrics"
+    metrics:
+      include:
+        - MaxQueueDepth: "Max Queue Depth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+          
+        - CurrentQueueDepth: "Current Queue Depth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
+          
+        - OpenInputCount: "Open Input Count"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
+          
+        - OpenOutputCount: "Open Output Count"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
+      
+  # This Object will extract queue metrics    
+  - metricsType: "channelMetrics"
+    metrics:
+      include:
+        - Messages: "Messages"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
+          
+        - Status: "Status"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"
+          
+        - ByteSent: "Byte Sent"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
+          
+        - ByteReceived: "Byte Received"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
+          
+        - BuffersSent: "Buffers Sent"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
+          
+        - BuffersReceived: "Buffers Received"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+  
+numberOfThreads: 10
+          
+#prefix used to show up metrics in AppDynamics, Note: it was root_category_name in monitor.xml
+metricPrefix: "Custom Metrics|WebsphereMQ|" 

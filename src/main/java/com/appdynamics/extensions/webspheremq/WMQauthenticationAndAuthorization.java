@@ -63,7 +63,7 @@ public class WMQauthenticationAndAuthorization {
 			errorMsg.append("Queue manager cannot be null");
 		} else {
 			if (Constants.TRANSPORT_TYPE_CLIENT.equalsIgnoreCase(queueManager.getTransportType())) {
-				if (StringUtils.hasText(queueManager.getHost())) {
+				if (!StringUtils.hasText(queueManager.getHost())) {
 					validArgs = false;
 					errorMsg.append("Host cannot be null or empty for client type connection. ");
 				}
@@ -71,13 +71,13 @@ public class WMQauthenticationAndAuthorization {
 					validArgs = false;
 					errorMsg.append("port should be set for client type connection. ");
 				}
-				if (StringUtils.hasText(queueManager.getChannelName())) {
+				if (!StringUtils.hasText(queueManager.getChannelName())) {
 					validArgs = false;
 					errorMsg.append("Channel cannot be null or empty for client type connection. ");
 				}
 			}
 			if (Constants.TRANSPORT_TYPE_BINGINGS.equalsIgnoreCase(queueManager.getTransportType())) {
-				if (StringUtils.hasText(queueManager.getName())) {
+				if (!StringUtils.hasText(queueManager.getName())) {
 					validArgs = false;
 					errorMsg.append("queuemanager cannot be null or empty for bindings type connection. ");
 				}
