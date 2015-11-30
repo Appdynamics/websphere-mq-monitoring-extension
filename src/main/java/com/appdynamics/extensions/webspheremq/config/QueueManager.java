@@ -10,7 +10,7 @@ import java.util.List;
 public class QueueManager {
 	
 	private String host;
-	private int port;
+	private int port = -1;
 	private String name;
 	private String channelName;
 	private String transportType;

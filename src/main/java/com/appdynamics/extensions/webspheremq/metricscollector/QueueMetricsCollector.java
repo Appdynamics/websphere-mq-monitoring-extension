@@ -85,9 +85,6 @@ public class QueueMetricsCollector extends MetricsCollector {
 					String metrickey = itr.next();
 					WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
 					int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-					if (logger.isDebugEnabled()) {
-						logger.debug("Metric: " + wmqOverride.getAlias() + "=" + metricVal);
-					}
 					publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias());
 				}
 			}
@@ -95,7 +92,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 			logger.error("PCFException caught while collecting metric for Queue: " + queueName, pcfe);
 			PCFMessage[] msgs = (PCFMessage[]) pcfe.exceptionSource;
 			for (int i = 0; i < msgs.length; i++) {
-				logger.error(msgs[i]);
+				logger.error(msgs[i].toString());
 			}
 			// Dont throw exception as it will stop queuemetric colloection
 		} catch (Exception mqe) {
@@ -150,7 +147,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 			PCFMessage[] responseMsgs = agent.send(inquireNames);
 
 			if (responseMsgs == null || responseMsgs.length == 0) {
-				logger.debug("Unable to get response from PCF");
+				logger.error("Unable to get response from PCF");
 				throw new TaskExecutionException("Unable to get response from PCF");
 			}
 			String[] names = (String[]) responseMsgs[0].getParameterValue(CMQCFC.MQCACF_Q_NAMES);

@@ -18,6 +18,8 @@ import com.appdynamics.extensions.webspheremq.metricscollector.QueueMetricsColle
 import com.google.common.collect.Maps;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
+import com.ibm.mq.headers.CMQC;
+import com.ibm.mq.headers.MQDataException;
 import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
@@ -65,8 +67,9 @@ public class WebsphereMQMonitorTask implements Runnable {
 		extractAndReportInternal(env, metricsMap);
 	}
 
-	/*
-	 * Returns master data structure,This map will contain only those metrics which are to be reported to controller. It contains metric type as key and a map of metric and WMQMetricOverride as value,
+	/**
+	 * Returns master data structure,This map will contain only those metrics which are to be reported to controller.<br>
+	 * It contains metric type as key and a map of metric and WMQMetricOverride as value,<br>
 	 * entryset of internal map implicitly represents metrics to be reported.
 	 */
 	private Map<String, Map<String, WMQMetricOverride>> getMetricsToReport() {
@@ -113,12 +116,14 @@ public class WebsphereMQMonitorTask implements Runnable {
 	}
 
 	private void extractAndReportInternal(Hashtable env, Map<String, Map<String, WMQMetricOverride>> metricsMap) throws MQException, TaskExecutionException {
-		if (queueManager == null) {
-			String nullQManagerMsg = "Queue manager cannot be null";
-			logger.debug(nullQManagerMsg);
-			throw new IllegalArgumentException(nullQManagerMsg);
+
+		MQQueueManager ibmQueueManager = null;
+		if (env != null) {
+			ibmQueueManager = new MQQueueManager(queueManager.getName(), env);
+		} else {
+			ibmQueueManager = new MQQueueManager(queueManager.getName());
 		}
-		MQQueueManager ibmQueueManager = new MQQueueManager(queueManager.getName(), env);
+
 		logger.debug("Intializing PCFMessageAgent...");
 		PCFMessageAgent agent = new PCFMessageAgent(ibmQueueManager);
 		logger.debug("Sending PCFMessageAgent.connect() request....");
@@ -149,6 +154,51 @@ public class WebsphereMQMonitorTask implements Runnable {
 		} else {
 			logger.warn("No queue metrics to report");
 		}
+		DestroyAgent(agent);
+	}
+
+	/*
+	 * Do not Remove this method even if it is not used
+	 */
+	private PCFMessageAgent createAgent() throws MQException {
+
+		PCFMessageAgent agent = null;
+		boolean client = Constants.TRANSPORT_TYPE_CLIENT.equals(queueManager.getTransportType());
+		try {
+			if (!client) {
+				// Connect to the local queue manager.
+				agent = new PCFMessageAgent(queueManager.getName());
+			} else {
+				// Connect to the client and define the queue manager host, port and channel.
+				// Notice that the method does not take a queue manager name. It is assuming that the
+				// default QM will be used.
+				agent = new PCFMessageAgent(queueManager.getHost(), queueManager.getPort(), queueManager.getChannelName());
+			}
+		} catch (MQException mqde) {
+			if (mqde.reasonCode == CMQC.MQRC_Q_MGR_NAME_ERROR) {
+				StringBuilder errMsgBuilder = new StringBuilder("Either could not find the ");
+				if (client) {
+					errMsgBuilder.append("default queue manager at \"" + queueManager.getHost() + "\", port \"" + queueManager.getPort() + "\"");
+				} else {
+					errMsgBuilder.append("queue manager \"" + queueManager.getName() + "\"");
+				}
+				errMsgBuilder.append(" or could not find the default channel \"" + queueManager.getChannelName() + "\" on the queue manager.");
+				logger.error(errMsgBuilder.toString());
+			}
+
+			throw mqde;
+		}
+		return agent;
+	}
+
+	/**
+	 * Destroy the agent.
+	 * 
+	 * @throws MQDataException
+	 */
+	private void DestroyAgent(PCFMessageAgent agent) throws MQException {
+		// Disconnect the agent.
+		agent.disconnect();
 	}
 
 }

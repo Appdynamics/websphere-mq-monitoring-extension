@@ -5,12 +5,14 @@ import java.util.Hashtable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.appdynamics.extensions.StringUtils;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.ibm.mq.MQC;
 
 /**
- * Takes care of websphere mq connection, authentication, SSL, Cipher spec, certificate based authorization
+ * Takes care of websphere mq connection, authentication, SSL, Cipher spec, certificate based authorization.<br>
+ * It also validates the arguments passed for various scenarios.
  * 
  * @author rajeevsingh
  * @version 2.0
@@ -23,6 +25,7 @@ public class WMQauthenticationAndAuthorization {
 
 	public WMQauthenticationAndAuthorization(QueueManager queueManager) {
 		this.queueManager = queueManager;
+		validateArgs();
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -52,4 +55,37 @@ public class WMQauthenticationAndAuthorization {
 		}
 	}
 
+	private void validateArgs() {
+		boolean validArgs = true;
+		StringBuilder errorMsg = new StringBuilder();
+		if (queueManager == null) {
+			validArgs = false;
+			errorMsg.append("Queue manager cannot be null");
+		} else {
+			if (Constants.TRANSPORT_TYPE_CLIENT.equalsIgnoreCase(queueManager.getTransportType())) {
+				if (StringUtils.hasText(queueManager.getHost())) {
+					validArgs = false;
+					errorMsg.append("Host cannot be null or empty for client type connection. ");
+				}
+				if (queueManager.getPort() == -1) {
+					validArgs = false;
+					errorMsg.append("port should be set for client type connection. ");
+				}
+				if (StringUtils.hasText(queueManager.getChannelName())) {
+					validArgs = false;
+					errorMsg.append("Channel cannot be null or empty for client type connection. ");
+				}
+			}
+			if (Constants.TRANSPORT_TYPE_BINGINGS.equalsIgnoreCase(queueManager.getTransportType())) {
+				if (StringUtils.hasText(queueManager.getName())) {
+					validArgs = false;
+					errorMsg.append("queuemanager cannot be null or empty for bindings type connection. ");
+				}
+			}
+		}
+
+		if (!validArgs) {
+			throw new IllegalArgumentException(errorMsg.toString());
+		}
+	}
 }
