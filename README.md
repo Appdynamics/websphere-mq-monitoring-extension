@@ -4,12 +4,10 @@ WebSphere MQ Monitoring Extension
 Use Case
 -------- 
 
-The WebSphere MQ monitoring extension can monitor multiple queues in multiple Websphere MQ queue managers.  
+The WebSphere MQ monitoring extension can monitor multiple queues in multiple Websphere MQ queue managers parallely.  
  
-This monitor reports the following metrics for each queue manager:
+This monitor can report the specified metrics (Configurable) for queue managers:
  
-Maximum queue depth
-Current queue depth for each queue.
  
 The MQ Monitor currently supports IBM Websphere MQ version 7.x. It may work with other Websphere MQ versions but it has not been tested in those environments.
  
@@ -37,9 +35,9 @@ com.ibm.mq.pcf.jar
 
 These jar files are typically found in /opt/mqm/java/lib on a UNIX server but may be found in an alternate location depending upon your environment.
  
-For more information about MQ installation locations, click here.
- 
 Alternatively, you may download either the Websphere MQ Server and or Client that contain the jars here.
+
+In case of client type connection WMQ client must be installed as WMQ jars inturn need jni libraries. 
  
  
 Rebuilding the Project
@@ -47,7 +45,7 @@ Rebuilding the Project
 1. Clone the repo websphere-mq-monitoring-extension from GitHub https://github.com/Appdynamics
 2. Copy the seven MQ jar files listed above into the websphere-mq-monitoring-extension/lib/ directory. Create a lib folder if not already present.
 3. Run 'mvn clean install' from the cloned websphere-mq-monitoring-extension directory.
-4. The MQMonitor.zip should get built and found in the 'target' directory.
+4. The MQMonitor-2.0.zip should get built and found in the 'target' directory.
 
 
 Installation
@@ -57,22 +55,28 @@ The following instructions assume that you have installed the AppDynamics Machin
     Unix/Linux:    /AppDynamics/MachineAgent
     Windows:     C:\AppDynamics\MachineAgent
  
-1. Unzip MQMonitor.zip file and copy to MachineAgent/monitors directory
-2. Copy the following jars to the MQMonitor directory
+1. Unzip contents of MQMonitor-2.0.zip file and copy to MachineAgent/monitors directory
+2. 
 
- ``` 
-  com.ibm.mq.commonservices.jar
-  com.ibm.mq.jar
-  com.ibm.mq.jmqi.jar
-  dhbcore.jar
-  com.ibm.mq.headers.jar
-  connector.jar
-  com.ibm.mq.pcf.jar
- ```
-3. Edit the monitor.xml file. The configuration supports defining multiple queue managers to connect to as well as multiple queues for a given queue manager.  An example monitor.xml file follows these installation instructions.
-4. Follow the numbering convention when adding or removing queue managers and or queues.
+ 2.1 BINDINGS type connection: Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.
+ Copy the following jars to the MQMonitor directory
+ 
+  ``` 
+   com.ibm.mq.commonservices.jar
+   com.ibm.mq.jar
+   com.ibm.mq.jmqi.jar
+   dhbcore.jar
+   com.ibm.mq.headers.jar
+   connector.jar
+   com.ibm.mq.pcf.jar
+  ```
 
-    Note: Do not create multiple instances of the queue monitor running that monitor the same queues inside the       same queue managers.  This causes duplication data with in the AppDynamics Controller.
+  2.2 Alternatively in case of CLIENT type connection install WMQ client and edit monitor.xml classpath section to point to above mentioned jars in WMQ client installation. This is important as jni libraries required by these jars are available in client installation only. 
+
+3. Create a channel of type server connection in each of the queue manager you wish to query. 
+
+4. Edit the config.yaml file.  An example config.yaml file follows these installation instructions.
+
 5. Restart the Machine Agent.
  
 Sample monitor.xml
@@ -82,94 +86,107 @@ The following is a sample monitor.xml file that depicts two different queue mana
  
 
 ```
-<!-- The name of the root folder where the metrics will appear under the tier -->
-<argument name="root_category_name" is-required="true" default-value="Queue Monitoring" />
+# WebsphereMQ instance particulars
 
-<!-- The number of queue managers that are configured -->
-<argument name="number_of_queue_managers" is-required="true" default-value="2" />
+queueManagers:
+  - host: "localhost"
+    port: 1414
+    #Actual name of the queue manager
+    name: "queueMgr1"
+    #Channel name of the queue manager, channel should be server-conn type.
+    channelName: "SYSTEM.ADMIN.SVRCONN"
+    #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
+    #For bindings type connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
+    #for client type connection change it to "Client".
+    transportType: "Bindings"
+    #user with admin level access, no need to provide credentials in case of bindings transport type, it is only applicable for client type
+    username:
+    password:
+    
+    #SSL related properties
+    # e.g."C:/Program Files (x86)/IBM/WebSphere MQ/ssl/key" , Please use forward slash in the path.
+    sslKeyRepository:  
+    # e.g. "SSL_RSA_WITH_AES_128_CBC_SHA256"
+    cipherSuite:
+    
+    # First Include filter is applied and on the result of include filter exclude filter is applied.  
+    queueIncludeFilters:
+        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
+        type: "NONE"
+        #The name of the queue or queue name pattern as per queue filter, comma separated values
+        values: ["SYSTEM", "AMQ", "KMQ"]
+          
+    queueExcludeFilters:
+        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
+        type: "STARTSWITH"
+        #The name of the queue or queue name pattern as per queue filter, comma separated values
+        values: ["SYSTEM", "AMQ", "KMQ"]
 
-<!-- the host or IP address of the queue manager -->
-<argument name="queue_mgr_host_1" is-required="true" default-value="127.0.0.1" />
+    channelIncludeFilters:
+        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
+        type: "NONE"
+        #The name of the channel or channel name pattern as per channel filter, comma separated values
+        values: ["SYSTEM", "AMQ", "KMQ"]    
 
-<!-- The port number of the queue manager -->
-<argument name="queue_mgr_port_1" is-required="true" default-value="1414" />	
+    channelExcludeFilters:
+        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
+        type: "STARTSWITH"
+        #The name of the channel or channel name pattern as per channel filter, comma separated values
+        values: ["SYSTEM", "AMQ", "KMQ"]
+    
+mqMertics:
+  # This Object will extract queue manager metrics
+  - metricsType: "queueMgrMetrics"
+    metrics:
+      include:
+        - Status: "Status"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
+      
+  # This Object will extract channel metrics    
+  - metricsType: "queueMetrics"
+    metrics:
+      include:
+        - MaxQueueDepth: "Max Queue Depth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+          
+        - CurrentQueueDepth: "Current Queue Depth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
+          
+        - OpenInputCount: "Open Input Count"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
+          
+        - OpenOutputCount: "Open Output Count"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
+      
+  # This Object will extract queue metrics    
+  - metricsType: "channelMetrics"
+    metrics:
+      include:
+        - Messages: "Messages"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
+          
+        - Status: "Status"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"
+          
+        - ByteSent: "Byte Sent"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
+          
+        - ByteReceived: "Byte Received"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
+          
+        - BuffersSent: "Buffers Sent"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
+          
+        - BuffersReceived: "Buffers Received"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
 
-<!-- The actual name of the queue manager -->	
-<argument name="queue_mgr_name_1" is-required="true" default-value="QUEUEMGR01" />
-
-<!-- The channel name of the queue manager -->
-<argument name="queue_mgr_channel_name_1" is-required="true" default-value="SYSTEM.ADMIN.SVRCONN" />
-
-<!-- The transport type for the queue manager connection, the default is 1 for a client type connection -->
-<argument name="queue_mgr_transport_type_1" is-required="true" default-value="1" />
-
-<!-- The user name for the connection if required -->
-<argument name="queue_mgr_user_1" is-required="true" default-value="" />
-
-<!-- The password for the connection if required -->
-<argument name="queue_mgr_password_1" is-required="true" default-value="" />
-
-<!-- The number of configured queues to be monitored for the queue manager -->
-<argument name="queue_mgr_1_number_of_queues" is-required="true" default-value="2" />
-
-<!-- The name of the first queue -->
-<argument name="queue_mgr_1_queue_1" is-required="true" default-value="CREWDATA01" />
-
-<!-- The name of the second queue -->
-<argument name="queue_mgr_1_queue_2" is-required="true" default-value="CREWDATA02" />
-
-<!-- the host or IP address of the queue manager -->
-<argument name="queue_mgr_host_2" is-required="true" default-value="127.0.0.2" />
-
-<!-- The port number of the queue manager -->
-<argument name="queue_mgr_port_2" is-required="true" default-value="1415" />	
-
-<!-- The actual name of the queue manager -->	
-<argument name="queue_mgr_name_2" is-required="true" default-value="QUEUEMGR02" />
-
-<!-- The channel name of the queue manager -->
-<argument name="queue_mgr_channel_name_2" is-required="true" default-value="SYSTEM.ADMIN.SVRCONN" />
-
-<!-- The transport type for the queue manager connection, the default is 1 for a client type connection -->
-<argument name="queue_mgr_transport_type_2" is-required="true" default-value="1" />
-
-<!-- The user name for the connection if required -->
-<argument name="queue_mgr_user_2" is-required="true" default-value="" />
-
-<!-- The password for the connection if required -->
-<argument name="queue_mgr_password_2" is-required="true" default-value="" />
-
-<!-- The number of configured queues to be monitored for the queue manager -->
-<argument name="queue_mgr_2_number_of_queues" is-required="true" default-value="2" />
-
-<!-- The name of the first queue -->
-<argument name="queue_mgr_2_queue_1" is-required="true" default-value="CREWDATA03" />
-
-<!-- The name of the second queue -->
-<argument name="queue_mgr_2_queue_2" is-required="true" default-value="CREWDATA04" />
+# For most of the installation this is sufficient.
+numberOfThreads: 10
+          
+#prefix used to show up metrics in AppDynamics, Note: it was root_category_name in monitor.xml
+metricPrefix: "Custom Metrics|WebsphereMQ|" 
 
 ```
-
-Password Encryption Support
----------------------------
-To avoid setting the clear text password in the monitor.xml. Please follow the process to encrypt the password and set the encrypted password and 
-the key in the monitor.xml
-
-1. Download the util jar to encrypt the password from https://github.com/Appdynamics/maven-repo/blob/master/releases/com/appdynamics/appd-exts-commons/1.1.2/appd-exts-commons-1.1.2.jar and navigate to downloaded directory
-2. Encrypt password from the commandline
-
-   ```
-   java -cp appd-exts-commons-1.1.2.jar com.appdynamics.extensions.crypto.Encryptor myKey myPassword
-   ```
-3. Use the same encryption key for each queue's password. In the monitor.xml, add the encryption key as below.
-
-   ```
-   <argument name="encryption-key" is-required="false" default-value="myKey"/>
-   ```
-4. For every queue manager, you can specify an encrypted password as below
-   ```
-   <argument name="queue_mgr_password_encrypted_1" is-required="true" default-value="<ENCRYPTED_PASSWORD>"/>
-   ```
 
 
 
@@ -196,8 +213,3 @@ WebSphere MQ Queue Alert Email
 WebSphere MQ Queue Policy Remediation
  
 ![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/127iF9FD2336797A0D2E/image-size/original?v=mpbl-1&px=-1)
-
-Support
-------- 
-For any questions or feature request, please contact James Schneider (james.schneider@appdynamics.com)
-
