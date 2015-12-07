@@ -15,6 +15,12 @@ queueManagers:
     username:
     password:
     
+    #SSL related properties
+    # e.g."C:/Program Files (x86)/IBM/WebSphere MQ/ssl/key" , Please use forward slash in the path.
+    sslKeyRepository:  
+    # e.g. "SSL_RSA_WITH_AES_128_CBC_SHA256"
+    cipherSuite:
+    
     # First Include filter is applied and on the result of include filter exclude filter is applied.  
     queueIncludeFilters:
         #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 

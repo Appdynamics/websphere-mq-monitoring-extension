@@ -36,6 +36,9 @@ public class WMQauthenticationAndAuthorization {
 		addEnvProperty(env, MQC.CHANNEL_PROPERTY, queueManager.getChannelName());
 		addEnvProperty(env, MQC.USER_ID_PROPERTY, queueManager.getUsername());
 		addEnvProperty(env, MQC.PASSWORD_PROPERTY, queueManager.getPassword());
+		addEnvProperty(env, MQC.SSL_CERT_STORE_PROPERTY, queueManager.getSslKeyRepository());
+		addEnvProperty(env, MQC.SSL_CIPHER_SUITE_PROPERTY, queueManager.getCipherSuite());
+		//TODO: investigate on CIPHER_SPEC property No Available in MQ 7.5 Jar
 
 		if (Constants.TRANSPORT_TYPE_CLIENT.equalsIgnoreCase(queueManager.getTransportType()))
 			addEnvProperty(env, MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES_CLIENT);

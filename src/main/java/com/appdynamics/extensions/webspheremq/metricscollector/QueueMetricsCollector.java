@@ -115,12 +115,8 @@ public class QueueMetricsCollector extends MetricsCollector {
 
 		List<String> allQueueList = new ArrayList<String>();
 		List<String> localQueueList = getQueueListByType(MQConstants.MQQT_LOCAL);
-		List<String> aliasQueueList = getQueueListByType(MQConstants.MQQT_ALIAS);
-		List<String> remoteQueueList = getQueueListByType(MQConstants.MQQT_REMOTE);
 
 		allQueueList.addAll(localQueueList);
-		allQueueList.addAll(aliasQueueList);
-		allQueueList.addAll(remoteQueueList);
 
 		return allQueueList;
 

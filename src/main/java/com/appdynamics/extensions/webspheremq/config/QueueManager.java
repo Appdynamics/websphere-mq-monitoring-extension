@@ -16,6 +16,10 @@ public class QueueManager {
 	private String transportType;
 	private String username;
 	private String password;
+	private String sslKeyRepository;
+	private String cipherSuite;
+	private String cipherSpec;
+
 	
 	private QueueIncludeFilters queueIncludeFilters;
 	private QueueExcludeFilters queueExcludeFilters;
@@ -119,6 +123,30 @@ public class QueueManager {
 
 	public void setChannelExcludeFilters(ChannelExcludeFilters channelExcludeFilters) {
 		this.channelExcludeFilters = channelExcludeFilters;
+	}
+
+	public String getSslKeyRepository() {
+		return sslKeyRepository;
+	}
+
+	public void setSslKeyRepository(String sslKeyRepository) {
+		this.sslKeyRepository = sslKeyRepository;
+	}
+
+	public String getCipherSuite() {
+		return cipherSuite;
+	}
+
+	public void setCipherSuite(String cipherSuite) {
+		this.cipherSuite = cipherSuite;
+	}
+
+	public String getCipherSpec() {
+		return cipherSpec;
+	}
+
+	public void setCipherSpec(String cipherSpec) {
+		this.cipherSpec = cipherSpec;
 	}
 		
 }
