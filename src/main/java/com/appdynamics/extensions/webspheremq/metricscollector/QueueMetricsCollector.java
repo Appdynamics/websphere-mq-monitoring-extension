@@ -2,6 +2,7 @@ package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -41,14 +42,22 @@ public class QueueMetricsCollector extends MetricsCollector {
 	@Override
 	protected void processFilter() throws TaskExecutionException {
 		List<String> allQueues = getQueueList();
+		logger.debug("All Queues: "+Arrays.toString(allQueues.toArray()));
+		// include all queues first in case include filter is not there.
+		List<String> includedQueues = allQueues; 
 
 		// First evaluate include filters and then exclude filters
 		QueueIncludeFilters includeFilters = this.queueManager.getQueueIncludeFilters();
-		List<String> includedQueues = evalIncludeFilter(includeFilters.getType(), allQueues, includeFilters.getValues());
-
+		if(includeFilters!=null){
+			includedQueues = evalIncludeFilter(includeFilters.getType(), allQueues, includeFilters.getValues());
+		}
 		QueueExcludeFilters excludeFilters = this.queueManager.getQueueExcludeFilters();
-		queueList = evalExcludeFilter(excludeFilters.getType(), includedQueues, excludeFilters.getValues());
-
+		if(excludeFilters!=null){
+			queueList = evalExcludeFilter(excludeFilters.getType(), includedQueues, excludeFilters.getValues());
+		}else{
+			queueList = includedQueues;
+		}
+		logger.debug("Queues after filter: "+Arrays.toString(queueList.toArray()));
 	}
 
 	@Override

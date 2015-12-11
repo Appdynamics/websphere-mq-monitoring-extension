@@ -59,10 +59,10 @@ mqMertics:
     metrics:
       include:
         - MaxQueueDepth: "Max Queue Depth"
-          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"          
           
         - CurrentQueueDepth: "Current Queue Depth"
-          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
           
         - OpenInputCount: "Open Input Count"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"

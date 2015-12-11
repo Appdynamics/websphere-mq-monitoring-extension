@@ -126,10 +126,6 @@ public class WebsphereMQMonitorTask implements Runnable {
 
 		logger.debug("Intializing PCFMessageAgent...");
 		PCFMessageAgent agent = new PCFMessageAgent(ibmQueueManager);
-		logger.debug("Sending PCFMessageAgent.connect() request....");
-		// Note that agent.connect() method is synchronized
-		agent.connect(queueManager.getName());
-		logger.debug(" PCFMessageAgent connected");
 
 		Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
 		if (qMgrMetricsToReport != null) {

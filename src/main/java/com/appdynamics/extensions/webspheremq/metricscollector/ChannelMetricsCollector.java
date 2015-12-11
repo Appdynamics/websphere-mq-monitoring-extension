@@ -54,14 +54,22 @@ public class ChannelMetricsCollector extends MetricsCollector {
 
 	public void processFilter() throws TaskExecutionException {
 		List<String> allChannels = getChannelList(queueManager);
+		logger.debug("All Channels: "+Arrays.toString(allChannels.toArray()));
+		// include all channels first in case include filter is not there.
+		List<String> includedChannels = allChannels;
 
 		// First evaluate include filters and then exclude filters
 		ChannelIncludeFilters includeFilters = this.queueManager.getChannelIncludeFilters();
-		List<String> includedChannels = evalIncludeFilter(includeFilters.getType(), allChannels, includeFilters.getValues());
-
+		if (includeFilters != null) {
+			includedChannels = evalIncludeFilter(includeFilters.getType(), allChannels, includeFilters.getValues());
+		}
 		ChannelExcludeFilters excludeFilters = this.queueManager.getChannelExcludeFilters();
-		channelList = evalExcludeFilter(excludeFilters.getType(), includedChannels, excludeFilters.getValues());
-
+		if (excludeFilters != null) {
+			channelList = evalExcludeFilter(excludeFilters.getType(), includedChannels, excludeFilters.getValues());
+		}else{
+			channelList = includedChannels;
+		}
+		logger.debug("Channels after filter: "+Arrays.toString(channelList.toArray()));
 	}
 
 	public String getAtrifact() {
@@ -81,8 +89,8 @@ public class ChannelMetricsCollector extends MetricsCollector {
 	private void publishChannelMetrics(String channelName) {
 		PCFMessage request;
 		PCFMessage[] response;
-		int[] attrs = getIntArrtibutesArray(CMQCFC.MQCACH_CHANNEL_NAME,CMQCFC.MQCACH_CONNECTION_NAME);
-		
+		int[] attrs = getIntArrtibutesArray(CMQCFC.MQCACH_CHANNEL_NAME, CMQCFC.MQCACH_CONNECTION_NAME);
+
 		getIntArrtibutesArray(CMQCFC.MQCACH_CHANNEL_NAME, CMQCFC.MQCACH_CONNECTION_NAME);
 		logger.debug("Attributes being sent along PCF agent request to query channel metrics: " + Arrays.toString(attrs));
 		request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS);
@@ -108,7 +116,8 @@ public class ChannelMetricsCollector extends MetricsCollector {
 		} catch (PCFException pcfe) {
 			String errorMsg = "";
 			if (pcfe.getReason() == MQConstants.MQRCCF_CHL_STATUS_NOT_FOUND) {
-				errorMsg = "Could not collect channel information as channel is stopped or inactive, check config.yaml: Reason '3065'\n";
+				errorMsg = "Channel- "+channelName+" :";
+				errorMsg += "Could not collect channel information as channel is stopped or inactive: Reason '3065'\n";
 				errorMsg += "If the channel type is MQCHT_RECEIVER, MQCHT_SVRCONN or MQCHT_CLUSRCVR, then the only action is to enable the channel, not start it.";
 				logger.error(errorMsg);
 			} else if (pcfe.getReason() == MQConstants.MQRC_SELECTOR_ERROR) {
