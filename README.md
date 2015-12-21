@@ -68,7 +68,18 @@ The following instructions assume that you have installed the AppDynamics Machin
   connector.jar
   com.ibm.mq.pcf.jar
  ```
- 2.2. Alternatively in case of CLIENT type connection install WMQ client and edit monitor.xml classpath section to point to above mentioned jars in WMQ client installation. This is important as there are many libraries and other files required by these jars available in client installation only. 
+ 2.2. Alternatively in case of CLIENT type connection install WMQ client and edit monitor.xml classpath section to point to above mentioned jars in WMQ client installation (refer following example). This is important as there are many libraries and other files required by these jars available in client installation only. 
+ 
+ ```
+ 
+</task-arguments>
+	<java-task>
+            <classpath>websphere-mq-monitoring-extension.jar;/Users/rajeevsingh/mqclient/lib/com.ibm.mq.commonservices.jar;/Users/rajeevsingh/mqclient/lib/com.ibm.mq.jar;/Users/rajeevsingh/mqclient/lib/com.ibm.mq.jmqi.jar;/Users/rajeevsingh/mqclient/lib/dhbcore.jar;/Users/rajeevsingh/mqclient/lib/com.ibm.mq.headers.jar;/Users/rajeevsingh/mqclient/lib/connector.jar;/Users/rajeevsingh/mqclient/lib/com.ibm.mq.pcf.jar;/Users/rajeevsingh/mqclient/lib/com.ibm.mqjms.jar</classpath>
+	    <impl-class>com.appdynamics.extensions.webspheremq.WebspherMqMonitor</impl-class>
+	</java-task>
+</monitor-run-task>
+
+ ```
  
 3. Create a channel of type server connection in each of the queue manager you want to monitor. 
 
