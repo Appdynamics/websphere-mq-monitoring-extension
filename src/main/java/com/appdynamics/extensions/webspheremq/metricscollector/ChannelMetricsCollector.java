@@ -171,8 +171,8 @@ public class ChannelMetricsCollector extends MetricsCollector {
 					for (int index = 0; index < names.length; index++) {
 
 						channels.add(names[index].trim());
-
-						logger.debug("|" + (index + padding).substring(0, 5) + "|" + (names[index] + padding).substring(0, 48) + "|" + (channelTypes[types[index]] + padding).substring(0, 10) + "|");
+						if(types!=null)
+							logger.debug("|" + (index + padding).substring(0, 5) + "|" + (names[index] + padding).substring(0, 48) + "|" + (channelTypes[types[index]] + padding).substring(0, 10) + "|");
 					}
 
 					logger.debug("+-----+------------------------------------------------+----------+");

@@ -26,7 +26,7 @@ queueManagers:
         #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
         type: "NONE"
         #The name of the queue or queue name pattern as per queue filter, comma separated values
-        values: ["SYSTEM", "AMQ", "KMQ"]
+        values: []
           
     queueExcludeFilters:
         #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
@@ -35,13 +35,13 @@ queueManagers:
         values: ["SYSTEM", "AMQ", "KMQ"]
 
     channelIncludeFilters:
-        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
+        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all channels) 
         type: "NONE"
         #The name of the channel or channel name pattern as per channel filter, comma separated values
-        values: ["SYSTEM", "AMQ", "KMQ"]    
+        values: []    
 
     channelExcludeFilters:
-        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues) 
+        #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all channels) 
         type: "STARTSWITH"
         #The name of the channel or channel name pattern as per channel filter, comma separated values
         values: ["SYSTEM", "AMQ", "KMQ"]
