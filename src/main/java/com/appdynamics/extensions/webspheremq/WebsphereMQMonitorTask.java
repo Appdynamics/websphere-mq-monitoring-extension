@@ -194,7 +194,9 @@ public class WebsphereMQMonitorTask implements Runnable {
 	 */
 	private void DestroyAgent(PCFMessageAgent agent) throws MQException {
 		// Disconnect the agent.
+		String agentName = agent.getQManagerName();
 		agent.disconnect();
+		logger.debug("agent disconnected for queue manager {} in thread {}", agentName, Thread.currentThread().getName());
 	}
 
 }
