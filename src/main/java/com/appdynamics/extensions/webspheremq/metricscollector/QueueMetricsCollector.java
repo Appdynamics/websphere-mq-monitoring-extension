@@ -42,22 +42,22 @@ public class QueueMetricsCollector extends MetricsCollector {
 	@Override
 	protected void processFilter() throws TaskExecutionException {
 		List<String> allQueues = getQueueList();
-		logger.debug("All Queues: "+Arrays.toString(allQueues.toArray()));
+		logger.debug("All Queues: " + Arrays.toString(allQueues.toArray()));
 		// include all queues first in case include filter is not there.
-		List<String> includedQueues = allQueues; 
+		List<String> includedQueues = allQueues;
 
 		// First evaluate include filters and then exclude filters
 		QueueIncludeFilters includeFilters = this.queueManager.getQueueIncludeFilters();
-		if(includeFilters!=null){
+		if (includeFilters != null) {
 			includedQueues = evalIncludeFilter(includeFilters.getType(), allQueues, includeFilters.getValues());
 		}
 		QueueExcludeFilters excludeFilters = this.queueManager.getQueueExcludeFilters();
-		if(excludeFilters!=null){
+		if (excludeFilters != null) {
 			queueList = evalExcludeFilter(excludeFilters.getType(), includedQueues, excludeFilters.getValues());
-		}else{
+		} else {
 			queueList = includedQueues;
 		}
-		logger.debug("Queues after filter: "+Arrays.toString(queueList.toArray()));
+		logger.debug("Queues after filter: " + Arrays.toString(queueList.toArray()));
 	}
 
 	@Override
@@ -75,9 +75,15 @@ public class QueueMetricsCollector extends MetricsCollector {
 		/*
 		 * attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH, CMQC.MQIA_MAX_Q_DEPTH, CMQC.MQIA_OPEN_INPUT_COUNT, CMQC.MQIA_OPEN_OUTPUT_COUNT };
 		 */
+		long entryTime = System.currentTimeMillis();
+
 		if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
 			logger.debug("Queue metrics to report is null or empty, nothing to publish");
+			return;
 		}
+
+		logger.debug("publishQueueMetrics entry time for queue {} is {} milliseconds", queueName, entryTime);
+
 		int[] attrs = getIntArrtibutesArray(CMQC.MQCA_Q_NAME);
 
 		PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_Q);
@@ -87,7 +93,15 @@ public class QueueMetricsCollector extends MetricsCollector {
 		PCFMessage[] response;
 
 		try {
+			logger.debug("sending PCF agent request to query queue metrics");
+			long startTime = System.currentTimeMillis();
 			response = agent.send(request);
+			long endTime = System.currentTimeMillis() - startTime;
+			logger.debug("PCF agent queue metrics query response for {} received in {} milliseconds", queueName, endTime);
+			if (response == null || response.length <= 0) {
+				logger.debug("Unexpected Error while PCFMessage.send(), response is either null or empty");
+				return;
+			}
 			for (int i = 0; i < response.length; i++) {
 				Iterator<String> itr = getMetricsToReport().keySet().iterator();
 				while (itr.hasNext()) {
@@ -107,6 +121,9 @@ public class QueueMetricsCollector extends MetricsCollector {
 		} catch (Exception mqe) {
 			logger.error("MQException caught", mqe);
 			// Dont throw exception as it will stop queuemetric colloection
+		} finally {
+			long exitTime = System.currentTimeMillis() - entryTime;
+			logger.debug("Time taken to publish metrics for queue {} is {} milliseconds", queueName, exitTime);
 		}
 	}
 

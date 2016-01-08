@@ -49,7 +49,7 @@ public abstract class MetricsCollector {
 	public abstract Map<String, ? extends MetricOverride> getMetricsToReport();
 
 	/**
-	 * Applies include and exculde filters to the artifacts (i.e queue manager, q, or channel),<br>
+	 * Applies include and exclude filters to the artifacts (i.e queue manager, q, or channel),<br>
 	 * extracts and publishes the metrics to controller
 	 * 
 	 * @throws TaskExecutionException

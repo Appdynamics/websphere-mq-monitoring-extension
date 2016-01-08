@@ -54,7 +54,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 
 	public void processFilter() throws TaskExecutionException {
 		List<String> allChannels = getChannelList(queueManager);
-		logger.debug("All Channels: "+Arrays.toString(allChannels.toArray()));
+		logger.debug("All Channels: " + Arrays.toString(allChannels.toArray()));
 		// include all channels first in case include filter is not there.
 		List<String> includedChannels = allChannels;
 
@@ -66,10 +66,10 @@ public class ChannelMetricsCollector extends MetricsCollector {
 		ChannelExcludeFilters excludeFilters = this.queueManager.getChannelExcludeFilters();
 		if (excludeFilters != null) {
 			channelList = evalExcludeFilter(excludeFilters.getType(), includedChannels, excludeFilters.getValues());
-		}else{
+		} else {
 			channelList = includedChannels;
 		}
-		logger.debug("Channels after filter: "+Arrays.toString(channelList.toArray()));
+		logger.debug("Channels after filter: " + Arrays.toString(channelList.toArray()));
 	}
 
 	public String getAtrifact() {
@@ -87,11 +87,12 @@ public class ChannelMetricsCollector extends MetricsCollector {
 	}
 
 	private void publishChannelMetrics(String channelName) {
+		long entryTime = System.currentTimeMillis();
+		logger.debug("publishChannelMetrics entry time for channel {} is {} milliseconds", channelName, entryTime);
 		PCFMessage request;
 		PCFMessage[] response;
 		int[] attrs = getIntArrtibutesArray(CMQCFC.MQCACH_CHANNEL_NAME, CMQCFC.MQCACH_CONNECTION_NAME);
 
-		getIntArrtibutesArray(CMQCFC.MQCACH_CHANNEL_NAME, CMQCFC.MQCACH_CONNECTION_NAME);
 		logger.debug("Attributes being sent along PCF agent request to query channel metrics: " + Arrays.toString(attrs));
 		request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS);
 		request.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, channelName);
@@ -99,8 +100,14 @@ public class ChannelMetricsCollector extends MetricsCollector {
 		request.addParameter(CMQCFC.MQIACH_CHANNEL_INSTANCE_ATTRS, attrs);
 		try {
 			logger.debug("sending PCF agent request to query channel metrics");
+			long startTime = System.currentTimeMillis();
 			response = agent.send(request);
-			logger.debug("PCF agent request sent, response received");
+			long endTime = System.currentTimeMillis() - startTime;
+			logger.debug("PCF agent channel metrics query response for {} received in {} milliseconds", channelName, endTime);
+			if (response == null || response.length <= 0) {
+				logger.debug("Unexpected Error while PCFMessage.send(), response is either null or empty");
+				return;
+			}
 			for (int i = 0; i < response.length; i++) {
 				Iterator<String> itr = getMetricsToReport().keySet().iterator();
 				while (itr.hasNext()) {
@@ -116,7 +123,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 		} catch (PCFException pcfe) {
 			String errorMsg = "";
 			if (pcfe.getReason() == MQConstants.MQRCCF_CHL_STATUS_NOT_FOUND) {
-				errorMsg = "Channel- "+channelName+" :";
+				errorMsg = "Channel- " + channelName + " :";
 				errorMsg += "Could not collect channel information as channel is stopped or inactive: Reason '3065'\n";
 				errorMsg += "If the channel type is MQCHT_RECEIVER, MQCHT_SVRCONN or MQCHT_CLUSRCVR, then the only action is to enable the channel, not start it.";
 				logger.error(errorMsg);
@@ -125,6 +132,9 @@ public class ChannelMetricsCollector extends MetricsCollector {
 			}
 		} catch (Exception e) {
 			logger.error("Unexpected Error occoured while collecting metrics for channel " + channelName + " " + e);
+		} finally {
+			long exitTime = System.currentTimeMillis() - entryTime;
+			logger.debug("Time taken to publish metrics for channel {} is {} milliseconds", channelName, exitTime);
 		}
 	}
 
@@ -171,8 +181,9 @@ public class ChannelMetricsCollector extends MetricsCollector {
 					for (int index = 0; index < names.length; index++) {
 
 						channels.add(names[index].trim());
-						if(types!=null)
-							logger.debug("|" + (index + padding).substring(0, 5) + "|" + (names[index] + padding).substring(0, 48) + "|" + (channelTypes[types[index]] + padding).substring(0, 10) + "|");
+						if (types != null)
+							logger.debug("|" + (index + padding).substring(0, 5) + "|" + (names[index] + padding).substring(0, 48) + "|" + (channelTypes[types[index]] + padding).substring(0, 10)
+									+ "|");
 					}
 
 					logger.debug("+-----+------------------------------------------------+----------+");

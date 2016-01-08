@@ -115,42 +115,50 @@ public class WebsphereMQMonitorTask implements Runnable {
 		return overrideMap;
 	}
 
-	private void extractAndReportInternal(Hashtable env, Map<String, Map<String, WMQMetricOverride>> metricsMap) throws MQException, TaskExecutionException {
+	private void extractAndReportInternal(Hashtable env, Map<String, Map<String, WMQMetricOverride>> metricsMap) throws TaskExecutionException {
 
 		MQQueueManager ibmQueueManager = null;
-		if (env != null) {
-			ibmQueueManager = new MQQueueManager(queueManager.getName(), env);
-		} else {
-			ibmQueueManager = new MQQueueManager(queueManager.getName());
-		}
+		PCFMessageAgent agent = null;
+		try {
+			if (env != null) {
+				ibmQueueManager = new MQQueueManager(queueManager.getName(), env);
+			} else {
+				ibmQueueManager = new MQQueueManager(queueManager.getName());
+			}
+			logger.debug("Connection initiated for queue manager {} in thread {}", queueManager.getName(), Thread.currentThread().getName());
 
-		logger.debug("Intializing PCFMessageAgent...");
-		PCFMessageAgent agent = new PCFMessageAgent(ibmQueueManager);
+			agent = new PCFMessageAgent(ibmQueueManager);
+			logger.debug("Intialized PCFMessageAgent for queue manager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 
-		Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
-		if (qMgrMetricsToReport != null) {
-			MetricsCollector qMgrMetricsCollector = new QueueManagerMetricsCollector(qMgrMetricsToReport, this.monitor, agent, queueManager, this.metricPrefix);
-			qMgrMetricsCollector.processFilterAndPublishMetrics();
-		} else {
-			logger.warn("No queue manager metrics to report");
-		}
+			Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
+			if (qMgrMetricsToReport != null) {
+				MetricsCollector qMgrMetricsCollector = new QueueManagerMetricsCollector(qMgrMetricsToReport, this.monitor, agent, queueManager, this.metricPrefix);
+				qMgrMetricsCollector.processFilterAndPublishMetrics();
+			} else {
+				logger.warn("No queue manager metrics to report");
+			}
 
-		Map<String, WMQMetricOverride> channelMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_CHANNEL);
-		if (channelMetricsToReport != null) {
-			MetricsCollector channelMetricsCollector = new ChannelMetricsCollector(channelMetricsToReport, this.monitor, agent, queueManager, this.metricPrefix);
-			channelMetricsCollector.processFilterAndPublishMetrics();
-		} else {
-			logger.warn("No channel metrics to report");
-		}
+			Map<String, WMQMetricOverride> channelMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_CHANNEL);
+			if (channelMetricsToReport != null) {
+				MetricsCollector channelMetricsCollector = new ChannelMetricsCollector(channelMetricsToReport, this.monitor, agent, queueManager, this.metricPrefix);
+				channelMetricsCollector.processFilterAndPublishMetrics();
+			} else {
+				logger.warn("No channel metrics to report");
+			}
 
-		Map<String, WMQMetricOverride> queueMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE);
-		if (queueMetricsToReport != null) {
-			MetricsCollector queueMetricsCollector = new QueueMetricsCollector(queueMetricsToReport, this.monitor, agent, queueManager, this.metricPrefix);
-			queueMetricsCollector.processFilterAndPublishMetrics();
-		} else {
-			logger.warn("No queue metrics to report");
+			Map<String, WMQMetricOverride> queueMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE);
+			if (queueMetricsToReport != null) {
+				MetricsCollector queueMetricsCollector = new QueueMetricsCollector(queueMetricsToReport, this.monitor, agent, queueManager, this.metricPrefix);
+				queueMetricsCollector.processFilterAndPublishMetrics();
+			} else {
+				logger.warn("No queue metrics to report");
+			}
+		} catch (MQException mqe) {
+			logger.error(mqe.getMessage(),mqe);
+			throw new TaskExecutionException(mqe.getMessage());
+		} finally {
+			cleanUp(ibmQueueManager, agent);
 		}
-		DestroyAgent(agent);
 	}
 
 	/*
@@ -188,15 +196,32 @@ public class WebsphereMQMonitorTask implements Runnable {
 	}
 
 	/**
-	 * Destroy the agent.
+	 * Destroy the agent and disconnect from queue manager
 	 * 
-	 * @throws MQDataException
 	 */
-	private void DestroyAgent(PCFMessageAgent agent) throws MQException {
+	private void cleanUp(MQQueueManager ibmQueueManager, PCFMessageAgent agent) {
 		// Disconnect the agent.
-		String agentName = agent.getQManagerName();
-		agent.disconnect();
-		logger.debug("agent disconnected for queue manager {} in thread {}", agentName, Thread.currentThread().getName());
+
+		if (agent != null) {
+			try {
+				String qMgrName = agent.getQManagerName();
+				agent.disconnect();
+				logger.debug("PCFMessageAgent disconnected for queue manager {} in thread {}", qMgrName, Thread.currentThread().getName());
+			} catch (Exception e) {
+				logger.error("Error occoured  while disconnting PCFMessageAgent for queue manager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
+			}
+		}
+
+		// Disconnect queue manager
+		
+		if (ibmQueueManager != null) {
+			try {
+				ibmQueueManager.disconnect();
+				logger.debug("Connection diconnected for queue manager {} in thread {}", ibmQueueManager.getName(), Thread.currentThread().getName());
+			} catch (Exception e) {
+				logger.error("Error occoured while disconnting queue manager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
+			}
+		}
 	}
 
 }
