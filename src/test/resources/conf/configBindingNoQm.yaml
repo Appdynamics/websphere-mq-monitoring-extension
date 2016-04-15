@@ -1,0 +1,93 @@
+### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
+numberOfThreads: 10
+
+#This will create this metric in all the tiers, under this path. Please make sure to have a trailing |
+#metricPrefix: Custom Metrics|WebsphereMQ|
+
+#This will create it in specific Tier. Replace <TIER_NAME>. Please make sure to have a trailing |
+metricPrefix: "Server|Component:<TIER_NAME>|Custom Metrics|WebsphereMQ|"
+
+queueManagers:
+  - host: "localhost"
+    port: 1414
+    #Actual name of the queue manager
+    name: ""
+    #Channel name of the queue manager
+    channelName: "SYSTEM.ADMIN.SVRCONN"
+    #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
+    #For bindings type connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
+    #for client type connection change it to "Client".
+    transportType: "Bindings"
+    #user with admin level access, no need to provide credentials in case of bindings transport type, it is only applicable for client type
+    username:
+    password:
+    
+    queueFilters:
+        #Can provide complete queue name or generic names. A generic name is a character string followed by an asterisk (*),
+        #for example ABC*, and it selects all objects having names that start with the selected character string.
+        #An asterisk on its own matches all possible names.
+        include: ["ABC","DEF*"]
+        exclude:
+            #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+            - type: "STARTSWITH"
+            #The name of the queue or queue name pattern as per queue filter, comma separated values
+              values: ["SYSTEM","AMQ"]
+
+    channelFilters:
+        #Can provide complete channel name or generic names. A generic name is a character string followed by an asterisk (*),
+        #for example ABC*, and it selects all objects having names that start with the selected character string.
+        #An asterisk on its own matches all possible names.
+        include: ["ABC","DEF*"]
+        exclude:
+            #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+            - type: "STARTSWITH"
+            #The name of the queue or queue name pattern as per queue filter, comma separated values
+              values: ["SYSTEM"]
+
+mqMertics:
+  # This Object will extract queue manager metrics
+  - metricsType: "queueMgrMetrics"
+    metrics:
+      include:
+        - Status: "Status"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
+      
+  # This Object will extract channel metrics    
+  - metricsType: "queueMetrics"
+    metrics:
+      include:
+        - MaxQueueDepth: "Max Queue Depth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+          
+        - CurrentQueueDepth: "Current Queue Depth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
+          
+        - OpenInputCount: "Open Input Count"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
+          
+        - OpenOutputCount: "Open Output Count"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
+      
+  # This Object will extract queue metrics    
+  - metricsType: "channelMetrics"
+    metrics:
+      include:
+        - Messages: "Messages"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
+          
+        - Status: "Status"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS" #http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
+          
+        - ByteSent: "Byte Sent"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
+          
+        - ByteReceived: "Byte Received"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
+          
+        - BuffersSent: "Buffers Sent"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
+          
+        - BuffersReceived: "Buffers Received"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+  
+

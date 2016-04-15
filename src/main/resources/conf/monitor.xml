@@ -1,72 +1,24 @@
 <monitor>
-	<name>MqQueueMonitor</name>
+	<name>WMQueueMonitor</name>
 	<type>managed</type>
         <enabled>true</enabled>
-	<description>Monitors MQ Queues</description>
+	<description>Monitors Websphere Messaging Queues</description>
 	<monitor-configuration>
 	</monitor-configuration>
 	<monitor-run-task>
 		<execution-style>periodic</execution-style>
-		<execution-frequency-in-seconds>5</execution-frequency-in-seconds>
-		<name>MQ Queue Monitor Run Task</name>
-		<display-name>MQ Queue Monitor Task</display-name>
-		<description>MQ Queue Monitor Task</description>
+		<execution-frequency-in-seconds>30</execution-frequency-in-seconds>
+		<name>Websphere Messaging Queue Monitor Run Task</name>
+		<display-name>Websphere Messaging Queue Monitor Task</display-name>
+		<description>Websphere Messaging Queue Monitor Task</description>
 		<type>java</type>
 		<execution-timeout-in-secs>60</execution-timeout-in-secs>
 		<task-arguments>
-		    <!-- The name of the root folder where the metrics will appear under the tier -->
-			<argument name="root_category_name" is-required="true" default-value="Custom Metrics" />
-			<!-- The number of queue managers that are configured -->
-			<argument name="number_of_queue_managers" is-required="true" default-value="1" />
-			<!-- the host or IP address of the queue manager -->
-			<argument name="queue_mgr_host_1" is-required="true" default-value="127.0.0.1" />
-			<!-- The port number of the queue manager -->
-			<argument name="queue_mgr_port_1" is-required="true" default-value="1414" />
-			<!-- The actual name of the queue manager -->
-			<argument name="queue_mgr_name_1" is-required="true" default-value="QUEUEMGR01" />
-			<!-- The channel name of the queue manager -->
-			<argument name="queue_mgr_channel_name_1" is-required="true" default-value="SYSTEM.ADMIN.SVRCONN" />
-			<!-- The transport type for the queue manager connection, the default is 1 for a client type connection -->
-			<argument name="queue_mgr_transport_type_1" is-required="true" default-value="1" />
-			<!-- The user name for the connection if required -->
-			<argument name="queue_mgr_user_1" is-required="true" default-value="" />
-			<!-- The password for the connection if required -->
-			<argument name="queue_mgr_password_1" is-required="true" default-value="" />
-
-			<!-- The number of queue managers that are configured -->
-			<argument name="number_of_remote_queues" is-required="true" default-value="2" />
-
-			<!-- Define in set of queue manager name and queue name -->
-			<argument name="remote_queue_mgr_name_1" is-required="true" default-value="" />
-			<argument name="remote_queue_name_1" is-required="true" default-value="" />
-
-			<argument name="remote_queue_mgr_name_2" is-required="true" default-value="" />
-			<argument name="remote_queue_name_2" is-required="true" default-value="" />
-
-			<!-- queue filter type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues)  -->
-			<argument name="queue_filter_type" is-required="true" default-value="NONE" />
-			<!-- The name of the queue or queue name pattern as per queue filter, comma separated values are allowed-->
-			<argument name="queue_filter_value" is-required="false" default-value="" />
-			<!-- queue exclude filter type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE (default all queues)  -->
-			<argument name="queue_exclude_filter_type" is-required="false" default-value="STARTSWITH" />
-
-			<!-- exclude pattern startswith-->
-			<argument name="queue_exclude_filter_value" is-required="false" default-value="SYSTEM,AMQ,KMQ" />
-
-			<!-- The fully qualified path to the directory where stats files are written to, one file per queue, this is now turned off -->
-			<argument name="write_stats_directory" is-required="true" default-value="C:\Data\queue_stats" />
-			<!--
-			Enable AWR / ASH metric collection if it is licensed
-			<argument name="ash_licensed" is-required="false" default-value="true" />
-			-->
-			<task-arguments>
-        	<!--<argument name="config-file" is-required="true" default-value="monitors/MQMonitor/config.yaml" />-->
-        	</task-arguments>
-
+		    <argument name="config-file" is-required="false" default-value="monitors/WMQMonitor/config.yaml"/>
 		</task-arguments>
 		<java-task>
 			<classpath>websphere-mq-monitoring-extension.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;dhbcore.jar;com.ibm.mq.headers.jar;connector.jar;com.ibm.mq.pcf.jar</classpath>
-			<impl-class>com.appdynamics.mqmonitor.MQMonitor</impl-class>
+			<impl-class>com.appdynamics.extensions.webspheremq.WebsphereMQMonitor</impl-class>
 		</java-task>
 	</monitor-run-task>
 </monitor>

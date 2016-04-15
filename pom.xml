@@ -3,9 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.appdynamics.mqmonitor</groupId>
+    <groupId>com.appdynamics.wmqmonitor</groupId>
     <artifactId>websphere-mq-monitoring-extension</artifactId>
+<<<<<<< HEAD
     <version>1.6</version>
+=======
+    <version>4.0.0</version>
+>>>>>>> mqrewrite
     <packaging>jar</packaging>
     <name>websphere-mq-monitoring-extension</name>
     <url>http://maven.apache.org</url>
@@ -13,6 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
         <lib.dir>${basedir}/lib</lib.dir>
+        <target.dir>${project.build.directory}/WMQMonitor</target.dir>
     </properties>
     <dependencies>
         <dependency>
@@ -43,15 +48,39 @@
             <systemPath>${lib.dir}/com.ibm.mq.pcf.jar</systemPath>
         </dependency>
         <dependency>
-            <groupId>com.appdynamics</groupId>
-            <artifactId>appd-exts-commons</artifactId>
-            <version>1.1.2</version>
+            <groupId>com.ibm</groupId>
+            <artifactId>com.ibm.mq.headers</artifactId>
+            <version>7.5.0.2</version>
+            <scope>system</scope>
+            <systemPath>${lib.dir}/com.ibm.mq.headers.jar</systemPath>
         </dependency>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
-            <scope>provided</scope>
+            <groupId>com.ibm</groupId>
+            <artifactId>connector</artifactId>
+            <version>7.5.0.2</version>
+            <scope>system</scope>
+            <systemPath>${lib.dir}/connector.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.appdynamics</groupId>
+            <artifactId>appd-exts-commons</artifactId>
+            <version>1.5.7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>11.0.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.13</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -60,9 +89,22 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+<<<<<<< HEAD
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>1.13</version>
+=======
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+            <scope>provided</scope>
+>>>>>>> mqrewrite
         </dependency>
     </dependencies>
     <build>
@@ -105,7 +147,8 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Implementation-Title>MQMonitor v${project.version} Build Date ${maven.build.timestamp}</Implementation-Title>
+                                        <Implementation-Title>WMQMonitor v${project.version} Build Date ${maven.build.timestamp}</Implementation-Title>
+                                        <Main-Class>com.appdynamics.extensions.workbench.WorkbenchServerLauncher</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -123,16 +166,15 @@
                         <phase>install</phase>
                         <configuration>
                             <target>
-                                <property name="target.dir" value="${project.build.directory}/MQMonitor"/>
                                 <mkdir dir="${target.dir}"/>
                                 <copy todir="${target.dir}">
-                                    <fileset dir="src/main/resources/conf" includes="monitor.xml"/>
+                                    <fileset dir="src/main/resources/conf" includes="monitor.xml,config.yaml"/>
                                 </copy>
                                 <copy todir="${target.dir}">
                                     <fileset dir="${project.build.directory}" includes="${project.build.finalName}.${project.packaging}"/>
                                 </copy>
                                 <zip destfile="${target.dir}-${project.version}.zip">
-                                    <zipfileset dir="${target.dir}" filemode="755" prefix="MQMonitor/"/>
+                                    <zipfileset dir="${target.dir}" filemode="755" prefix="WMQMonitor/"/>
                                 </zip>
                                 <delete dir="${target.dir}"/>
                             </target>
