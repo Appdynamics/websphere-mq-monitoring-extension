@@ -5,11 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.appdynamics.wmqmonitor</groupId>
     <artifactId>websphere-mq-monitoring-extension</artifactId>
-<<<<<<< HEAD
-    <version>1.6</version>
-=======
     <version>4.0.0</version>
->>>>>>> mqrewrite
     <packaging>jar</packaging>
     <name>websphere-mq-monitoring-extension</name>
     <url>http://maven.apache.org</url>
@@ -89,11 +85,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-<<<<<<< HEAD
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>1.13</version>
-=======
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
@@ -104,7 +95,6 @@
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
             <scope>provided</scope>
->>>>>>> mqrewrite
         </dependency>
     </dependencies>
     <build>
