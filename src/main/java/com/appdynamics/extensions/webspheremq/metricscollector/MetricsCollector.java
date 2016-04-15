@@ -1,26 +1,23 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.appdynamics.extensions.conf.MonitorConfiguration;
 import com.appdynamics.extensions.util.metrics.MetricConstants;
 import com.appdynamics.extensions.util.metrics.MetricOverride;
 import com.appdynamics.extensions.webspheremq.common.Constants;
+import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
+import java.util.*;
 
 /**
  * MetricsCollector class is abstract and serves as superclass for all types of metric collection class.<br>
@@ -33,14 +30,12 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 public abstract class MetricsCollector {
 
 	protected Map<String, ? extends MetricOverride> metricsToReport;
-	protected AManagedMonitor monitor;
+	protected MonitorConfiguration writer;
 	protected PCFMessageAgent agent;
 	protected String metricPrefix;
 	protected QueueManager queueManager;
 
 	public static final Logger logger = LoggerFactory.getLogger(MetricsCollector.class);
-
-	protected abstract void processFilter() throws TaskExecutionException;
 
 	protected abstract void publishMetrics() throws TaskExecutionException;
 
@@ -54,15 +49,15 @@ public abstract class MetricsCollector {
 	 * 
 	 * @throws TaskExecutionException
 	 */
-	public final void processFilterAndPublishMetrics() throws TaskExecutionException {
-		processFilter();
+	public final void process() throws TaskExecutionException {
 		publishMetrics();
 	}
 
 	public void printMetric(String metricName, String value, String aggType, String timeRollup, String clusterRollup) {
-		MetricWriter metricWriter = monitor.getMetricWriter(metricName, aggType, timeRollup, clusterRollup);
-		metricWriter.printMetric(value);
-		logger.info("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value + " :" + aggType + ":" + timeRollup + ":" + clusterRollup);
+		writer.getMetricWriter().printMetric(metricName,value, aggType, timeRollup, clusterRollup);
+		//TODO remove print statement
+		//System.out.println("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value);
+		logger.debug("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value + " :" + aggType + ":" + timeRollup + ":" + clusterRollup);
 	}
 
 	protected String getMetricsName(String... pathelements) {
@@ -104,6 +99,55 @@ public abstract class MetricsCollector {
 
 	public static enum FilterType {
 		STARTSWITH, EQUALS, ENDSWITH, CONTAINS, NONE;
+	}
+
+	public boolean isExcluded(String resourceName, Set<ExcludeFilters> excludeFilters) {
+		if(excludeFilters == null){
+			return false;
+		}
+		for(ExcludeFilters filter : excludeFilters){
+			if(isExcluded(resourceName, filter)){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean isExcluded(String resourceName, ExcludeFilters excludeFilter){
+		String type = excludeFilter.getType();
+		Set<String> filterValues = excludeFilter.getValues();
+		switch (FilterType.valueOf(type)){
+			case CONTAINS:
+				for (String filterValue : filterValues) {
+					if (resourceName.contains(filterValue)) {
+						return true;
+					}
+				}
+				break;
+			case STARTSWITH:
+				for (String filterValue : filterValues) {
+					if (resourceName.startsWith(filterValue)) {
+						return true;
+					}
+				}
+				break;
+			case NONE:
+				return false;
+			case EQUALS:
+				for (String filterValue : filterValues) {
+					if (resourceName.equals(filterValue)) {
+						return true;
+					}
+				}
+				break;
+			case ENDSWITH:
+				for (String filterValue : filterValues) {
+					if (resourceName.endsWith(filterValue)) {
+						return true;
+					}
+				}
+		}
+		return false;
 	}
 
 	public List<String> evalExcludeFilter(String type, List<String> artifactList, Set<String> filterValueList) {

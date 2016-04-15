@@ -1,9 +1,8 @@
 package com.appdynamics.extensions.webspheremq.common;
 
-import org.apache.log4j.Logger;
-
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
+import org.apache.log4j.Logger;
 
 public class Util {
 

@@ -20,12 +20,10 @@ public class QueueManager {
 	private String cipherSuite;
 	private String cipherSpec;
 
-	
-	private QueueIncludeFilters queueIncludeFilters;
-	private QueueExcludeFilters queueExcludeFilters;
+	private ResourceFilters queueFilters;
 
-	private ChannelIncludeFilters channelIncludeFilters;
-	private ChannelExcludeFilters channelExcludeFilters;
+	private ResourceFilters channelFilters;
+
 	
 	List<String> writeStatsDirectory;
 
@@ -85,21 +83,15 @@ public class QueueManager {
 		this.password = password;
 	}
 
-	public QueueIncludeFilters getQueueIncludeFilters() {
-		return queueIncludeFilters;
+
+	public ResourceFilters getQueueFilters() {
+		return queueFilters;
 	}
 
-	public void setQueueIncludeFilters(QueueIncludeFilters queueIncludeFilters) {
-		this.queueIncludeFilters = queueIncludeFilters;
+	public void setQueueFilters(ResourceFilters queueFilters) {
+		this.queueFilters = queueFilters;
 	}
 
-	public ChannelIncludeFilters getChannelIncludeFilters() {
-		return channelIncludeFilters;
-	}
-
-	public void setChannelIncludeFilters(ChannelIncludeFilters channelIncludeFilters) {
-		this.channelIncludeFilters = channelIncludeFilters;
-	}
 
 	public List<String> getWriteStatsDirectory() {
 		return writeStatsDirectory;
@@ -109,21 +101,6 @@ public class QueueManager {
 		this.writeStatsDirectory = writeStatsDirectory;
 	}
 
-	public QueueExcludeFilters getQueueExcludeFilters() {
-		return queueExcludeFilters;
-	}
-
-	public void setQueueExcludeFilters(QueueExcludeFilters queueExcludeFilters) {
-		this.queueExcludeFilters = queueExcludeFilters;
-	}
-
-	public ChannelExcludeFilters getChannelExcludeFilters() {
-		return channelExcludeFilters;
-	}
-
-	public void setChannelExcludeFilters(ChannelExcludeFilters channelExcludeFilters) {
-		this.channelExcludeFilters = channelExcludeFilters;
-	}
 
 	public String getSslKeyRepository() {
 		return sslKeyRepository;
@@ -148,5 +125,12 @@ public class QueueManager {
 	public void setCipherSpec(String cipherSpec) {
 		this.cipherSpec = cipherSpec;
 	}
-		
+
+	public ResourceFilters getChannelFilters() {
+		return channelFilters;
+	}
+
+	public void setChannelFilters(ResourceFilters channelFilters) {
+		this.channelFilters = channelFilters;
+	}
 }

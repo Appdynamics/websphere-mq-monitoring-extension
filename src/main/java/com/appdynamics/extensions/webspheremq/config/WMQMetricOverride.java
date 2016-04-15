@@ -1,9 +1,8 @@
 package com.appdynamics.extensions.webspheremq.config;
 
+import com.appdynamics.extensions.util.metrics.MetricOverride;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.appdynamics.extensions.util.metrics.MetricOverride;
 
 public class WMQMetricOverride extends MetricOverride {
 

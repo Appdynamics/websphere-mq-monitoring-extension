@@ -1,11 +1,6 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import java.util.Iterator;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.appdynamics.extensions.conf.MonitorConfiguration;
 import com.appdynamics.extensions.util.metrics.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
@@ -14,6 +9,11 @@ import com.ibm.mq.pcf.PCFMessage;
 import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * This class is responsible for queue metric collection.
@@ -27,16 +27,12 @@ public class QueueManagerMetricsCollector extends MetricsCollector {
 	public static final Logger logger = LoggerFactory.getLogger(QueueManagerMetricsCollector.class);
 	private final String artifact = "Queue Manager";
 
-	public QueueManagerMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, AManagedMonitor monitor, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
+	public QueueManagerMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration writer, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
 		this.metricsToReport = metricsToReport;
-		this.monitor = monitor;
+		this.writer = writer;
 		this.agent = agent;
 		this.metricPrefix = metricPrefix;
 		this.queueManager = queueManager;
-	}
-
-	public void processFilter() {
-		// Filters are not applicable for Queue manager
 	}
 
 	public String getAtrifact() {
