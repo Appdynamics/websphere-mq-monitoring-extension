@@ -7,9 +7,9 @@ Use case
 
 The WebSphere MQ monitoring extension can monitor multiple queues managers and their resources, namely queues and channels.
 
-This monitor can report the specified metrics (Configurable) for queue managers:
+The metrics for queue manager, queue and channel can be configured.
 
-The MQ Monitor currently supports IBM Websphere MQ version 7.x. It may work with other Websphere MQ versions but it has not been tested in those environments.
+The MQ Monitor currently supports IBM Websphere MQ version 7.x and 8.x.
 
  
 Prerequisites
@@ -17,8 +17,8 @@ Prerequisites
  
 The machine where you install the monitor must have the AppDynamics Machine Agent installed and running.
  
-In CLIENT mode, the machine where you install the monitor must have firewall access to each queue manager (host and port) you define in the monitor.xml file.
-Also, in CLIENT mode, please provide admin level credentials in the config.yaml file to monitor the queue manager and its resources
+**In CLIENT mode, the machine where you install the monitor must have firewall access to each queue manager (host and port) you define in the monitor.xml file.
+Also, in CLIENT mode, please provide admin level credentials in the config.yaml file to monitor the queue manager and its resources**
 
 Dependencies
 ------------
@@ -37,20 +37,10 @@ com.ibm.mq.pcf.jar
 
 These jar files are typically found in /opt/mqm/java/lib on a UNIX server but may be found in an alternate location depending upon your environment.
  
-Alternatively, you may download either the Websphere MQ Server and/or Client that contain the jars here.
+To find these jars, you may download either the Websphere MQ Server and/or Client here.
 
-In case of client type connection, WMQ client must be installed as WMQ jars in turn need jni libraries.
+In case of client type connection, WMQ client must be installed to get the WMQ jars.
 
-Troubleshooting
----------------
-
-1. Verify Machine Agent Data: Please start the Machine Agent without the extension and make sure that it reports data. Verify that the machine agent status is UP and it is reporting Hardware Metrics.
-2. config.yml: Validate the file [here](http://www.yamllint.com/)
-3. There have been incompatibility issues with v7.0* and v7.1* version of WebSphere Message Queue Server.Please try using jar versions > v7.5x to resolve these incompatibility issues.
-   Similarly, v8.x no longer ships with connector.jar. Try using the missing jars from previous versions like v7.5x
-4. Metric Limit: Please start the machine agent with the argument -Dappdynamics.agent.maxMetrics=5000 if there is a metric limit reached error in the logs. If you don't see the expected metrics, this could be the cause.
-5. Check Logs: There could be some obvious errors in the machine agent logs. Please take a look.
-6. Collect Debug Logs: Edit the file, <MachineAgent>/conf/logging/log4j.xml and update the level of the appender com.appdynamics to debug Let it run for 5-10 minutes and attach the logs to a support ticket
 
 Rebuilding the Project
 ----------------------
@@ -72,19 +62,26 @@ The following instructions assume that you have installed the AppDynamics Machin
 
  2.1 BINDINGS type connection: Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.
  Copy the following jars to the MQMonitor directory
- 
-  ``` 
-   com.ibm.mq.commonservices.jar
-   com.ibm.mq.jar
-   com.ibm.mq.jmqi.jar
-   dhbcore.jar
-   com.ibm.mq.headers.jar
-   connector.jar
-   com.ibm.mq.pcf.jar
-  ```
- 2.2 Alternatively in case of CLIENT type connection install WMQ client and edit monitor.xml classpath section to point to above mentioned jars in WMQ client installation. This is important as jni libraries required by these jars are available in client installation only.
+
+ ```
+
+    com.ibm.mq.commonservices.jar
+    com.ibm.mq.jar
+    com.ibm.mq.jmqi.jar
+    dhbcore.jar
+    com.ibm.mq.headers.jar
+    connector.jar
+    com.ibm.mq.pcf.jar
+
+ ```
+
+ 2.2 Alternatively in case of CLIENT type connection install WMQ client and edit monitor.xml classpath section to point to above mentioned jars in WMQ client installation.
+
 
  If you don't want to copy the jar files, you can point to the jar files by providing the relative paths to the jar files in the monitor.xml.
+
+ If you are on version 8+ of WebSphere MQ, you may not find the connector.jar and dhbcore.jar. Please use com.ibm.mq.allclient.jar.
+ You will have to edit the monitor.xml to remove the connector.jar and dhbcore.jar with com.ibm.mq.allclient.jar
 
 3. Create a channel of type server connection in each of the queue manager you wish to query. 
 
@@ -99,6 +96,7 @@ The following is a sample config.yaml file that depicts two different queue mana
  
 
 ```
+
     #For most purposes, no need to change this.
     numberOfThreads: 10
 
@@ -217,6 +215,18 @@ The following is a sample config.yaml file that depicts two different queue mana
 
 ```
 
+Troubleshooting
+---------------
+
+1. Verify Machine Agent Data: Please start the Machine Agent without the extension and make sure that it reports data. Verify that the machine agent status is UP and it is reporting Hardware Metrics.
+2. config.yml: Validate the file [here](http://www.yamllint.com/)
+3. There have been incompatibility issues with v7.0* and v7.1* version of WebSphere Message Queue Server.Please try using jar versions > v7.5x to resolve these incompatibility issues.
+   Similarly, v8.x no longer ships with connector.jar and dhbcore.jar. Please use com.ibm.mq.allclient.jar. If it still doesn't work , Try using the missing jars from previous versions like v7.5x
+4. Metric Limit: Please start the machine agent with the argument -Dappdynamics.agent.maxMetrics=5000 if there is a metric limit reached error in the logs. If you don't see the expected metrics, this could be the cause.
+5. Check Logs: There could be some obvious errors in the machine agent logs. Please take a look.
+6. Collect Debug Logs: Edit the file, <MachineAgent>/conf/logging/log4j.xml and update the level of the appender com.appdynamics to debug Let it run for 5-10 minutes and attach the logs to a support ticket
+
+
 WorkBench
 ---------
 
@@ -279,5 +289,5 @@ More Troubleshooting
 		
 ```
 
-Also this might occour if you have used TABs in config.yaml, In that case yaml parsing will fail and config won't be loaded.
+Also this might occur if you have used TABs in config.yaml, In that case yaml parsing will fail and config won't be loaded.
 		
