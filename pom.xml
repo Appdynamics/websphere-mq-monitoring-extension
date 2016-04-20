@@ -12,8 +12,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
-        <lib.dir>${basedir}/lib_8_0_0_4</lib.dir>
-        <ibm.mq.lib.version>8.0.0.4</ibm.mq.lib.version>
+        <lib.dir>${basedir}/lib</lib.dir>
+        <ibm.mq.lib.version>7.5.2</ibm.mq.lib.version>
         <target.dir>${project.build.directory}/WMQMonitor</target.dir>
     </properties>
     <dependencies>
@@ -51,20 +51,20 @@
             <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.headers.jar</systemPath>
         </dependency>
-        <!--<dependency>
+        <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>connector</artifactId>
             <version>7.5.0.2</version>
             <scope>system</scope>
             <systemPath>${lib.dir}/connector.jar</systemPath>
-        </dependency>-->
-        <dependency>
+        </dependency>
+        <!--<dependency>
             <groupId>com.ibm</groupId>
             <artifactId>connector</artifactId>
             <scope>system</scope>
             <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.allclient.jar</systemPath>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.appdynamics</groupId>
             <artifactId>appd-exts-commons</artifactId>
