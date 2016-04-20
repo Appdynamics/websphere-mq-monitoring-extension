@@ -138,8 +138,8 @@ public class WebsphereMQMonitor extends AManagedMonitor {
 			for (QueueManager queueManager : config.getQueueManagers()) {
 				WebsphereMQMonitorTask websphereMqTask = new WebsphereMQMonitorTask(queueManager, config.getMetricPrefix(), config.getMqMertics(), writer);
 				executorService.execute(websphereMqTask);
-				//#TODO remove this
-				/*try {
+				/*//#TODO remove this
+				try {
 					Thread.sleep(100000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();

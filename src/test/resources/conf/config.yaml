@@ -9,9 +9,9 @@ metricPrefix: "Server|Component:<TIER_NAME>|Custom Metrics|WebsphereMQ|"
 
 queueManagers:
   - host: "192.168.57.104"
-    port: 1414
+    port: 1424
     #Actual name of the queue manager
-    name: "TEST_QM_1"
+    name: "VER_8_QMGR"
     #Channel name of the queue manager
     channelName: "SYSTEM.ADMIN.SVRCONN"
     #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection

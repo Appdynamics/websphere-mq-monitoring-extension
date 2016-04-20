@@ -13,6 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
         <lib.dir>${basedir}/lib_8_0_0_4</lib.dir>
+        <ibm.mq.lib.version>8.0.0.4</ibm.mq.lib.version>
         <target.dir>${project.build.directory}/WMQMonitor</target.dir>
     </properties>
     <dependencies>
@@ -25,29 +26,29 @@
         <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>com.ibm.mq</artifactId>
-            <version>7.5.0.2</version>
             <scope>system</scope>
+            <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>com.ibm.mq.jmqi</artifactId>
-            <version>7.5.0.2</version>
             <scope>system</scope>
+            <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.jmqi.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>com.ibm.mq.pcf</artifactId>
-            <version>7.5.0.2</version>
             <scope>system</scope>
+            <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.pcf.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>com.ibm.mq.headers</artifactId>
-            <version>7.5.0.2</version>
             <scope>system</scope>
+            <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.headers.jar</systemPath>
         </dependency>
         <!--<dependency>
@@ -60,8 +61,8 @@
         <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>connector</artifactId>
-            <version>7.5.0.2</version>
             <scope>system</scope>
+            <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.allclient.jar</systemPath>
         </dependency>
         <dependency>

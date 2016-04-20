@@ -55,8 +55,8 @@ public abstract class MetricsCollector {
 
 	public void printMetric(String metricName, String value, String aggType, String timeRollup, String clusterRollup) {
 		writer.getMetricWriter().printMetric(metricName,value, aggType, timeRollup, clusterRollup);
-		//TODO remove print statement
-		//System.out.println("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value);
+		/*//TODO remove print statement
+		System.out.println("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value);*/
 		logger.debug("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value + " :" + aggType + ":" + timeRollup + ":" + clusterRollup);
 	}
 
