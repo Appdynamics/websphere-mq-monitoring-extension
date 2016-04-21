@@ -274,12 +274,11 @@ More Troubleshooting
 1. Error `Completion Code '2', Reason '2495'`
    This might occour due to various reasons ranging from incorrect installation to applying [ibm fix packs](http://www-01.ibm.com/support/docview.wss?uid=swg21410038) but most of the time it happens when you are trying to connect in `Bindings` mode and machine agent is not on the same machine on which WMQ server is running. If you want to connect to WMQ server from a remote machine then connect using `Client` mode.
 
-2. Error `Completion Code '2', Reason '2495'`
    You could also see this error on windows **MQJE001: Completion Code '2', Reason '2495'; The native JNI library 'mqjbnd' was not found.Can't load AMD 64-bit .dll on a IA 32-bit platform**
    This issue can be resolved by setting the PATH variable to have the java/lib64 before the java/lib libraries. Please check the issue here https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.dev.doc/q031570_.htm
    **You will have to restart the Windows Server for it to work.**
 
-   Another way you can work around this issue is to avoid using the Bindings mode. Connect using CLIENT transport type from a remote box. Make sure to provide Windows admin username and password in the config.yaml.
+   Another way to get around this issue is to avoid using the Bindings mode. Connect using CLIENT transport type from a remote box. Make sure to provide Windows admin username and password in the config.yaml.
 
 3. Error `Completion Code '2', Reason '2035'`
    This could happen for various reasons but for most of the cases, for **Client** mode the user specified in config.yaml is not authorized to access the queue manager. Also sometimes even if userid and password are correct, channel auth (CHLAUTH) for that queue manager blocks traffics from other ips, you need to contact admin to provide you access to the queue manager.
@@ -299,5 +298,5 @@ More Troubleshooting
 
 
 
-Also this might occur if you have used TABs in config.yaml, In that case yaml parsing will fail and config won't be loaded.
+
 		
