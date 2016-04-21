@@ -220,7 +220,10 @@ Troubleshooting
 3.  MQ Version incompatibilities :  In case of any jar incompatibility issue, the rule of thumb is to **Use the jars from MQ version 7.5**. We have seen some jar incompatibility issues on IBM version 7.0.x ,version 7.1.x and version 8.x when the extension is configured in **Client** mode. However, after replacing the jars with MQ version 7.5's jars, everything worked fine. 
 4. Metric Limit: Please start the machine agent with the argument -Dappdynamics.agent.maxMetrics=5000 if there is a metric limit reached error in the logs. If you don't see the expected metrics, this could be the cause.
 5. Check Logs: There could be some obvious errors in the machine agent logs. Please take a look.
-6. Collect Debug Logs: Edit the file, <MachineAgent>/conf/logging/log4j.xml and update the level of the appender com.appdynamics to debug Let it run for 5-10 minutes and attach the logs to a support ticket
+6. `The config cannot be null` error.
+   This usually happenes when on a windows machine in monitor.xml you give config.yaml file path with linux file path separator `/`. Use Windows file path separator `\` e.g. `monitors\MQMonitor\config.yaml` .
+
+7. Collect Debug Logs: Edit the file, <MachineAgent>/conf/logging/log4j.xml and update the level of the appender com.appdynamics to debug Let it run for 5-10 minutes and attach the logs to a support ticket
 
 
 WorkBench
@@ -286,15 +289,7 @@ More Troubleshooting
 4. MQJE001: Completion Code '2', Reason '2195'
    This could happen in **Client** mode. One way this could be fixed is to use 7.5.2 version of the jars. 
 
-5. `The config cannot be null` error.
-   This usually happenes when on a windows machine in monitor.xml you give config.yaml file path with linux file path separator `/`. Use Windows file path separator `\` e.g. `monitors\MQMonitor\config.yaml` .
 
-```
-  <task-arguments>
-    <argument name="config-file" is-required="false" default-value="monitors\MQMonitor\config.yaml"/>
-  </task-arguments>
-		
-```
 
 
 
