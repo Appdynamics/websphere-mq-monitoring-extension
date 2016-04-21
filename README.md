@@ -15,10 +15,11 @@ The MQ Monitor currently supports IBM Websphere MQ version 7.x and 8.x.
 Prerequisites
 -------------
  
-The machine where you install the monitor must have the AppDynamics Machine Agent installed and running.
+This extension requires a AppDynamics Java Machine Agent installed and running. 
+
+If this extension is configured for **CLIENT** transport type (more on that later), please make sure the MQ's host and port is accessible. 
  
-**In CLIENT mode, the machine where you install the monitor must have firewall access to each queue manager (host and port) you define in the monitor.xml file.
-Also, in CLIENT mode, please provide admin level credentials in the config.yaml file to monitor the queue manager and its resources**
+If this extension is configured for **CLIENT** transport type (more on that later), admin level credentials to the queue manager would be needed. If the hosting OS for IBM MQ is Windows, Windows user credentials will be needed. 
 
 Dependencies
 ------------
@@ -35,11 +36,8 @@ connector.jar
 com.ibm.mq.pcf.jar
 ```
 
-These jar files are typically found in /opt/mqm/java/lib on a UNIX server but may be found in an alternate location depending upon your environment.
- 
-To find these jars, you may download either the Websphere MQ Server and/or Client here.
-
-In case of client type connection, WMQ client must be installed to get the WMQ jars.
+If you don't find the **connector.jar** & **dhbocre.jar**, please copy the **com.ibm.mq.allclient.jar** in the ```/monitors/WMQMonitor``` dir. 
+These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server but may be found in an alternate location depending upon your environment. In case **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars.
 
 
 Rebuilding the Project
@@ -52,36 +50,31 @@ Rebuilding the Project
 
 Installation
 ------------
-The following instructions assume that you have installed the AppDynamics Machine Agent in the following directory:
- 
-    Unix/Linux:    /AppDynamics/MachineAgent
-    Windows:     C:\AppDynamics\MachineAgent
- 
-1. Unzip contents of MQMonitor-<version>.zip file and copy to MachineAgent/monitors directory
-2. 
 
- 2.1 BINDINGS type connection: Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.
- Copy the following jars to the MQMonitor directory
+1. Unzip contents of WMQMonitor-<version>.zip file and copy to <code><machine-agent-dir>/monitors</code> directory.
+2. There are two transport modes in which this extension can be run
 
- ```
+  **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
 
-    com.ibm.mq.commonservices.jar
-    com.ibm.mq.jar
-    com.ibm.mq.jmqi.jar
-    dhbcore.jar
-    com.ibm.mq.headers.jar
-    connector.jar
-    com.ibm.mq.pcf.jar
+  **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the IBM MQ Client for this mode to get the necessary jars as mentioned previously.
+  
+   Copy the following jars to the WMQMonitor directory
+ 	```
 
- ```
+	    com.ibm.mq.commonservices.jar
+	    com.ibm.mq.jar
+	    com.ibm.mq.jmqi.jar
+	    dhbcore.jar
+	    com.ibm.mq.headers.jar
+	    connector.jar
+	    com.ibm.mq.pcf.jar
 
- 2.2 Alternatively in case of CLIENT type connection install WMQ client and edit monitor.xml classpath section to point to above mentioned jars in WMQ client installation.
+ 	```
 
+   As mentioned previously, If you don't find the **connector.jar** & **dhbcore.jar**, please copy the **com.ibm.mq.allclient.jar**. If you are copying the **com.ibm.mq.allclient.jar**, please edit the monitor.xml to replace the **connector.jar** & **dhbcore.jar** entries with  **com.ibm.mq.allclient.jar**
 
- If you don't want to copy the jar files, you can point to the jar files by providing the relative paths to the jar files in the monitor.xml.
+   If you don't want to copy the jar files, you can point to the jar files by providing the relative paths to the jar files in the  monitor.xml.
 
- If you are on version 8+ of WebSphere MQ, you may not find the connector.jar and dhbcore.jar. Please use com.ibm.mq.allclient.jar.
- You will have to edit the monitor.xml to remove the connector.jar and dhbcore.jar with com.ibm.mq.allclient.jar
 
 3. Create a channel of type server connection in each of the queue manager you wish to query. 
 
@@ -92,7 +85,7 @@ The following instructions assume that you have installed the AppDynamics Machin
 Sample config.yaml
 ------------------
  
-The following is a sample config.yaml file that depicts two different queue managers defined.
+The following is a sample config.yaml file that depicts two different queue managers defined. The different fields are explained in the in-line comments. 
  
 
 ```
@@ -214,14 +207,17 @@ The following is a sample config.yaml file that depicts two different queue mana
               ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
 
 ```
+Metrics
+--------
+The metrics will be reported under the tree ```Application Infrastructure Performance|$TIER|Custom Metrics|WebsphereMQ```
+
 
 Troubleshooting
 ---------------
 
 1. Verify Machine Agent Data: Please start the Machine Agent without the extension and make sure that it reports data. Verify that the machine agent status is UP and it is reporting Hardware Metrics.
 2. config.yml: Validate the file [here](http://www.yamllint.com/)
-3. There have been incompatibility issues with v7.0* and v7.1* version of WebSphere Message Queue Server.Please try using jar versions > v7.5x to resolve these incompatibility issues.
-   Similarly, v8.x no longer ships with connector.jar and dhbcore.jar. Please use com.ibm.mq.allclient.jar. If it still doesn't work , Try using the missing jars from previous versions like v7.5x
+3.  MQ Version incompatibilities :  In case of any jar incompatibility issue, the rule of thumb is to **Use the jars from MQ version 7.5**. We have seen some jar incompatibility issues on IBM version 7.0.x ,version 7.1.x and version 8.x when the extension is configured in **Client** mode. However, after replacing the jars with MQ version 7.5's jars, everything worked fine. 
 4. Metric Limit: Please start the machine agent with the argument -Dappdynamics.agent.maxMetrics=5000 if there is a metric limit reached error in the logs. If you don't see the expected metrics, this could be the cause.
 5. Check Logs: There could be some obvious errors in the machine agent logs. Please take a look.
 6. Collect Debug Logs: Edit the file, <MachineAgent>/conf/logging/log4j.xml and update the level of the appender com.appdynamics to debug Let it run for 5-10 minutes and attach the logs to a support ticket
