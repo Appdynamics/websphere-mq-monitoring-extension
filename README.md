@@ -195,6 +195,10 @@ The following is a sample config.yaml file that depicts two different queue mana
             - OnQTime: "OnQTime"
               ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
               ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            
+            - UncommittedMsgs: "UncommittedMsgs"
+              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_UNCOMMITTED_MSGS"
+              ibmCommand: "MQCMD_INQUIRE_Q_STATUS"  
     
             - HighQDepth: "HighQDepth"
               ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
