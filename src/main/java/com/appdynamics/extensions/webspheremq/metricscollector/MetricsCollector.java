@@ -1,15 +1,12 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.conf.MonitorConfiguration;
-import com.appdynamics.extensions.util.metrics.MetricConstants;
-import com.appdynamics.extensions.util.metrics.MetricOverride;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
+import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.pcf.PCFMessageAgent;
-import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
-import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +27,7 @@ import java.util.*;
 public abstract class MetricsCollector {
 
 	protected Map<String, ? extends MetricOverride> metricsToReport;
-	protected MonitorConfiguration writer;
+	protected MonitorConfiguration monitorConfig;
 	protected PCFMessageAgent agent;
 	protected String metricPrefix;
 	protected QueueManager queueManager;
@@ -54,7 +51,7 @@ public abstract class MetricsCollector {
 	}
 
 	public void printMetric(String metricName, String value, String aggType, String timeRollup, String clusterRollup) {
-		writer.getMetricWriter().printMetric(metricName,value, aggType, timeRollup, clusterRollup);
+		monitorConfig.getMetricWriter().printMetric(metricName,value, aggType, timeRollup, clusterRollup);
 		/*//TODO remove print statement
 		System.out.println("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value);*/
 		logger.debug("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value + " :" + aggType + ":" + timeRollup + ":" + clusterRollup);
@@ -65,7 +62,7 @@ public abstract class MetricsCollector {
 		for (int i = 0; i < pathelements.length; i++) {
 			pathBuilder.append(pathelements[i]);
 			if (i != pathelements.length - 1) {
-				pathBuilder.append(MetricConstants.METRICS_SEPARATOR);
+				pathBuilder.append("|");
 			}
 		}
 		return pathBuilder.toString();
@@ -249,7 +246,7 @@ public abstract class MetricsCollector {
 	
 
 
-	protected int[] getIntArrtibutesArray(int... inputAttrs) {
+	protected int[] getIntAttributesArray(int... inputAttrs) {
 		int[] attrs = new int[inputAttrs.length+getMetricsToReport().size()];
 		// fill input attrs
 		for(int i=0 ; i< inputAttrs.length; i++){

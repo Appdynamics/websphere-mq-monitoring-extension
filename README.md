@@ -36,7 +36,7 @@ connector.jar
 com.ibm.mq.pcf.jar
 ```
 
-If you don't find the **connector.jar** & **dhbocre.jar**, please copy the **com.ibm.mq.allclient.jar** in the ```/monitors/WMQMonitor``` dir. 
+If you don't find the **connector.jar** & **dhbcore.jar**, please copy the **com.ibm.mq.allclient.jar** in the ```/monitors/WMQMonitor``` dir. 
 These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server but may be found in an alternate location depending upon your environment. In case **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars.
 
 
@@ -167,44 +167,70 @@ The following is a sample config.yaml file that depicts two different queue mana
           include:
             - Status: "Status"
               ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
-
-      # This Object will extract channel metrics
+          
+      # This Object will extract queue metrics
       - metricsType: "queueMetrics"
         metrics:
           include:
             - MaxQueueDepth: "Max Queue Depth"
-              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
-
-            - CurrentQueueDepth: "Current Queue Depth"
               ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
-
+              ibmCommand: "MQCMD_INQUIRE_Q"
+              
+            - CurrentQueueDepth: "Current Queue Depth"
+              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+              ibmCommand: "MQCMD_INQUIRE_Q"
+              
             - OpenInputCount: "Open Input Count"
               ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
-
+              ibmCommand: "MQCMD_INQUIRE_Q"
+              
             - OpenOutputCount: "Open Output Count"
               ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
-
-      # This Object will extract queue metrics
+              ibmCommand: "MQCMD_INQUIRE_Q"
+    
+            - OldestMsgAge: "OldestMsgAge"
+              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
+              ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+    
+            - OnQTime: "OnQTime"
+              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
+              ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+    
+            - HighQDepth: "HighQDepth"
+              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
+              ibmCommand: "MQCMD_RESET_Q_STATS"
+    
+            - MsgDeqCount: "MsgDeqCount"
+              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_DEQ_COUNT"
+              ibmCommand: "MQCMD_RESET_Q_STATS"
+    
+            - MsgEnqCount: "MsgEnqCount"
+              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_ENQ_COUNT"
+              ibmCommand: "MQCMD_RESET_Q_STATS"
+    
+          
+      # This Object will extract channel metrics
       - metricsType: "channelMetrics"
         metrics:
           include:
             - Messages: "Messages"
               ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
-
+              
             - Status: "Status"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS" #http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
-
+              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"  #http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
+              
             - ByteSent: "Byte Sent"
               ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
-
+              
             - ByteReceived: "Byte Received"
               ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
-
+              
             - BuffersSent: "Buffers Sent"
               ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
-
+              
             - BuffersReceived: "Buffers Received"
               ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+
 
 ```
 Metrics

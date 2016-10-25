@@ -1,6 +1,7 @@
 package com.appdynamics.extensions.webspheremq;
 
 import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.util.MetricWriteHelper;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.MqMetric;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -14,7 +15,6 @@ import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
 import com.ibm.mq.headers.CMQC;
 import com.ibm.mq.pcf.PCFMessageAgent;
-import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,27 +26,26 @@ import java.util.Map;
 /**
  * Encapsulates all metrics collection for all artifacts related to a queue manager.
  * 
- * @author rajeevsingh
+ * @author rajeevsingh,kunalgup
  * @version 2.0
  *
  */
-public class WebsphereMQMonitorTask implements Runnable {
+public class WMQMonitorTask implements Runnable {
 
-	public static final Logger logger = LoggerFactory.getLogger(WebsphereMQMonitorTask.class);
+	public static final Logger logger = LoggerFactory.getLogger(WMQMonitorTask.class);
 	private QueueManager queueManager;
 	private String metricPrefix;
-	private MonitorConfiguration writer;
+	private MonitorConfiguration monitorConfig;
 	private MqMetric[] mqMetrics;
 
-	public WebsphereMQMonitorTask(QueueManager queueManager, String metricPrefix, MqMetric[] mqMetrics, MonitorConfiguration writer) {
+	public WMQMonitorTask(QueueManager queueManager, String metricPrefix, MqMetric[] mqMetrics, MonitorConfiguration monitorConfig) {
 		this.queueManager = queueManager;
 		this.metricPrefix = metricPrefix;
-		this.writer = writer;
+		this.monitorConfig = monitorConfig;
 		this.mqMetrics = mqMetrics;
 	}
 
 	public void run() {
-
 		long startTime = System.currentTimeMillis();
 		try {
 			logger.debug("WebSphereMQ monitor thread for queueManager " + queueManager.getName() + " started.");
@@ -61,7 +60,7 @@ public class WebsphereMQMonitorTask implements Runnable {
 
 	private void extractAndReportMetrics() throws MQException, TaskExecutionException {
 		Map<String, Map<String, WMQMetricOverride>> metricsMap = getMetricsToReport();
-		WebsphereMQContext auth = new WebsphereMQContext(queueManager);
+		WMQContext auth = new WMQContext(queueManager);
 		Hashtable env = auth.getMQEnvironment();
 		extractAndReportInternal(env, metricsMap);
 	}
@@ -101,6 +100,7 @@ public class WebsphereMQMonitorTask implements Runnable {
 			override.setTimeRollup(metricTypes[1]);
 			override.setClusterRollup(metricTypes[2]);
 			override.setMetricKey(metricName);
+			override.setIbmCommand((String) metric.get("ibmCommand"));
 			override.setIbmConstant((String) metric.get("ibmConstant"));
 			if (override.getConstantValue() == -1) {
 				// Only add the metric which is valid, if constant value
@@ -131,7 +131,7 @@ public class WebsphereMQMonitorTask implements Runnable {
 
 			Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
 			if (qMgrMetricsToReport != null) {
-				MetricsCollector qMgrMetricsCollector = new QueueManagerMetricsCollector(qMgrMetricsToReport, this.writer, agent, queueManager, this.metricPrefix);
+				MetricsCollector qMgrMetricsCollector = new QueueManagerMetricsCollector(qMgrMetricsToReport, this.monitorConfig, agent, queueManager, this.metricPrefix);
 				qMgrMetricsCollector.process();
 			} else {
 				logger.warn("No queue manager metrics to report");
@@ -139,7 +139,7 @@ public class WebsphereMQMonitorTask implements Runnable {
 
 			Map<String, WMQMetricOverride> channelMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_CHANNEL);
 			if (channelMetricsToReport != null) {
-				MetricsCollector channelMetricsCollector = new ChannelMetricsCollector(channelMetricsToReport, this.writer, agent, queueManager, this.metricPrefix);
+				MetricsCollector channelMetricsCollector = new ChannelMetricsCollector(channelMetricsToReport, this.monitorConfig, agent, queueManager, this.metricPrefix);
 				channelMetricsCollector.process();
 			} else {
 				logger.warn("No channel metrics to report");
@@ -147,7 +147,7 @@ public class WebsphereMQMonitorTask implements Runnable {
 
 			Map<String, WMQMetricOverride> queueMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE);
 			if (queueMetricsToReport != null) {
-				MetricsCollector queueMetricsCollector = new QueueMetricsCollector(queueMetricsToReport, this.writer, agent, queueManager, this.metricPrefix);
+				MetricsCollector queueMetricsCollector = new QueueMetricsCollector(queueMetricsToReport, this.monitorConfig, agent, queueManager, this.metricPrefix);
 				queueMetricsCollector.process();
 			} else {
 				logger.warn("No queue metrics to report");

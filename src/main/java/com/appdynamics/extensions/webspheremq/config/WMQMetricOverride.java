@@ -1,12 +1,12 @@
 package com.appdynamics.extensions.webspheremq.config;
 
-import com.appdynamics.extensions.util.metrics.MetricOverride;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WMQMetricOverride extends MetricOverride {
 
 	String ibmConstant;
+	String ibmCommand;
 	int constantValue = -1;
 	public static final Logger logger = LoggerFactory.getLogger(WMQMetricOverride.class);
 
@@ -20,6 +20,14 @@ public class WMQMetricOverride extends MetricOverride {
 
 	public void setIbmConstant(String ibmConstant) {
 		this.ibmConstant = ibmConstant;
+	}
+
+	public String getIbmCommand() {
+		return ibmCommand;
+	}
+
+	public void setIbmCommand(String ibmCommand) {
+		this.ibmCommand = ibmCommand;
 	}
 
 	public int getConstantValue() {
@@ -53,6 +61,7 @@ public class WMQMetricOverride extends MetricOverride {
 		stringRep.append("Metric Key=" + getMetricKey() + ",");
 		stringRep.append("Alias=" + getAlias() + ",");
 		stringRep.append("IbmConstant=" + getIbmConstant() + ",");
+		stringRep.append("IbmCommand=" + getIbmCommand() + ",");
 		stringRep.append("ConstantVal=" + getConstantValue() + ",");
 		stringRep.append("Aggregator=" + getAggregator() + ",");
 		stringRep.append("TimeRollup=" + getTimeRollup() + ",");

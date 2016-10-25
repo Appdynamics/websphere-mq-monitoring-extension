@@ -4,8 +4,9 @@ numberOfThreads: 10
 #This will create this metric in all the tiers, under this path. Please make sure to have a trailing |
 #metricPrefix: Custom Metrics|WebsphereMQ|
 
-#This will create it in specific Tier. Replace <TIER_ID>. Please make sure to have a trailing |
-metricPrefix: "Server|Component:<TIER_ID>|Custom Metrics|WebsphereMQ|"
+#This will create it in specific Tier aka Component. Replace <COMPONENT_ID>. Please make sure to have a trailing |.
+#To find out the COMPONENT_ID, please see the screen shot here https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
+metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
 
 queueManagers:
   - host: "localhost"
@@ -22,8 +23,7 @@ queueManagers:
     username: ""
     password: ""
     
-    #SSL related properties
-    # e.g."C:/Program Files (x86)/IBM/WebSphere MQ/ssl/key" , Please use forward slash in the path.
+    #SSL related properties. Please provide the path
     sslKeyRepository: ""
     # e.g. "SSL_RSA_WITH_AES_128_CBC_SHA256"
     cipherSuite: ""
@@ -59,23 +59,48 @@ mqMertics:
         - Status: "Status"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
       
-  # This Object will extract channel metrics    
+  # This Object will extract queue metrics
   - metricsType: "queueMetrics"
     metrics:
       include:
         - MaxQueueDepth: "Max Queue Depth"
-          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"          
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
+          ibmCommand: "MQCMD_INQUIRE_Q"
           
         - CurrentQueueDepth: "Current Queue Depth"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+          ibmCommand: "MQCMD_INQUIRE_Q"
           
         - OpenInputCount: "Open Input Count"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
+          ibmCommand: "MQCMD_INQUIRE_Q"
           
         - OpenOutputCount: "Open Output Count"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
+          ibmCommand: "MQCMD_INQUIRE_Q"
+
+        - OldestMsgAge: "OldestMsgAge"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
+          ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+
+        - OnQTime: "OnQTime"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
+          ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+
+        - HighQDepth: "HighQDepth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
+          ibmCommand: "MQCMD_RESET_Q_STATS"
+
+        - MsgDeqCount: "MsgDeqCount"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_DEQ_COUNT"
+          ibmCommand: "MQCMD_RESET_Q_STATS"
+
+        - MsgEnqCount: "MsgEnqCount"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_ENQ_COUNT"
+          ibmCommand: "MQCMD_RESET_Q_STATS"
+
       
-  # This Object will extract queue metrics    
+  # This Object will extract channel metrics
   - metricsType: "channelMetrics"
     metrics:
       include:

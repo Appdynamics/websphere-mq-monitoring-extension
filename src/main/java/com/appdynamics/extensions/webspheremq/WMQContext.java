@@ -17,12 +17,12 @@ import java.util.Hashtable;
  * @version 2.0
  *
  */
-public class WebsphereMQContext {
+public class WMQContext {
 
-	public static final Logger logger = LoggerFactory.getLogger(WebsphereMQContext.class);
+	public static final Logger logger = LoggerFactory.getLogger(WMQContext.class);
 	private QueueManager queueManager;
 
-	public WebsphereMQContext(QueueManager queueManager) {
+	public WMQContext(QueueManager queueManager) {
 		this.queueManager = queueManager;
 		validateArgs();
 	}

@@ -18,7 +18,7 @@
 		</task-arguments>
 		<java-task>
 			<classpath>websphere-mq-monitoring-extension.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;dhbcore.jar;com.ibm.mq.headers.jar;connector.jar;com.ibm.mq.pcf.jar</classpath>
-			<impl-class>com.appdynamics.extensions.webspheremq.WebsphereMQMonitor</impl-class>
+			<impl-class>com.appdynamics.extensions.webspheremq.WMQMonitor</impl-class>
 		</java-task>
 	</monitor-run-task>
 </monitor>

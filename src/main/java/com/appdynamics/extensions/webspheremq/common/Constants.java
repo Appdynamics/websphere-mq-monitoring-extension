@@ -4,9 +4,6 @@ public class Constants {
 	
 	public static final int DEFAULT_NUMBER_OF_THREADS = 10;
 	
-	public static String METRIC_STATUS = "Status";
-	public static String FILTER_STATUS = "EQUALS";
-	
 	public static final double DEFAULT_MULTIPLIER = 1d;
 	public static final String DEFAULT_METRIC_TYPE = "AVERAGE AVERAGE INDIVIDUAL";
 	

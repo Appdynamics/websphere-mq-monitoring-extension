@@ -1,22 +1,25 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.conf.MonitorConfiguration;
-import com.appdynamics.extensions.util.metrics.MetricOverride;
-import com.appdynamics.extensions.webspheremq.config.*;
-import com.ibm.mq.MQException;
+import com.appdynamics.extensions.util.MetricWriteHelper;
+import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
+import com.appdynamics.extensions.webspheremq.config.MetricOverride;
+import com.appdynamics.extensions.webspheremq.config.QueueManager;
+import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.constants.MQConstants;
 import com.ibm.mq.pcf.PCFException;
 import com.ibm.mq.pcf.PCFMessage;
 import com.ibm.mq.pcf.PCFMessageAgent;
-import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This class is responsible for channel metric collection.
@@ -34,9 +37,9 @@ public class ChannelMetricsCollector extends MetricsCollector {
 	 * The Channel Status values are mentioned here http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
 	 */
 
-	public ChannelMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration writer, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
+	public ChannelMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
 		this.metricsToReport = metricsToReport;
-		this.writer = writer;
+		this.monitorConfig = monitorConfig;
 		this.agent = agent;
 		this.metricPrefix = metricPrefix;
 		this.queueManager = queueManager;
@@ -51,7 +54,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 			return;
 		}
 
-		int[] attrs = getIntArrtibutesArray(CMQCFC.MQCACH_CHANNEL_NAME, CMQCFC.MQCACH_CONNECTION_NAME);
+		int[] attrs = getIntAttributesArray(CMQCFC.MQCACH_CHANNEL_NAME, CMQCFC.MQCACH_CONNECTION_NAME);
 		logger.debug("Attributes being sent along PCF agent request to query channel metrics: " + Arrays.toString(attrs));
 
 		Set<String> channelGenericNames = this.queueManager.getChannelFilters().getInclude();

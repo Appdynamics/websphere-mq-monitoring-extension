@@ -49,23 +49,47 @@ mqMertics:
         - Status: "Status"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
       
-  # This Object will extract channel metrics    
+# This Object will extract queue metrics
   - metricsType: "queueMetrics"
     metrics:
       include:
         - MaxQueueDepth: "Max Queue Depth"
-          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
-          
-        - CurrentQueueDepth: "Current Queue Depth"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
-          
+          ibmCommand: "MQCMD_INQUIRE_Q"
+
+        - CurrentQueueDepth: "Current Queue Depth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+          ibmCommand: "MQCMD_INQUIRE_Q"
+
         - OpenInputCount: "Open Input Count"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
-          
+          ibmCommand: "MQCMD_INQUIRE_Q"
+
         - OpenOutputCount: "Open Output Count"
           ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
+          ibmCommand: "MQCMD_INQUIRE_Q"
+
+        - OldestMsgAge: "OldestMsgAge"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
+          ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+
+        - OnQTime: "OnQTime"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
+          ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+
+        - HighQDepth: "HighQDepth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
+          ibmCommand: "MQCMD_RESET_Q_STATS"
+
+        - MsgDeqCount: "MsgDeqCount"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_DEQ_COUNT"
+          ibmCommand: "MQCMD_RESET_Q_STATS"
+
+        - MsgEnqCount: "MsgEnqCount"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_ENQ_COUNT"
+          ibmCommand: "MQCMD_RESET_Q_STATS"
       
-  # This Object will extract queue metrics    
+  # This Object will extract channel metrics
   - metricsType: "channelMetrics"
     metrics:
       include:

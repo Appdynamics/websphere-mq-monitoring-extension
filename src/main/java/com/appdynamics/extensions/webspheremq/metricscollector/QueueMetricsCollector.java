@@ -1,33 +1,36 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.conf.MonitorConfiguration;
-import com.appdynamics.extensions.util.metrics.MetricOverride;
+import com.appdynamics.extensions.util.MetricWriteHelper;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
+import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQC;
-import com.ibm.mq.constants.CMQCFC;
-import com.ibm.mq.pcf.PCFException;
-import com.ibm.mq.pcf.PCFMessage;
-import com.ibm.mq.pcf.PCFMessageAgent;
-import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
+import com.ibm.mq.pcf.*;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
+import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.*;
 
 public class QueueMetricsCollector extends MetricsCollector {
 
 	public static final Logger logger = LoggerFactory.getLogger(QueueMetricsCollector.class);
 	private final String artifact = "Queues";
 
-	public QueueMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration writer, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
+	public QueueMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
 		this.metricsToReport = metricsToReport;
-		this.writer = writer;
+		this.monitorConfig = monitorConfig;
 		this.agent = agent;
 		this.metricPrefix = metricPrefix;
 		this.queueManager = queueManager;
@@ -35,74 +38,53 @@ public class QueueMetricsCollector extends MetricsCollector {
 
 	@Override
 	protected void publishMetrics() throws TaskExecutionException {
-		/*
-		 * attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH, CMQC.MQIA_MAX_Q_DEPTH, CMQC.MQIA_OPEN_INPUT_COUNT, CMQC.MQIA_OPEN_OUTPUT_COUNT };
-		 */
-		long entryTime = System.currentTimeMillis();
-
-		if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
-			logger.debug("Queue metrics to report from the config is null or empty, nothing to publish");
-			return;
+		logger.info("Collecting queue metrics...");
+		List<Future> futures = Lists.newArrayList();
+		Map<String, ? extends MetricOverride>  metricsForInquireQCmd = getMetricsToReport(InquireQCmdCollector.COMMAND);
+		if(!metricsForInquireQCmd.isEmpty()){
+			futures.add(monitorConfig.getExecutorService().submit(new InquireQCmdCollector(this,metricsForInquireQCmd)));
 		}
-
-
-		int[] attrs = getIntArrtibutesArray(CMQC.MQCA_Q_NAME);
-		logger.debug("Attributes being sent along PCF agent request to query channel metrics: " + Arrays.toString(attrs));
-
-		Set<String> queueGenericNames = this.queueManager.getQueueFilters().getInclude();
-		for(String queueGenericName : queueGenericNames){
-			// list of all metrics extracted through MQCMD_INQUIRE_Q is mentioned here https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087810_.htm
-			PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_Q);
-			request.addParameter(CMQC.MQCA_Q_NAME, queueGenericName);
-			request.addParameter(CMQC.MQIA_Q_TYPE, CMQC.MQQT_ALL);
-			request.addParameter(CMQCFC.MQIACF_Q_ATTRS, attrs);
-			PCFMessage[] response;
-
+		Map<String, ? extends MetricOverride>  metricsForInquireQStatusCmd = getMetricsToReport(InquireQStatusCmdCollector.COMMAND);
+		if(!metricsForInquireQStatusCmd.isEmpty()){
+			futures.add(monitorConfig.getExecutorService().submit(new InquireQStatusCmdCollector(this,metricsForInquireQStatusCmd)));
+		}
+		Map<String, ? extends MetricOverride>  metricsForResetQStatsCmd = getMetricsToReport(ResetQStatsCmdCollector.COMMAND);
+		if(!metricsForResetQStatsCmd.isEmpty()){
+			futures.add(monitorConfig.getExecutorService().submit(new ResetQStatsCmdCollector(this,metricsForResetQStatsCmd)));
+		}
+		for(Future f: futures){
 			try {
-				logger.debug("sending PCF agent request to query metrics for generic queue {}",queueGenericName);
-				long startTime = System.currentTimeMillis();
-				response = agent.send(request);
-				long endTime = System.currentTimeMillis() - startTime;
-				logger.debug("PCF agent queue metrics query response for generic queue {} received in {} milliseconds", queueGenericName, endTime);
-				if (response == null || response.length <= 0) {
-					logger.debug("Unexpected Error while PCFMessage.send(), response is either null or empty");
-					return;
+				long timeout = 20;
+				if(monitorConfig.getConfigYml().get("threadTimeoutInSeconds") != null){
+					timeout = Long.parseLong((String)monitorConfig.getConfigYml().get("threadTimeoutInSeconds"));
 				}
-				for (int i = 0; i < response.length; i++) {
-					String queueName = response[i].getStringParameterValue(CMQC.MQCA_Q_NAME).trim();
-					Set<ExcludeFilters> excludeFilters = this.queueManager.getQueueFilters().getExclude();
-					if(!isExcluded(queueName,excludeFilters)) { //check for exclude filters
-						logger.debug("Pulling out metrics for queue name {}",queueName);
-						Iterator<String> itr = getMetricsToReport().keySet().iterator();
-						while (itr.hasNext()) {
-							String metrickey = itr.next();
-							WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
-							int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-							publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias());
-						}
-					}
-					else{
-						logger.debug("Queue name {} is excluded.",queueName);
-					}
-				}
-			} catch (PCFException pcfe) {
-				logger.error("PCFException caught while collecting metric for Queue: " + queueGenericName, pcfe);
-				PCFMessage[] msgs = (PCFMessage[]) pcfe.exceptionSource;
-				for (int i = 0; i < msgs.length; i++) {
-					logger.error(msgs[i].toString());
-				}
-				// Dont throw exception as it will stop queuemetric colloection
-			} catch (Exception mqe) {
-				logger.error("MQException caught", mqe);
-				// Dont throw exception as it will stop queuemetric colloection
+				f.get(timeout, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				logger.error("The thread was interrupted ",e);
+			} catch (ExecutionException e) {
+				logger.error("Something unforeseen has happened ",e);
+			} catch (TimeoutException e) {
+				logger.error("Thread timed out ",e);
 			}
-			// #TODO extract metrics like CMQC.MQIA_MSG_DEQ_COUNT, CMQC.MQIA_MSG_ENQ_COUNT  using the CMQCFC.MQCMD_RESET_Q_STATS through a new PCF request
 		}
-		long exitTime = System.currentTimeMillis() - entryTime;
-		logger.debug("Time taken to publish metrics for all queues is {} milliseconds", exitTime);
 	}
 
-
+	private Map<String, ? extends MetricOverride> getMetricsToReport(String command) {
+		Map<String, WMQMetricOverride> commandMetrics = Maps.newHashMap();
+		if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
+			logger.debug("There are no metrics configured for {}",command);
+			return commandMetrics;
+		}
+		Iterator<String> itr = getMetricsToReport().keySet().iterator();
+		while (itr.hasNext()) {
+			String metrickey = itr.next();
+			WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
+			if(wmqOverride.getIbmCommand().equalsIgnoreCase(command)){
+				commandMetrics.put(metrickey,wmqOverride);
+			}
+		}
+		return commandMetrics;
+	}
 
 	@Override
 	public String getAtrifact() {
@@ -114,5 +96,49 @@ public class QueueMetricsCollector extends MetricsCollector {
 		return this.metricsToReport;
 	}
 
+	protected void processPCFRequestAndPublishQMetrics(String queueGenericName, PCFMessage request, String command) throws MQException, IOException {
+		PCFMessage[] response;
+		logger.debug("sending PCF agent request to query metrics for generic queue {} for command {}",queueGenericName,command);
+		long startTime = System.currentTimeMillis();
+		response = agent.send(request);
+		long endTime = System.currentTimeMillis() - startTime;
+		logger.debug("PCF agent queue metrics query response for generic queue {} for command {} received in {} milliseconds", queueGenericName, command,endTime);
+		if (response == null || response.length <= 0) {
+			logger.debug("Unexpected Error while PCFMessage.send() for command {}, response is either null or empty",command);
+			return;
+		}
+		for (int i = 0; i < response.length; i++) {
+			String queueName = response[i].getStringParameterValue(CMQC.MQCA_Q_NAME).trim();
+			Set<ExcludeFilters> excludeFilters = this.queueManager.getQueueFilters().getExclude();
+			if(!isExcluded(queueName,excludeFilters)) { //check for exclude filters
+				logger.debug("Pulling out metrics for queue name {} for command {}",queueName,command);
+				Iterator<String> itr = getMetricsToReport().keySet().iterator();
+				while (itr.hasNext()) {
+					String metrickey = itr.next();
+					WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
+					PCFParameter pcfParam = response[i].getParameter(wmqOverride.getConstantValue());
+					if(pcfParam instanceof MQCFIN){
+						int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
+						publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias());
+					}
+					else if(pcfParam instanceof MQCFIL){
+						int[] metricVals = response[i].getIntListParameterValue(wmqOverride.getConstantValue());
+						if(metricVals != null){
+							int count=0;
+							for(int val : metricVals){
+								count++;
+								publishMetric(wmqOverride, val, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias(),"_" + Integer.toString(count));
+							}
+						}
 
+
+					}
+				}
+			}
+			else{
+				logger.debug("Queue name {} is excluded.",queueName);
+			}
+		}
+
+	}
 }

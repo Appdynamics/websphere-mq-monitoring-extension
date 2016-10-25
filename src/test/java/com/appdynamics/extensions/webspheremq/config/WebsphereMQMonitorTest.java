@@ -1,7 +1,7 @@
 package com.appdynamics.extensions.webspheremq.config;
 
 
-import com.appdynamics.extensions.webspheremq.WebsphereMQMonitor;
+import com.appdynamics.extensions.webspheremq.WMQMonitor;
 import com.google.common.collect.Maps;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.junit.Test;
@@ -13,7 +13,7 @@ public class WebsphereMQMonitorTest {
 
     @Test
     public void testWMQMonitor() throws ClassNotFoundException, TaskExecutionException {
-        WebsphereMQMonitor mqMonitor = new WebsphereMQMonitor();
+        WMQMonitor mqMonitor = new WMQMonitor();
         Map<String, String> taskArgs = Maps.newHashMap();
         taskArgs.put(CONFIG_ARG, "src/test/resources/conf/config.yaml");
         mqMonitor.execute(taskArgs, null);
