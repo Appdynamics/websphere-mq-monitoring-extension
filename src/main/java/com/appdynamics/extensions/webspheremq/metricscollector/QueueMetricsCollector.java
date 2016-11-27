@@ -55,8 +55,8 @@ public class QueueMetricsCollector extends MetricsCollector {
 		for(Future f: futures){
 			try {
 				long timeout = 20;
-				if(monitorConfig.getConfigYml().get("threadTimeoutInSeconds") != null){
-					timeout = Long.parseLong((String)monitorConfig.getConfigYml().get("threadTimeoutInSeconds"));
+				if(monitorConfig.getConfigYml().get("queueMetricsCollectionTimeoutInSeconds") != null){
+					timeout = Long.parseLong((String)monitorConfig.getConfigYml().get("queueMetricsCollectionTimeoutInSeconds"));
 				}
 				f.get(timeout, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {

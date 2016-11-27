@@ -8,6 +8,10 @@ numberOfThreads: 10
 #To find out the COMPONENT_ID, please see the screen shot here https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
 metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
 
+#This is the timeout on queue metrics threads.Default value is 20 seconds. No need to change the default
+#Unless you know what you are doing.
+#queueMetricsCollectionTimeoutInSeconds: 20
+
 queueManagers:
   - host: "localhost"
     port: 1414
@@ -23,9 +27,8 @@ queueManagers:
     username: ""
     password: ""
     
-    #SSL related properties. Please provide the path
-    sslKeyRepository: ""
-    # e.g. "SSL_RSA_WITH_AES_128_CBC_SHA256"
+    # IBM Cipher Suite e.g. "SSL_RSA_WITH_AES_128_CBC_SHA256"..
+    # For translation to IBM Cipher  http://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.dev.doc/q113210_.htm
     cipherSuite: ""
 
     queueFilters:

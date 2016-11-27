@@ -114,6 +114,10 @@ The following is a sample config.yaml file that depicts two different queue mana
         username: "hello"
         password: "hello"
 
+        #This is the timeout on queue metrics threads.Default value is 20 seconds. No need to change the default
+        #Unless you know what you are doing.
+        queueMetricsCollectionTimeoutInSeconds: 20
+        
         queueFilters:
             #An asterisk on its own matches all possible names.
             include: ["*"]
@@ -143,6 +147,9 @@ The following is a sample config.yaml file that depicts two different queue mana
         #user with admin level access, no need to provide credentials in case of bindings transport type, it is only applicable for client type
         username: "hello"
         password: "hello"
+        #This is the timeout on queue metrics threads.Default value is 20 seconds. No need to change the default
+        #Unless you know what you are doing.
+        queueMetricsCollectionTimeoutInSeconds: 20
 
         queueFilters:
             #Matches all queues  that starts with TACA..
@@ -237,6 +244,26 @@ The following is a sample config.yaml file that depicts two different queue mana
 
 
 ```
+
+SSL Support
+-----------
+Configure the IBM SSL Cipher Suite in the config.yaml. 
+
+Note that, to use some CipherSuites the unrestricted policy needs to be configured in JRE. Please visit [this link] (http://www.ibm.com/support/knowledgecenter/SSYKE2_8.0.0/com.ibm.java.security.component.80.doc/security-component/sdkpolicyfiles.html
+) for more details.
+
+To configure SSL, the MA's trust store and keystore needs to be setup with the JKS filepath. 
+
+Please add the following JVM arguments to the MA start up command or script. 
+
+```-Dcom.ibm.mq.cfg.useIBMCipherMappings=false```  (If you are using IBM Cipher Suites, set the flag to true. Please visit [this link](http://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.dev.doc/q113210_.htm) for more details.
+)
+
+```-Djavax.net.ssl.trustStore=<PATH_TO_JKS_FILE>```
+```-Djavax.net.ssl.trustStorePassword=<PASS>```
+```-Djavax.net.ssl.keyStore=<PATH_TO_JKS_FILE>```
+```-Djavax.net.ssl.keyStorePassword=<PASS>```
+
 Metrics
 --------
 The metrics will be reported under the tree ```Application Infrastructure Performance|$TIER|Custom Metrics|WebsphereMQ```

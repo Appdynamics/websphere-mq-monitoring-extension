@@ -13,6 +13,7 @@ public class Configuration {
 	private String metricPrefix;
 	private MqMetric[] mqMertics;
 	private int numberOfThreads = Constants.DEFAULT_NUMBER_OF_THREADS;
+	private int queueMetricsCollectionTimeoutInSeconds = 20;
 	
 	public QueueManager[] getQueueManagers() {
 		return queueManagers;
@@ -38,6 +39,12 @@ public class Configuration {
 	public void setNumberOfThreads(int numberOfThreads) {
 		this.numberOfThreads = numberOfThreads;
 	}
-	
-	
+
+	public int getQueueMetricsCollectionTimeoutInSeconds() {
+		return queueMetricsCollectionTimeoutInSeconds;
+	}
+
+	public void setQueueMetricsCollectionTimeoutInSeconds(int queueMetricsCollectionTimeoutInSeconds) {
+		this.queueMetricsCollectionTimeoutInSeconds = queueMetricsCollectionTimeoutInSeconds;
+	}
 }

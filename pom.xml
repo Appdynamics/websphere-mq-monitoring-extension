@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.appdynamics.wmqmonitor</groupId>
     <artifactId>websphere-mq-monitoring-extension</artifactId>
-    <version>5.0.0</version>
+    <version>5.1.0</version>
     <packaging>jar</packaging>
     <name>websphere-mq-monitoring-extension</name>
     <url>http://maven.apache.org</url>

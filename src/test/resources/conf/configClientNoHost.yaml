@@ -7,6 +7,11 @@ numberOfThreads: 10
 #This will create it in specific Tier. Replace <TIER_NAME>. Please make sure to have a trailing |
 metricPrefix: "Server|Component:<TIER_NAME>|Custom Metrics|WebsphereMQ|"
 
+
+#This is the timeout on queue metrics threads.Default value is 20 seconds.
+queueMetricsCollectionTimeoutInSeconds: 20
+
+
 queueManagers:
   - host: ""
     
