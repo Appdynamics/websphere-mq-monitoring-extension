@@ -83,11 +83,11 @@ public class WMQMonitor extends AManagedMonitor {
 						WMQMonitorTask wmqTask = new WMQMonitorTask(queueManager, config.getMetricPrefix(), config.getMqMertics(), monitorConfiguration);
 						monitorConfiguration.getExecutorService().execute(wmqTask);
 						//#TODO remove this
-//						try {
-//							Thread.sleep(100000);
-//						} catch (InterruptedException e) {
-//							e.printStackTrace();
-//						}
+						/*try {
+							Thread.sleep(100000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}*/
 					}
 				}
 

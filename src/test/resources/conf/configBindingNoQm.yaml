@@ -1,9 +1,6 @@
 ### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
 numberOfThreads: 10
 
-#This will create this metric in all the tiers, under this path. Please make sure to have a trailing |
-#metricPrefix: Custom Metrics|WebsphereMQ|
-
 #This will create it in specific Tier. Replace <TIER_NAME>. Please make sure to have a trailing |
 metricPrefix: "Server|Component:<TIER_NAME>|Custom Metrics|WebsphereMQ|"
 
