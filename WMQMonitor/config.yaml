@@ -1,0 +1,170 @@
+### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
+numberOfThreads: 10
+
+#This will create it in specific Tier aka Component. Replace <COMPONENT_ID>. Please make sure to have a trailing |.
+#To find out the COMPONENT_ID, please see the screen shot here https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
+metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
+
+#This is the timeout on queue metrics and channel metrics threads.Default value is 20 seconds. No need to change the default
+#Unless you know what you are doing.
+#queueMetricsCollectionTimeoutInSeconds: 20
+#channelMetricsCollectionTimeoutInSeconds: 20
+
+#Uncomment only if encryption of passwords is wanted
+#encryptionKey: ""
+
+queueManagers:
+  - host: "localhost"
+    port: 1414
+    #Actual name of the queue manager
+    name: ""
+    #Channel name of the queue manager, channel should be server-conn type.
+    channelName: "SYSTEM.ADMIN.SVRCONN"
+    #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
+    #For bindings type connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
+    #for client type connection change it to "Client".
+    transportType: "Bindings"
+    #user with admin level access, comment out the credentials in case of bindings transport type, it is only applicable for client type
+    username: ""
+    password: ""
+
+    #Uncomment only if encryption of passwords is wanted
+    #encryptedPassword: ""
+
+    #Uncomment this only if you know what you are doing.
+    #modelQueueName: ""
+    #replyQueuePrefix: ""
+
+    # IBM Cipher Suite e.g. "SSL_RSA_WITH_AES_128_CBC_SHA256"..
+    # For translation to IBM Cipher  http://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.dev.doc/q113210_.htm
+    cipherSuite: ""
+
+    queueFilters:
+        #Can provide complete queue name or generic names. A generic name is a character string followed by an asterisk (*),
+        #for example ABC*, and it selects all objects having names that start with the selected character string.
+        #An asterisk on its own matches all possible names.
+        include: ["*"]
+        exclude:
+             #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+           - type: "STARTSWITH"
+             #The name of the queue or queue name pattern as per queue filter, comma separated values
+             values: ["SYSTEM","AMQ"]
+
+
+    channelFilters:
+        #Can provide complete channel name or generic names. A generic name is a character string followed by an asterisk (*),
+        #for example ABC*, and it selects all objects having names that start with the selected character string.
+        #An asterisk on its own matches all possible names.
+        include: ["*"]
+        exclude:
+           #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+           - type: "STARTSWITH"
+           #The name of the queue or queue name pattern as per queue filter, comma separated values
+             values: ["SYSTEM"]
+
+    listenerFilters:
+        #Can provide complete channel name or generic names. A generic name is a character string followed by an asterisk (*),
+        #for example ABC*, and it selects all objects having names that start with the selected character string.
+        #An asterisk on its own matches all possible names.
+        include: ["*"]
+        exclude:
+           #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+           - type: "STARTSWITH"
+           #The name of the queue or queue name pattern as per queue filter, comma separated values
+             values: ["SYSTEM"]
+
+
+mqMertics:
+  # This Object will extract queue manager metrics
+  - metricsType: "queueMgrMetrics"
+    metrics:
+      include:
+        - Status: "Status"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
+      
+  # This Object will extract queue metrics
+  - metricsType: "queueMetrics"
+    metrics:
+      include:
+        - MaxQueueDepth: "Max Queue Depth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
+          ibmCommand: "MQCMD_INQUIRE_Q"
+          
+        - CurrentQueueDepth: "Current Queue Depth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+          ibmCommand: "MQCMD_INQUIRE_Q"
+          
+        - OpenInputCount: "Open Input Count"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
+          ibmCommand: "MQCMD_INQUIRE_Q"
+          
+        - OpenOutputCount: "Open Output Count"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
+          ibmCommand: "MQCMD_INQUIRE_Q"
+
+        - OldestMsgAge: "OldestMsgAge"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
+          ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+
+        - OnQTime: "OnQTime"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
+          ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+
+        - UncommittedMsgs: "UncommittedMsgs"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_UNCOMMITTED_MSGS"
+          ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+
+        - HighQDepth: "HighQDepth"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
+          ibmCommand: "MQCMD_RESET_Q_STATS"
+
+        - MsgDeqCount: "MsgDeqCount"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_DEQ_COUNT"
+          ibmCommand: "MQCMD_RESET_Q_STATS"
+
+        - MsgEnqCount: "MsgEnqCount"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_ENQ_COUNT"
+          ibmCommand: "MQCMD_RESET_Q_STATS"
+
+      
+  # This Object will extract channel metrics
+  - metricsType: "channelMetrics"
+    metrics:
+      include:
+        - Messages: "Messages"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
+          
+        - Status: "Status"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"  #http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
+          
+        - ByteSent: "Byte Sent"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
+          
+        - ByteReceived: "Byte Received"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
+          
+        - BuffersSent: "Buffers Sent"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
+          
+        - BuffersReceived: "Buffers Received"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+
+        - MsgsReceived: "Messages Received"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS_RECEIVED"
+
+        - MsgsSent: "Messages Sent"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS_SENT"
+
+
+  - metricsType: "listenerMetrics"
+    metrics:
+      include:
+        - SessionCount : "SessionCount"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_SESSION_COUNT"
+
+        - Status : "Status"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_LISTENER_STATUS"
+
+
+  
+

@@ -178,6 +178,9 @@
                                 <copy todir="${target.dir}">
                                     <fileset dir="${project.build.directory}" includes="${project.build.finalName}.${project.packaging}"/>
                                 </copy>
+                                <copy todir="${target.dir}">
+                                    <fileset dir="." includes="LICENSE"/>
+                                </copy>
                                 <zip destfile="${target.dir}-${project.version}.zip">
                                     <zipfileset dir="${target.dir}" filemode="755" prefix="WMQMonitor/"/>
                                 </zip>
