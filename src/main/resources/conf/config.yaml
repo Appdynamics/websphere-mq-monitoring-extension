@@ -5,9 +5,13 @@ numberOfThreads: 10
 #To find out the COMPONENT_ID, please see the screen shot here https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
 metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
 
-#This is the timeout on queue metrics threads.Default value is 20 seconds. No need to change the default
+#This is the timeout on queue metrics and channel metrics threads.Default value is 20 seconds. No need to change the default
 #Unless you know what you are doing.
 #queueMetricsCollectionTimeoutInSeconds: 20
+#channelMetricsCollectionTimeoutInSeconds: 20
+
+#Uncomment only if encryption of passwords is wanted
+#encryptionKey: ""
 
 queueManagers:
   - host: "localhost"
@@ -23,7 +27,14 @@ queueManagers:
     #user with admin level access, comment out the credentials in case of bindings transport type, it is only applicable for client type
     username: ""
     password: ""
-    
+
+    #Uncomment only if encryption of passwords is wanted
+    #encryptedPassword: ""
+
+    #Uncomment this only if you know what you are doing.
+    #modelQueueName: ""
+    #replyQueuePrefix: ""
+
     # IBM Cipher Suite e.g. "SSL_RSA_WITH_AES_128_CBC_SHA256"..
     # For translation to IBM Cipher  http://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.dev.doc/q113210_.htm
     cipherSuite: ""
@@ -50,7 +61,19 @@ queueManagers:
            - type: "STARTSWITH"
            #The name of the queue or queue name pattern as per queue filter, comma separated values
              values: ["SYSTEM"]
-    
+
+    listenerFilters:
+        #Can provide complete channel name or generic names. A generic name is a character string followed by an asterisk (*),
+        #for example ABC*, and it selects all objects having names that start with the selected character string.
+        #An asterisk on its own matches all possible names.
+        include: ["*"]
+        exclude:
+           #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+           - type: "STARTSWITH"
+           #The name of the queue or queue name pattern as per queue filter, comma separated values
+             values: ["SYSTEM"]
+
+
 mqMertics:
   # This Object will extract queue manager metrics
   - metricsType: "queueMgrMetrics"
@@ -125,5 +148,23 @@ mqMertics:
           
         - BuffersReceived: "Buffers Received"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+
+        - MsgsReceived: "Messages Received"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS_RECEIVED"
+
+        - MsgsSent: "Messages Sent"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS_SENT"
+
+
+  - metricsType: "listenerMetrics"
+    metrics:
+      include:
+        - SessionCount : "SessionCount"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_SESSION_COUNT"
+
+        - Status : "Status"
+          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_LISTENER_STATUS"
+
+
   
 

@@ -14,6 +14,7 @@ public class Configuration {
 	private MqMetric[] mqMertics;
 	private int numberOfThreads = Constants.DEFAULT_NUMBER_OF_THREADS;
 	private int queueMetricsCollectionTimeoutInSeconds = 20;
+	private String encryptionKey;
 	
 	public QueueManager[] getQueueManagers() {
 		return queueManagers;
@@ -46,5 +47,13 @@ public class Configuration {
 
 	public void setQueueMetricsCollectionTimeoutInSeconds(int queueMetricsCollectionTimeoutInSeconds) {
 		this.queueMetricsCollectionTimeoutInSeconds = queueMetricsCollectionTimeoutInSeconds;
+	}
+
+	public String getEncryptionKey() {
+		return encryptionKey;
+	}
+
+	public void setEncryptionKey(String encryptionKey) {
+		this.encryptionKey = encryptionKey;
 	}
 }

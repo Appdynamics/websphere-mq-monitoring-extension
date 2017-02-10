@@ -9,6 +9,9 @@ metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
 #This is the timeout on queue metrics threads.Default value is 20 seconds.
 queueMetricsCollectionTimeoutInSeconds: 20
 
+#Uncomment only if encryption of passwords is wanted
+#encryptionKey: ""
+
 
 queueManagers:
   - host: ""

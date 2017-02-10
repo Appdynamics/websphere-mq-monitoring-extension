@@ -8,6 +8,10 @@ metricPrefix: "Server|Component:<TIER_NAME>|Custom Metrics|WebsphereMQ|"
 #Unless you know what you are doing.
 queueMetricsCollectionTimeoutInSeconds: 20
 
+#Uncomment only if encryption of passwords is wanted
+#encryptionKey: ""
+
+
 queueManagers:
   - host: "192.168.57.104"
     port: 1424
@@ -22,6 +26,12 @@ queueManagers:
     #user with admin level access, no need to provide credentials in case of bindings transport type, it is only applicable for client type
     username: "Administrator"
     password: "appd*2014"
+
+    #Uncomment only if encryption of passwords is wanted
+    #encryptedPassword: ""
+
+    #Uncomment this only if you know what you are doing. Default value is "appd_ext"
+    #replyQueuePrefix: "appd_ext"
 
     queueFilters:
         #Can provide complete queue name or generic names. A generic name is a character string followed by an asterisk (*),

@@ -19,10 +19,16 @@ public class QueueManager {
 	private String sslKeyRepository;
 	private String cipherSuite;
 	private String cipherSpec;
+	private String encryptedPassword;
+	private String encryptionKey;
+	private String replyQueuePrefix;
+	private String modelQueueName;
 
 	private ResourceFilters queueFilters;
 
 	private ResourceFilters channelFilters;
+
+	private ResourceFilters listenerFilters;
 
 	
 	List<String> writeStatsDirectory;
@@ -85,6 +91,9 @@ public class QueueManager {
 
 
 	public ResourceFilters getQueueFilters() {
+		if(queueFilters == null){
+			return new ResourceFilters();
+		}
 		return queueFilters;
 	}
 
@@ -127,10 +136,56 @@ public class QueueManager {
 	}
 
 	public ResourceFilters getChannelFilters() {
+		if(channelFilters == null){
+			return new ResourceFilters();
+		}
 		return channelFilters;
 	}
 
 	public void setChannelFilters(ResourceFilters channelFilters) {
 		this.channelFilters = channelFilters;
+	}
+
+	public String getEncryptedPassword() {
+		return encryptedPassword;
+	}
+
+	public void setEncryptedPassword(String encryptedPassword) {
+		this.encryptedPassword = encryptedPassword;
+	}
+
+	public String getEncryptionKey() {
+		return encryptionKey;
+	}
+
+	public void setEncryptionKey(String encryptionKey) {
+		this.encryptionKey = encryptionKey;
+	}
+
+	public String getReplyQueuePrefix() {
+		return replyQueuePrefix;
+	}
+
+	public void setReplyQueuePrefix(String replyQueuePrefix) {
+		this.replyQueuePrefix = replyQueuePrefix;
+	}
+
+	public String getModelQueueName() {
+		return modelQueueName;
+	}
+
+	public void setModelQueueName(String modelQueueName) {
+		this.modelQueueName = modelQueueName;
+	}
+
+	public ResourceFilters getListenerFilters() {
+		if(listenerFilters == null){
+			return new ResourceFilters();
+		}
+		return listenerFilters;
+	}
+
+	public void setListenerFilters(ResourceFilters listenerFilters) {
+		this.listenerFilters = listenerFilters;
 	}
 }

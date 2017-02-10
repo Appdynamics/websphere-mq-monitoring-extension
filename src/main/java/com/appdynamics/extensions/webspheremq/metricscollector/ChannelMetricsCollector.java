@@ -23,7 +23,7 @@ import java.util.Set;
 
 /**
  * This class is responsible for channel metric collection.
- * 
+ *
  * @author rajeevsingh ,James Schneider
  * @version 2.0
  *

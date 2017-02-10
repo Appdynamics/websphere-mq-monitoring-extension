@@ -80,6 +80,7 @@ public class WMQMonitor extends AManagedMonitor {
 				Configuration config = mapper.convertValue(configMap,Configuration.class);
 				if (config != null && config.getQueueManagers() != null) {
 					for (QueueManager queueManager : config.getQueueManagers()) {
+						queueManager.setEncryptionKey(config.getEncryptionKey());
 						WMQMonitorTask wmqTask = new WMQMonitorTask(queueManager, config.getMetricPrefix(), config.getMqMertics(), monitorConfiguration);
 						monitorConfiguration.getExecutorService().execute(wmqTask);
 						//#TODO remove this

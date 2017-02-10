@@ -1,19 +1,15 @@
 package com.appdynamics.extensions.webspheremq;
 
 import com.appdynamics.extensions.conf.MonitorConfiguration;
-import com.appdynamics.extensions.util.MetricWriteHelper;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.MqMetric;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
-import com.appdynamics.extensions.webspheremq.metricscollector.ChannelMetricsCollector;
-import com.appdynamics.extensions.webspheremq.metricscollector.MetricsCollector;
-import com.appdynamics.extensions.webspheremq.metricscollector.QueueManagerMetricsCollector;
-import com.appdynamics.extensions.webspheremq.metricscollector.QueueMetricsCollector;
+import com.appdynamics.extensions.webspheremq.metricscollector.*;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
-import com.ibm.mq.headers.CMQC;
 import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
@@ -127,6 +123,12 @@ public class WMQMonitorTask implements Runnable {
 			logger.debug("Connection initiated for queue manager {} in thread {}", queueManager.getName(), Thread.currentThread().getName());
 
 			agent = new PCFMessageAgent(ibmQueueManager);
+			if(!Strings.isNullOrEmpty(queueManager.getReplyQueuePrefix())){
+				agent.setReplyQueuePrefix(queueManager.getReplyQueuePrefix());
+			}
+			if(!Strings.isNullOrEmpty(queueManager.getModelQueueName())){
+				agent.setModelQueueName(queueManager.getModelQueueName());
+			}
 			logger.debug("Intialized PCFMessageAgent for queue manager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 
 			Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
@@ -152,6 +154,14 @@ public class WMQMonitorTask implements Runnable {
 			} else {
 				logger.warn("No queue metrics to report");
 			}
+
+			Map<String, WMQMetricOverride> listenerMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_LISTENER);
+			if (queueMetricsToReport != null) {
+				MetricsCollector listenerMetricsCollector = new ListenerMetricsCollector(listenerMetricsToReport, this.monitorConfig, agent, queueManager, this.metricPrefix);
+				listenerMetricsCollector.process();
+			} else {
+				logger.warn("No listener metrics to report");
+			}
 		} catch (MQException mqe) {
 			logger.error(mqe.getMessage(),mqe);
 			throw new TaskExecutionException(mqe.getMessage());
@@ -164,39 +174,7 @@ public class WMQMonitorTask implements Runnable {
 		}
 	}
 
-	/*
-	 * Do not Remove this method even if it is not used
-	 */
-	private PCFMessageAgent createAgent() throws MQException {
 
-		PCFMessageAgent agent = null;
-		boolean client = Constants.TRANSPORT_TYPE_CLIENT.equals(queueManager.getTransportType());
-		try {
-			if (!client) {
-				// Connect to the local queue manager.
-				agent = new PCFMessageAgent(queueManager.getName());
-			} else {
-				// Connect to the client and define the queue manager host, port and channel.
-				// Notice that the method does not take a queue manager name. It is assuming that the
-				// default QM will be used.
-				agent = new PCFMessageAgent(queueManager.getHost(), queueManager.getPort(), queueManager.getChannelName());
-			}
-		} catch (MQException mqde) {
-			if (mqde.reasonCode == CMQC.MQRC_Q_MGR_NAME_ERROR) {
-				StringBuilder errMsgBuilder = new StringBuilder("Either could not find the ");
-				if (client) {
-					errMsgBuilder.append("default queue manager at \"" + queueManager.getHost() + "\", port \"" + queueManager.getPort() + "\"");
-				} else {
-					errMsgBuilder.append("queue manager \"" + queueManager.getName() + "\"");
-				}
-				errMsgBuilder.append(" or could not find the default channel \"" + queueManager.getChannelName() + "\" on the queue manager.");
-				logger.error(errMsgBuilder.toString());
-			}
-
-			throw mqde;
-		}
-		return agent;
-	}
 
 	/**
 	 * Destroy the agent and disconnect from queue manager

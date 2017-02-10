@@ -10,6 +10,7 @@ public class Constants {
 	public static final String METRIC_TYPE_QUEUE_MANAGER = "queueMgrMetrics";
 	public static final String METRIC_TYPE_QUEUE = "queueMetrics";
 	public static final String METRIC_TYPE_CHANNEL = "channelMetrics";
+	public static final String METRIC_TYPE_LISTENER = "listenerMetrics";
 	
 	public static final String TRANSPORT_TYPE_CLIENT = "Client";
 	public static final String TRANSPORT_TYPE_BINGINGS = "Bindings";

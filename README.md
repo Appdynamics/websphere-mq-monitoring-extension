@@ -5,9 +5,9 @@ Use case
 -------------
 
 
-The WebSphere MQ monitoring extension can monitor multiple queues managers and their resources, namely queues and channels.
+The WebSphere MQ monitoring extension can monitor multiple queues managers and their resources, namely queues,channels and listeners.
 
-The metrics for queue manager, queue and channel can be configured.
+The metrics for queue manager, queue, channel and listener can be configured.
 
 The MQ Monitor currently supports IBM Websphere MQ version 7.x and 8.x.
 

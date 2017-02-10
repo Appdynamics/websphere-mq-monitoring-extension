@@ -1,13 +1,20 @@
 package com.appdynamics.extensions.webspheremq;
 
+import com.appdynamics.TaskInputArgs;
 import com.appdynamics.extensions.StringUtils;
+import com.appdynamics.extensions.crypto.CryptoUtil;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.ibm.mq.MQC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Hashtable;
+import java.util.Map;
+
+import static com.appdynamics.TaskInputArgs.PASSWORD_ENCRYPTED;
 
 /**
  * Takes care of websphere mq connection, authentication, SSL, Cipher spec, certificate based authorization.<br>
@@ -34,7 +41,7 @@ public class WMQContext {
 		addEnvProperty(env, MQC.PORT_PROPERTY, queueManager.getPort());
 		addEnvProperty(env, MQC.CHANNEL_PROPERTY, queueManager.getChannelName());
 		addEnvProperty(env, MQC.USER_ID_PROPERTY, queueManager.getUsername());
-		addEnvProperty(env, MQC.PASSWORD_PROPERTY, queueManager.getPassword());
+		addEnvProperty(env, MQC.PASSWORD_PROPERTY, getPassword());
 		addEnvProperty(env, MQC.SSL_CERT_STORE_PROPERTY, queueManager.getSslKeyRepository());
 		addEnvProperty(env, MQC.SSL_CIPHER_SUITE_PROPERTY, queueManager.getCipherSuite());
 		//TODO: investigate on CIPHER_SPEC property No Available in MQ 7.5 Jar
@@ -98,5 +105,21 @@ public class WMQContext {
 		if (!validArgs) {
 			throw new IllegalArgumentException(errorMsg.toString());
 		}
+	}
+
+	private String getPassword() {
+		String password = queueManager.getPassword();
+		if (!Strings.isNullOrEmpty(password)) {
+			return password;
+		}
+		String encryptionKey = queueManager.getEncryptionKey();
+		String encryptedPassword = queueManager.getEncryptedPassword();
+		if (!Strings.isNullOrEmpty(encryptionKey) && !Strings.isNullOrEmpty(encryptedPassword)) {
+			java.util.Map<String, String> cryptoMap = Maps.newHashMap();
+			cryptoMap.put(PASSWORD_ENCRYPTED, encryptedPassword);
+			cryptoMap.put(TaskInputArgs.ENCRYPTION_KEY, encryptionKey);
+			return CryptoUtil.getPassword(cryptoMap);
+		}
+		return null;
 	}
 }
