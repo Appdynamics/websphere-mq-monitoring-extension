@@ -149,19 +149,9 @@ mqMertics:
         - BuffersReceived: "Buffers Received"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
 
-        - MsgsReceived: "Messages Received"
-          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS_RECEIVED"
-
-        - MsgsSent: "Messages Sent"
-          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS_SENT"
-
-
   - metricsType: "listenerMetrics"
     metrics:
       include:
-        - SessionCount : "SessionCount"
-          ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_SESSION_COUNT"
-
         - Status : "Status"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_LISTENER_STATUS"
 
