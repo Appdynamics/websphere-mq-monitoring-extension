@@ -24,7 +24,7 @@ import java.util.Set;
 
 public class ListenerMetricsCollector extends MetricsCollector {
 
-    public static final Logger logger = LoggerFactory.getLogger(ChannelMetricsCollector.class);
+    public static final Logger logger = LoggerFactory.getLogger(ListenerMetricsCollector.class);
     private final String artifact = "Listeners";
 
 

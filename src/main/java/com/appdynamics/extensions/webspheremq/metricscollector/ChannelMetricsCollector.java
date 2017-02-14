@@ -97,9 +97,9 @@ public class ChannelMetricsCollector extends MetricsCollector {
 					errorMsg = "Channel- " + channelGenericName + " :";
 					errorMsg += "Could not collect channel information as channel is stopped or inactive: Reason '3065'\n";
 					errorMsg += "If the channel type is MQCHT_RECEIVER, MQCHT_SVRCONN or MQCHT_CLUSRCVR, then the only action is to enable the channel, not start it.";
-					logger.error(errorMsg);
+					logger.error(errorMsg,pcfe);
 				} else if (pcfe.getReason() == MQConstants.MQRC_SELECTOR_ERROR) {
-					logger.error("Invalid metrics passed while collecting channel metrics, check config.yaml: Reason '2067'");
+					logger.error("Invalid metrics passed while collecting channel metrics, check config.yaml: Reason '2067'",pcfe);
 				}
 			} catch (Exception e) {
 				logger.error("Unexpected Error occoured while collecting metrics for channel " + channelGenericName, e);
