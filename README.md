@@ -26,8 +26,11 @@ Smart Dashboards
 
 We now provide new, smart dashboards with this extension. These dashboards can be configured by users to include metrics at any level along the metric tree hierarchy. Metrics can be displayed in a number of different charts and graphs.  
 
-The following image is an example of the new smart dashboards for this extension: 
+The following images are an example of the new smart dashboards for this extension: 
 
+
+![smart-dashboards-1.png](smart-dashboards-1.png)
+![smart-dashboards-2.png](smart-dashboards-2.png)
 
 We have already pre-built the dashboard for this extension. Please download and unzip the attached smart-dashboard-webspheremq.zip. The smart dashboard process runs as a standalone JVM. 
 Please run the following command to start the process
