@@ -32,13 +32,13 @@ The following images are an example of the new smart dashboards for this extensi
 ![smart-dashboards-1.png](smart-dashboards-1.png)
 ![smart-dashboards-2.png](smart-dashboards-2.png)
 
-We have already pre-built the dashboard for this extension. Please download and unzip the attached smart-dashboard-webspheremq.zip. The smart dashboard process runs as a standalone JVM. 
+We have already pre-built the dashboard for this extension. Please [download](https://www.appdynamics.com/media/uploaded-files/1488848871/smart-dashboard-webspheremq.zip) and unzip the smart-dashboard-webspheremq.zip. The smart dashboard process runs as a standalone JVM. 
 Please run the following command to start the process
 
 ```
-java -jar smart-dashboard-<version>.jar
+java -jar smart-dashboard-(version).jar
  
- Replace the <version> with the version that you see in the directory.
+ Replace the (version) with the version that you see in the directory where you unzipped smart-dashboard-webspheremq.zip.
  
 ```
 
