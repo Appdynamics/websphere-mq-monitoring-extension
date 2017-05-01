@@ -5,39 +5,55 @@ numberOfThreads: 10
 #To find out the COMPONENT_ID, please see the screen shot here https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
 metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
 
-#This is the timeout on queue metrics and channel metrics threads.Default value is 20 seconds. No need to change the default
-#Unless you know what you are doing.
+#This is the timeout on queue metrics and channel metrics threads.Default value is 20 seconds.
+#No need to change the default unless you know what you are doing.
 #queueMetricsCollectionTimeoutInSeconds: 20
 #channelMetricsCollectionTimeoutInSeconds: 20
 
-#Uncomment only if encryption of passwords is wanted
+#Uncomment only if encryption of passwords is wanted.
 #encryptionKey: ""
 
 queueManagers:
   - host: "localhost"
     port: 1414
+
     #Actual name of the queue manager
     name: ""
-    #Channel name of the queue manager, channel should be server-conn type.
-    channelName: "SYSTEM.ADMIN.SVRCONN"
+
     #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
-    #For bindings type connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
-    #for client type connection change it to "Client".
+    #For bindings type, connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
+    #For client type, connection change it to "Client".
     transportType: "Bindings"
-    #user with admin level access, comment out the credentials in case of bindings transport type, it is only applicable for client type
+
+    #Channel name of the queue manager, channel should be server-conn type.
+    #This field is not required in case of transportType: Bindings
+    channelName: "SYSTEM.ADMIN.SVRCONN"
+
+    #user with admin level access.
+    #comment out the in case of transportType: Bindings.
     username: ""
     password: ""
 
-    #Uncomment only if encryption of passwords is wanted
+    #Uncomment only if encryption of passwords is wanted.
     #encryptedPassword: ""
 
     #Uncomment this only if you know what you are doing.
     #modelQueueName: ""
     #replyQueuePrefix: ""
 
+
+    #Sets the CCSID used in the message descriptor of request and response messages. The default value is MQC.MQCCSI_Q_MGR.
+    #To set this, please use the integer value.
+    #ccsid:
+
+    #Sets the encoding used in the message descriptor of request and response messages. The default value is MQC.MQENC_NATIVE.
+    #To set this, please use the integer value.
+    #encoding:
+
     # IBM Cipher Suite e.g. "SSL_RSA_WITH_AES_128_CBC_SHA256"..
     # For translation to IBM Cipher  http://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.dev.doc/q113210_.htm
-    cipherSuite: ""
+    #cipherSuite: ""
+
 
     queueFilters:
         #Can provide complete queue name or generic names. A generic name is a character string followed by an asterisk (*),

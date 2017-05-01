@@ -17,6 +17,8 @@ public class QueueManager {
 	private String username;
 	private String password;
 	private String sslKeyRepository;
+	private int ccsid = Integer.MIN_VALUE;
+	private int encoding = Integer.MIN_VALUE;
 	private String cipherSuite;
 	private String cipherSpec;
 	private String encryptedPassword;
@@ -187,5 +189,21 @@ public class QueueManager {
 
 	public void setListenerFilters(ResourceFilters listenerFilters) {
 		this.listenerFilters = listenerFilters;
+	}
+
+	public int getCcsid() {
+		return ccsid;
+	}
+
+	public void setCcsid(int ccsid) {
+		this.ccsid = ccsid;
+	}
+
+	public int getEncoding() {
+		return encoding;
+	}
+
+	public void setEncoding(int encoding) {
+		this.encoding = encoding;
 	}
 }

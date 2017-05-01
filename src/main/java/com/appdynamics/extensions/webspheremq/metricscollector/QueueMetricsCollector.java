@@ -116,23 +116,29 @@ public class QueueMetricsCollector extends MetricsCollector {
 				while (itr.hasNext()) {
 					String metrickey = itr.next();
 					WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
-					PCFParameter pcfParam = response[i].getParameter(wmqOverride.getConstantValue());
-					if(pcfParam instanceof MQCFIN){
-						int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-						publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias());
-					}
-					else if(pcfParam instanceof MQCFIL){
-						int[] metricVals = response[i].getIntListParameterValue(wmqOverride.getConstantValue());
-						if(metricVals != null){
-							int count=0;
-							for(int val : metricVals){
-								count++;
-								publishMetric(wmqOverride, val, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias(),"_" + Integer.toString(count));
-							}
+					try{
+						PCFParameter pcfParam = response[i].getParameter(wmqOverride.getConstantValue());
+						if(pcfParam instanceof MQCFIN){
+							int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
+							publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias());
 						}
+						else if(pcfParam instanceof MQCFIL){
+							int[] metricVals = response[i].getIntListParameterValue(wmqOverride.getConstantValue());
+							if(metricVals != null){
+								int count=0;
+								for(int val : metricVals){
+									count++;
+									publishMetric(wmqOverride, val, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias(),"_" + Integer.toString(count));
+								}
+							}
 
 
+						}
 					}
+					catch (PCFException pcfe) {
+						logger.error("PCFException caught while collecting metric for Queue: {} for metric: {} in command {}",queueName, wmqOverride.getIbmCommand(),command, pcfe);
+					}
+
 				}
 			}
 			else{

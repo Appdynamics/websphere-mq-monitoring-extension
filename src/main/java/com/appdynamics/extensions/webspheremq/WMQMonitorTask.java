@@ -129,6 +129,14 @@ public class WMQMonitorTask implements Runnable {
 			if(!Strings.isNullOrEmpty(queueManager.getModelQueueName())){
 				agent.setModelQueueName(queueManager.getModelQueueName());
 			}
+
+			if(queueManager.getCcsid() != Integer.MIN_VALUE){
+				agent.setCharacterSet(queueManager.getCcsid());
+			}
+
+			if(queueManager.getEncoding() != Integer.MIN_VALUE){
+				agent.setEncoding(queueManager.getEncoding());
+			}
 			logger.debug("Intialized PCFMessageAgent for queue manager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 
 			Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
