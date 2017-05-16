@@ -21,29 +21,6 @@ If this extension is configured for **CLIENT** transport type (more on that late
  
 If this extension is configured for **CLIENT** transport type (more on that later), admin level credentials to the queue manager would be needed. If the hosting OS for IBM MQ is Windows, Windows user credentials will be needed. 
 
-Smart Dashboards
-----------------
-
-We now provide new, smart dashboards with this extension. These dashboards can be configured by users to include metrics at any level along the metric tree hierarchy. Metrics can be displayed in a number of different charts and graphs.  
-
-The following images are an example of the new smart dashboards for this extension: 
-
-
-![smart-dashboards-1.png](smart-dashboards-1.png)
-![smart-dashboards-2.png](smart-dashboards-2.png)
-
-We have already pre-built the dashboard for this extension. Please [download](https://www.appdynamics.com/media/uploaded-files/1488848871/smart-dashboard-webspheremq.zip) and unzip the smart-dashboard-webspheremq.zip. The smart dashboard process runs as a standalone JVM. 
-Please run the following command to start the process
-
-```
-java -jar smart-dashboard-(version).jar
- 
- Replace the (version) with the version that you see in the directory where you unzipped smart-dashboard-webspheremq.zip.
- 
-```
-
-If the dashboard needs to be modified, please refer to [this](https://github.com/abeytom/smart-dashboard/blob/master/README.md) page for detailed documentation, instructions and screenshots of the various chart types available. 
-
 
 Dependencies
 ------------
