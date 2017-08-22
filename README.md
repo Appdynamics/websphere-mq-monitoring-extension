@@ -344,12 +344,20 @@ More Troubleshooting
 ---------------------
 
 1. Error `Completion Code '2', Reason '2495'`
+   Normally this error occurs if the environment variables are not set up correctly for this extension to work MQ in Bindings Mode.
+   
+   If you are seeing `Failed to load the WebSphere MQ native JNI library: 'mqjbnd'`, please add the following jvm argument when starting the MA. 
+   
+   -Djava.library.path=<path to lib64 directory> For eg. on Unix it could -Djava.library.path=/opt/mqm/java/lib64 
+   
+   Sometimes you also have run the setmqenv script before using the above jvm argument to start the machine agent. 
+   
+   . /opt/mqm/bin/setmqenv -s 
+   
+   For more details, please check this [doc](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.1.0/com.ibm.mq.doc/zr00610_.htm)
+   
    This might occour due to various reasons ranging from incorrect installation to applying [ibm fix packs](http://www-01.ibm.com/support/docview.wss?uid=swg21410038) but most of the time it happens when you are trying to connect in `Bindings` mode and machine agent is not on the same machine on which WMQ server is running. If you want to connect to WMQ server from a remote machine then connect using `Client` mode.
-
-   You could also see this error on windows **MQJE001: Completion Code '2', Reason '2495'; The native JNI library 'mqjbnd' was not found.Can't load AMD 64-bit .dll on a IA 32-bit platform**
-   This issue can be resolved by setting the PATH variable to have the java/lib64 before the java/lib libraries. Please check the issue here https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.dev.doc/q031570_.htm
-   **You will have to restart the Windows Server for it to work.**
-
+   
    Another way to get around this issue is to avoid using the Bindings mode. Connect using CLIENT transport type from a remote box. Make sure to provide Windows admin username and password in the config.yaml.
 
 3. Error `Completion Code '2', Reason '2035'`

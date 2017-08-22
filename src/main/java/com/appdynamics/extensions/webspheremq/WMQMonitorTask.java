@@ -122,14 +122,17 @@ public class WMQMonitorTask implements Runnable {
 			}
 			logger.debug("Connection initiated for queue manager {} in thread {}", queueManager.getName(), Thread.currentThread().getName());
 
-			agent = new PCFMessageAgent(ibmQueueManager);
-			if(!Strings.isNullOrEmpty(queueManager.getReplyQueuePrefix())){
-				agent.setReplyQueuePrefix(queueManager.getReplyQueuePrefix());
-			}
-			if(!Strings.isNullOrEmpty(queueManager.getModelQueueName())){
+			if(!Strings.isNullOrEmpty(queueManager.getModelQueueName()) && !Strings.isNullOrEmpty(queueManager.getReplyQueuePrefix())){
+				logger.debug("Initializing the PCF agent for model queue and reply queue prefix.");
+				agent = new PCFMessageAgent();
 				agent.setModelQueueName(queueManager.getModelQueueName());
+				agent.setReplyQueuePrefix(queueManager.getReplyQueuePrefix());
+				logger.debug("Connecting to queue manager to set the modelQueueName and replyQueuePrefix.");
+				agent.connect(ibmQueueManager);
 			}
-
+			else{
+				agent = new PCFMessageAgent(ibmQueueManager);
+			}
 			if(queueManager.getCcsid() != Integer.MIN_VALUE){
 				agent.setCharacterSet(queueManager.getCcsid());
 			}
@@ -137,6 +140,7 @@ public class WMQMonitorTask implements Runnable {
 			if(queueManager.getEncoding() != Integer.MIN_VALUE){
 				agent.setEncoding(queueManager.getEncoding());
 			}
+
 			logger.debug("Intialized PCFMessageAgent for queue manager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 
 			Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
