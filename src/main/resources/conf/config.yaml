@@ -37,7 +37,9 @@ queueManagers:
     #Uncomment only if encryption of passwords is wanted.
     #encryptedPassword: ""
 
-    #Uncomment this only if you know what you are doing.
+    #PCF requests are always sent to SYSTEM.ADMIN.COMMAND.QUEUE. The PCF responses to these requests are sent to the default reply-to queue called
+    #SYSTEM.DEFAULT.MODEL.QUEUE. However, you can override this behavior and send it to a temporary dynamic queue by changing the modelQueueName and replyQueuePrefix fields.
+    #For more details around this https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q083240_.htm & https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q020010_.htm
     #modelQueueName: ""
     #replyQueuePrefix: ""
 
