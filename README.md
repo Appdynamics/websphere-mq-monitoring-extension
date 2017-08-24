@@ -19,8 +19,9 @@ This extension requires a AppDynamics Java Machine Agent installed and running.
 
 If this extension is configured for **CLIENT** transport type (more on that later), please make sure the MQ's host and port is accessible. 
  
-If this extension is configured for **CLIENT** transport type (more on that later), admin level credentials to the queue manager would be needed. If the hosting OS for IBM MQ is Windows, Windows user credentials will be needed. 
+If this extension is configured for **CLIENT** transport type (more on that later), credentials of user with correct access rights would be needed in config.yaml (more on that later). If the hosting OS for IBM MQ is Windows, Windows user credentials will be needed. 
 
+This extension has been tested on Windows and Unix systems. Customers have successfully gotten it to work on AIX systems as well. 
 
 Dependencies
 ------------
@@ -37,8 +38,8 @@ connector.jar
 com.ibm.mq.pcf.jar
 ```
 
-If you don't find the **connector.jar** & **dhbcore.jar**, please copy the **com.ibm.mq.allclient.jar** in the ```/monitors/WMQMonitor``` dir. 
-These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server but may be found in an alternate location depending upon your environment. In case **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars.
+In newer versions of the MQ, IBM has removed **connector.jar** & **dhbcore.jar** and merged its contents in **com.ibm.mq.allclient.jar**.
+These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server but may be found in an alternate location depending upon your environment. In case **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars. To download IBM MQ Client jars, see [here](https://www-01.ibm.com/software/integration/wmq/clients/)
 
 
 Rebuilding the Project
@@ -57,7 +58,7 @@ Installation
 
   **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
 
-  **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the IBM MQ Client for this mode to get the necessary jars as mentioned previously.
+  **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://www-01.ibm.com/software/integration/wmq/clients/) for this mode to get the necessary jars as mentioned previously.
   
    Copy the following jars to the WMQMonitor directory
  	```
@@ -74,10 +75,10 @@ Installation
 
    As mentioned previously, If you don't find the **connector.jar** & **dhbcore.jar**, please copy the **com.ibm.mq.allclient.jar**. If you are copying the **com.ibm.mq.allclient.jar**, please edit the monitor.xml to replace the **connector.jar** & **dhbcore.jar** entries with  **com.ibm.mq.allclient.jar**
 
-   If you don't want to copy the jar files, you can point to the jar files by providing the relative paths to the jar files in the  monitor.xml.
+   If you don't want to copy the jar files, you can point to the jar files by providing the absolute paths to the jar files in the  monitor.xml.
 
 
-3. Create a channel of type server connection in each of the queue manager you wish to query. 
+3. If you plan to use **Client** transport type, create a channel of type server connection in each of the queue manager you wish to query. 
 
 4. Edit the config.yaml file.  An example config.yaml file follows these installation instructions.
 
@@ -255,6 +256,11 @@ More details about that is mentioned [here](https://www.ibm.com/support/knowledg
 By default, the PCF responses are sent to the SYSTEM.DEFAULT.MODEL.QUEUE. Using this queue causes a temporary dynamic queue to be created. You can override the default here by using the `modelQueueName` and `replyQueuePrefix` fields in the config.yaml.
 More details mentioned [here](https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q083240_.htm)
 
+
+
+Access Permissions
+-------------------
+If you are in **Bindings** mode, please make sure to start the MA process under a user which has permissions to inquire,get,put (since PCF responses cause dynamic queues to be created) on the broker. Similarly, for **Client** mode provide the credentials which have enough access permissions.
 
 
 SSL Support
