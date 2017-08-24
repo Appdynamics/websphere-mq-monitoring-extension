@@ -30,7 +30,7 @@ queueManagers:
     channelName: "SYSTEM.ADMIN.SVRCONN"
 
     #user with admin level access.
-    #comment out the in case of transportType: Bindings.
+    #comment out the username and password in case of transportType: Bindings.
     username: ""
     password: ""
 
