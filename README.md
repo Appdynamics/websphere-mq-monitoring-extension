@@ -368,7 +368,8 @@ More Troubleshooting
 
 3. Error `Completion Code '2', Reason '2035'`
    This could happen for various reasons but for most of the cases, for **Client** mode the user specified in config.yaml is not authorized to access the queue manager. Also sometimes even if userid and password are correct, channel auth (CHLAUTH) for that queue manager blocks traffics from other ips, you need to contact admin to provide you access to the queue manager.
-
+   For Bindings mode, please make sure that the MA is owned by a mqm user. Please check [this doc](https://www-01.ibm.com/support/docview.wss?uid=swg21636093) 
+  
 4. MQJE001: Completion Code '2', Reason '2195'
    This could happen in **Client** mode. One way this could be fixed is to use 7.5.2 version of the jars. 
 
