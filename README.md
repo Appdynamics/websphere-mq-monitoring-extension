@@ -9,7 +9,7 @@ The WebSphere MQ monitoring extension can monitor multiple queues managers and t
 
 The metrics for queue manager, queue, channel and listener can be configured.
 
-The MQ Monitor currently supports IBM Websphere MQ version 7.x and 8.x.
+The MQ Monitor currently supports IBM Websphere MQ version 7.x, 8.x and 9.x.
 
  
 Prerequisites
