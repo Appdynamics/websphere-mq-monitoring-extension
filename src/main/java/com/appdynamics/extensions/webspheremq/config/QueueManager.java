@@ -32,6 +32,8 @@ public class QueueManager {
 
 	private ResourceFilters listenerFilters;
 
+	private ResourceFilters topicFilters;
+
 	
 	List<String> writeStatsDirectory;
 
@@ -205,5 +207,16 @@ public class QueueManager {
 
 	public void setEncoding(int encoding) {
 		this.encoding = encoding;
+	}
+
+	public ResourceFilters getTopicFilters() {
+		if(topicFilters == null){
+			return new ResourceFilters();
+		}
+		return topicFilters;
+	}
+
+	public void setTopicFilters(ResourceFilters topicFilters) {
+		this.topicFilters = topicFilters;
 	}
 }

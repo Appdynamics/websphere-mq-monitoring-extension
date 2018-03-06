@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.appdynamics.wmqmonitor</groupId>
     <artifactId>websphere-mq-monitoring-extension</artifactId>
-    <version>6.5.0</version>
+    <version>7.0</version>
     <packaging>jar</packaging>
     <name>websphere-mq-monitoring-extension</name>
     <url>http://maven.apache.org</url>
@@ -58,20 +58,20 @@
             <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.commonservices.jar</systemPath>
         </dependency>
-       <!-- <dependency>
+       <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>connector</artifactId>
             <version>${ibm.mq.lib.version}</version>
             <scope>system</scope>
             <systemPath>${lib.dir}/connector.jar</systemPath>
-        </dependency>-->
-        <dependency>
+        </dependency>
+        <!--<dependency>
             <groupId>com.ibm</groupId>
             <artifactId>com.ibm.mq.allclient</artifactId>
             <scope>system</scope>
             <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.allclient.jar</systemPath>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.appdynamics</groupId>
             <artifactId>appd-exts-commons</artifactId>

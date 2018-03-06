@@ -91,6 +91,16 @@ queueManagers:
            #The name of the queue or queue name pattern as per queue filter, comma separated values
              values: ["SYSTEM"]
 
+    topicFilters:
+        #Can provide complete topic name or generic names. A generic name is a character string followed by an asterisk (*),
+        #for example ABC*, and it selects all objects having names that start with the selected character string.
+        #An asterisk on its own matches all possible names.
+        include: ["#"]
+        exclude:
+             #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+           - type: "STARTSWITH"
+             #The name of the queue or queue name pattern as per queue filter, comma separated values
+             values: ["SYSTEM","AMQ"]
 
 mqMertics:
   # This Object will extract queue manager metrics
@@ -174,6 +184,10 @@ mqMertics:
         - Status : "Status"
           ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_LISTENER_STATUS"
 
-
-  
-
+  # This Object will extract topic metrics
+  - metricsType: "topicMetrics"
+    metrics:
+      include:
+        - PublishCount: "Publish Count"
+          ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_PUB_COUNT"
+          ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"

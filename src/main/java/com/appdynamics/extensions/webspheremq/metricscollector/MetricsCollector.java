@@ -6,6 +6,7 @@ import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
+import com.google.common.base.Strings;
 import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
@@ -111,6 +112,8 @@ public abstract class MetricsCollector {
 	}
 
 	public boolean isExcluded(String resourceName, ExcludeFilters excludeFilter){
+		if (Strings.isNullOrEmpty(resourceName))
+			return true;
 		String type = excludeFilter.getType();
 		Set<String> filterValues = excludeFilter.getValues();
 		switch (FilterType.valueOf(type)){

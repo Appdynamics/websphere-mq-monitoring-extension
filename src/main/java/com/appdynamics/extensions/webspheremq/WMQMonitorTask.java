@@ -174,6 +174,15 @@ public class WMQMonitorTask implements Runnable {
 			} else {
 				logger.warn("No listener metrics to report");
 			}
+
+			Map<String, WMQMetricOverride> topicMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_TOPIC);
+			if (topicMetricsToReport != null) {
+				MetricsCollector topicsMetricsCollector = new TopicMetricsCollector(topicMetricsToReport, this.monitorConfig, agent, queueManager, this.metricPrefix);
+				topicsMetricsCollector.process();
+			} else {
+				logger.warn("No topic metrics to report");
+			}
+
 		} catch (MQException mqe) {
 			logger.error(mqe.getMessage(),mqe);
 			throw new TaskExecutionException(mqe.getMessage());
