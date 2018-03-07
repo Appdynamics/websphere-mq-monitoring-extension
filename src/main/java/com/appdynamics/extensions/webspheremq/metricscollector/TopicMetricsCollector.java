@@ -68,10 +68,10 @@ public class TopicMetricsCollector extends MetricsCollector {
         response = agent.send(request);
         long endTime = System.currentTimeMillis() - startTime;
         logger.debug("PCF agent topic metrics query response for generic topic {} for command {} received in {} milliseconds", topicGenericName, command,endTime);
-        /*if (response == null || response.length <= 0) {
+        if (response == null || response.length <= 0) {
             logger.debug("Unexpected Error while PCFMessage.send() for command {}, response is either null or empty",command);
             return;
-        }*/
+        }
         for (int i = 0; i < response.length; i++) {
             String topicString = response[i].getStringParameterValue(CMQC.MQCA_TOPIC_STRING).trim();
             Set<ExcludeFilters> excludeFilters = this.queueManager.getTopicFilters().getExclude();
@@ -86,18 +86,6 @@ public class TopicMetricsCollector extends MetricsCollector {
                         if(pcfParam instanceof MQCFIN){
                             int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
                             publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), topicString, wmqOverride.getAlias());
-                        }
-                        else if(pcfParam instanceof MQCFIL){
-                            int[] metricVals = response[i].getIntListParameterValue(wmqOverride.getConstantValue());
-                            if(metricVals != null){
-                                int count=0;
-                                for(int val : metricVals){
-                                    count++;
-                                    publishMetric(wmqOverride, val, queueManager.getName(), getAtrifact(), topicString, wmqOverride.getAlias(),"_" + Integer.toString(count));
-                                }
-                            }
-
-
                         }
                     }
                     catch (PCFException pcfe) {
