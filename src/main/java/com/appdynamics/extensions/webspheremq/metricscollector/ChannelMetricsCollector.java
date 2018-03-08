@@ -1,7 +1,7 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
-import com.appdynamics.extensions.util.MetricWriteHelper;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -37,11 +37,11 @@ public class ChannelMetricsCollector extends MetricsCollector {
 	 * The Channel Status values are mentioned here http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
 	 */
 
-	public ChannelMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
+	public ChannelMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
 		this.metricsToReport = metricsToReport;
 		this.monitorConfig = monitorConfig;
 		this.agent = agent;
-		this.metricPrefix = metricPrefix;
+		this.metricWriteHelper = metricWriteHelper;
 		this.queueManager = queueManager;
 	}
 

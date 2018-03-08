@@ -20,7 +20,7 @@ class InquireQCmdCollector extends QueueMetricsCollector implements Runnable {
     protected static final String COMMAND = "MQCMD_INQUIRE_Q";
 
     public InquireQCmdCollector(QueueMetricsCollector collector, Map<String, ? extends MetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager,collector.metricPrefix);
+        super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager, collector.metricWriteHelper);
     }
 
     public void run() {

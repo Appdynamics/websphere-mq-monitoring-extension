@@ -1,5 +1,6 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
@@ -30,7 +31,7 @@ public abstract class MetricsCollector {
 	protected Map<String, ? extends MetricOverride> metricsToReport;
 	protected MonitorConfiguration monitorConfig;
 	protected PCFMessageAgent agent;
-	protected String metricPrefix;
+	protected MetricWriteHelper metricWriteHelper;
 	protected QueueManager queueManager;
 
 	public static final Logger logger = LoggerFactory.getLogger(MetricsCollector.class);
@@ -52,14 +53,14 @@ public abstract class MetricsCollector {
 	}
 
 	public void printMetric(String metricName, String value, String aggType, String timeRollup, String clusterRollup) {
-		monitorConfig.getMetricWriter().printMetric(metricName,value, aggType, timeRollup, clusterRollup);
+		metricWriteHelper.printMetric(metricName,value, aggType, timeRollup, clusterRollup);
 		/*//TODO remove print statement
 		System.out.println("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value);*/
 		logger.debug("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value + " :" + aggType + ":" + timeRollup + ":" + clusterRollup);
 	}
 
 	protected String getMetricsName(String... pathelements) {
-		StringBuilder pathBuilder = new StringBuilder(this.metricPrefix);
+		StringBuilder pathBuilder = new StringBuilder(monitorConfig.getMetricPrefix()).append("|");
 		for (int i = 0; i < pathelements.length; i++) {
 			pathBuilder.append(pathelements[i]);
 			if (i != pathelements.length - 1) {

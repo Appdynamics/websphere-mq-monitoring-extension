@@ -1,5 +1,6 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.MetricOverride;
@@ -28,11 +29,11 @@ public class TopicMetricsCollector extends MetricsCollector {
     public static final Logger logger = LoggerFactory.getLogger(TopicMetricsCollector.class);
     private final String artifact = "Topics";
 
-    public TopicMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
+    public TopicMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
         this.metricsToReport = metricsToReport;
         this.monitorConfig = monitorConfig;
         this.agent = agent;
-        this.metricPrefix = metricPrefix;
+        this.metricWriteHelper = metricWriteHelper;
         this.queueManager = queueManager;
     }
 
@@ -42,7 +43,7 @@ public class TopicMetricsCollector extends MetricsCollector {
 
         Map<String, ? extends MetricOverride>  metricsForInquireTStatusCmd = getMetricsToReport(InquireTStatusCmdCollector.COMMAND);
         if(!metricsForInquireTStatusCmd.isEmpty()){
-            futures.add(monitorConfig.getExecutorService().submit(new InquireTStatusCmdCollector(this,metricsForInquireTStatusCmd)));
+            futures.add(monitorConfig.getExecutorService().submit("Topic Status Cmd Collector", new InquireTStatusCmdCollector(this, metricsForInquireTStatusCmd)));
         }
         for(Future f: futures){
             try {

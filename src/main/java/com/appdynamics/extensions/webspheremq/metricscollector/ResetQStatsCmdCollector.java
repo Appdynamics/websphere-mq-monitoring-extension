@@ -21,7 +21,7 @@ class ResetQStatsCmdCollector extends QueueMetricsCollector implements Runnable{
     protected static final String COMMAND = "MQCMD_RESET_Q_STATS";
 
     public ResetQStatsCmdCollector(QueueMetricsCollector collector, Map<String, ? extends MetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager,collector.metricPrefix);
+        super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager,collector.metricWriteHelper);
     }
 
     public void run() {

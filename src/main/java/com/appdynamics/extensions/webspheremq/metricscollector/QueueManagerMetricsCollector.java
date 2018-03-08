@@ -1,7 +1,7 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
-import com.appdynamics.extensions.util.MetricWriteHelper;
 import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
@@ -27,11 +27,11 @@ public class QueueManagerMetricsCollector extends MetricsCollector {
 	public static final Logger logger = LoggerFactory.getLogger(QueueManagerMetricsCollector.class);
 	private final String artifact = "Queue Manager";
 
-	public QueueManagerMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
+	public QueueManagerMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
 		this.metricsToReport = metricsToReport;
 		this.monitorConfig = monitorConfig;
 		this.agent = agent;
-		this.metricPrefix = metricPrefix;
+		this.metricWriteHelper = metricWriteHelper;
 		this.queueManager = queueManager;
 	}
 

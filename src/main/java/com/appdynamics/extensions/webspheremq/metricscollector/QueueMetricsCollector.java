@@ -1,14 +1,13 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
-import com.appdynamics.extensions.util.MetricWriteHelper;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.pcf.*;
@@ -28,11 +27,11 @@ public class QueueMetricsCollector extends MetricsCollector {
 	public static final Logger logger = LoggerFactory.getLogger(QueueMetricsCollector.class);
 	private final String artifact = "Queues";
 
-	public QueueMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
+	public QueueMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
 		this.metricsToReport = metricsToReport;
 		this.monitorConfig = monitorConfig;
 		this.agent = agent;
-		this.metricPrefix = metricPrefix;
+		this.metricWriteHelper = metricWriteHelper;
 		this.queueManager = queueManager;
 	}
 
@@ -42,15 +41,15 @@ public class QueueMetricsCollector extends MetricsCollector {
 		List<Future> futures = Lists.newArrayList();
 		Map<String, ? extends MetricOverride>  metricsForInquireQCmd = getMetricsToReport(InquireQCmdCollector.COMMAND);
 		if(!metricsForInquireQCmd.isEmpty()){
-			futures.add(monitorConfig.getExecutorService().submit(new InquireQCmdCollector(this,metricsForInquireQCmd)));
+			futures.add(monitorConfig.getExecutorService().submit("InquireQCmdCollector", new InquireQCmdCollector(this,metricsForInquireQCmd)));
 		}
 		Map<String, ? extends MetricOverride>  metricsForInquireQStatusCmd = getMetricsToReport(InquireQStatusCmdCollector.COMMAND);
 		if(!metricsForInquireQStatusCmd.isEmpty()){
-			futures.add(monitorConfig.getExecutorService().submit(new InquireQStatusCmdCollector(this,metricsForInquireQStatusCmd)));
+			futures.add(monitorConfig.getExecutorService().submit("InquireQStatusCmdCollector", new InquireQStatusCmdCollector(this,metricsForInquireQStatusCmd)));
 		}
 		Map<String, ? extends MetricOverride>  metricsForResetQStatsCmd = getMetricsToReport(ResetQStatsCmdCollector.COMMAND);
 		if(!metricsForResetQStatsCmd.isEmpty()){
-			futures.add(monitorConfig.getExecutorService().submit(new ResetQStatsCmdCollector(this,metricsForResetQStatsCmd)));
+			futures.add(monitorConfig.getExecutorService().submit("ResetQStatsCmdCollector", new ResetQStatsCmdCollector(this,metricsForResetQStatsCmd)));
 		}
 		for(Future f: futures){
 			try {

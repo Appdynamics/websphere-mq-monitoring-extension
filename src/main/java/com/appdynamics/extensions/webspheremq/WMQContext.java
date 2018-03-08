@@ -1,8 +1,9 @@
 package com.appdynamics.extensions.webspheremq;
 
-import com.appdynamics.TaskInputArgs;
-import com.appdynamics.extensions.StringUtils;
+
+import com.appdynamics.extensions.TaskInputArgs;
 import com.appdynamics.extensions.crypto.CryptoUtil;
+import com.appdynamics.extensions.util.StringUtils;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.google.common.base.Strings;
@@ -12,9 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Hashtable;
-import java.util.Map;
-
-import static com.appdynamics.TaskInputArgs.PASSWORD_ENCRYPTED;
 
 /**
  * Takes care of websphere mq connection, authentication, SSL, Cipher spec, certificate based authorization.<br>
@@ -65,7 +63,7 @@ public class WMQContext {
 		if (null != propVal) {
 			if(propVal instanceof String){
 				String propString = (String)propVal;
-				if(propString.isEmpty()){
+				if(Strings.isNullOrEmpty(propString)){
 					return;
 				}
 			}
@@ -116,7 +114,7 @@ public class WMQContext {
 		String encryptedPassword = queueManager.getEncryptedPassword();
 		if (!Strings.isNullOrEmpty(encryptionKey) && !Strings.isNullOrEmpty(encryptedPassword)) {
 			java.util.Map<String, String> cryptoMap = Maps.newHashMap();
-			cryptoMap.put(PASSWORD_ENCRYPTED, encryptedPassword);
+			cryptoMap.put(TaskInputArgs.PASSWORD_ENCRYPTED, encryptedPassword);
 			cryptoMap.put(TaskInputArgs.ENCRYPTION_KEY, encryptionKey);
 			return CryptoUtil.getPassword(cryptoMap);
 		}

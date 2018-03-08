@@ -20,7 +20,7 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnab
     protected static final String COMMAND = "MQCMD_INQUIRE_TOPIC_STATUS";
 
     public InquireTStatusCmdCollector(TopicMetricsCollector collector, Map<String, ? extends MetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager,collector.metricPrefix);
+        super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager,collector.metricWriteHelper);
     }
 
     public void run() {
