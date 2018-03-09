@@ -90,17 +90,11 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			// Get the First Entry which is the metric
 			Map.Entry firstEntry = (Map.Entry) metric.entrySet().iterator().next();
 			String metricName = firstEntry.getKey().toString();
+			Map<String, ?> metricPropsMap = (Map<String, ?>) metric.get(metricName);
 			WMQMetricOverride override = new WMQMetricOverride();
-			override.setAlias(firstEntry.getValue().toString());
-			override.setMultiplier(metric.get("multiplier") != null ? Double.parseDouble(metric.get("multiplier").toString()) : Constants.DEFAULT_MULTIPLIER);
-			String metricType = metric.get("metricType") != null ? metric.get("metricType").toString() : Constants.DEFAULT_METRIC_TYPE;
-			String[] metricTypes = metricType.split(" ");
-			override.setAggregator(metricTypes[0]);
-			override.setTimeRollup(metricTypes[1]);
-			override.setClusterRollup(metricTypes[2]);
-			override.setMetricKey(metricName);
-			override.setIbmCommand((String) metric.get("ibmCommand"));
-			override.setIbmConstant((String) metric.get("ibmConstant"));
+			override.setIbmCommand((String) metricPropsMap.get("ibmCommand"));
+			override.setIbmConstant((String) metricPropsMap.get("ibmConstant"));
+			override.setMetricProperties(metricPropsMap);
 			if (override.getConstantValue() == -1) {
 				// Only add the metric which is valid, if constant value
 				// resolutes to -1 then it is invalid.

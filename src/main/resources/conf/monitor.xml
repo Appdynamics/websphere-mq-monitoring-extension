@@ -1,5 +1,5 @@
 <monitor>
-	<name>WMQueueMonitor</name>
+	<name>IBMWebSphereMQMonitor</name>
 	<type>managed</type>
         <enabled>true</enabled>
 	<description>Monitors Websphere Messaging Queues</description>
@@ -14,7 +14,7 @@
 		<type>java</type>
 		<execution-timeout-in-secs>60</execution-timeout-in-secs>
 		<task-arguments>
-		    <argument name="config-file" is-required="false" default-value="monitors/WMQMonitor/config.yaml"/>
+		    <argument name="config-file" is-required="false" default-value="monitors/WMQMonitor/config.yml"/>
 		</task-arguments>
 		<java-task>
 			<classpath>websphere-mq-monitoring-extension.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;dhbcore.jar;com.ibm.mq.headers.jar;connector.jar;com.ibm.mq.pcf.jar</classpath>

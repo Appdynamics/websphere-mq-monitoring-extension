@@ -2,10 +2,11 @@ package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
-import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
+import com.google.common.collect.Lists;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.constants.MQConstants;
@@ -16,10 +17,7 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This class is responsible for channel metric collection.
@@ -37,7 +35,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 	 * The Channel Status values are mentioned here http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
 	 */
 
-	public ChannelMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
+	public ChannelMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
 		this.metricsToReport = metricsToReport;
 		this.monitorConfig = monitorConfig;
 		this.agent = agent;
@@ -79,12 +77,15 @@ public class ChannelMetricsCollector extends MetricsCollector {
 					if(!isExcluded(channelName,excludeFilters)) { //check for exclude filters
 						logger.debug("Pulling out metrics for channel name {}",channelName);
 						Iterator<String> itr = getMetricsToReport().keySet().iterator();
+						List<Metric> metrics = Lists.newArrayList();
 						while (itr.hasNext()) {
 							String metrickey = itr.next();
-							WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
+							WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
 							int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-							publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), channelName, wmqOverride.getAlias());
+							Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), channelName, metrickey);
+							metrics.add(metric);
 						}
+						publishMetrics(metrics);
 					}
 					else{
 						logger.debug("Channel name {} is excluded.",channelName);
@@ -115,7 +116,7 @@ public class ChannelMetricsCollector extends MetricsCollector {
 	}
 
 
-	public Map<String, ? extends MetricOverride> getMetricsToReport() {
+	public Map<String, WMQMetricOverride> getMetricsToReport() {
 		return this.metricsToReport;
 	}
 

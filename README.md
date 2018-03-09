@@ -1,13 +1,13 @@
-WebSphere MQ Monitoring Extension
-=================================
+AppDynamics Monitoring Extension for use with IBM WebSphere MQ
+==============================================================
 
 Use case
 -------------
 
 
-The WebSphere MQ monitoring extension can monitor multiple queues managers and their resources, namely queues,channels and listeners.
+The WebSphere MQ monitoring extension can monitor multiple queues managers and their resources, namely queues, topics, channels and listeners.
 
-The metrics for queue manager, queue, channel and listener can be configured.
+The metrics for queue manager, queue, topic, channel and listener can be configured.
 
 The MQ Monitor currently supports IBM Websphere MQ version 7.x, 8.x and 9.x.
 
@@ -15,7 +15,7 @@ The MQ Monitor currently supports IBM Websphere MQ version 7.x, 8.x and 9.x.
 Prerequisites
 -------------
  
-This extension requires a AppDynamics Java Machine Agent installed and running. 
+In order to use this extension, you do need a [Standalone JAVA Machine Agent](https://docs.appdynamics.com/display/PRO44/Java+Agent) or [SIM Agent](https://docs.appdynamics.com/display/PRO44/Server+Visibility).  For more details on downloading these products, please  visit https://download.appdynamics.com/.
 
 If this extension is configured for **CLIENT** transport type (more on that later), please make sure the MQ's host and port is accessible. 
  
@@ -53,7 +53,7 @@ Rebuilding the Project
 Installation
 ------------
 
-1. Unzip contents of WMQMonitor-<version>.zip file and copy to <code><machine-agent-dir>/monitors</code> directory.
+1. Unzip contents of WMQMonitor-<version>.zip file and copy to <code><machine-agent-dir>/monitors</code> directory. Please place the extension in the "monitors" directory of your Machine Agent installation directory. Do not place the extension in the "extensions" directory of your Machine Agent installation directory.
 2. There are two transport modes in which this extension can be run
 
   **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
@@ -168,81 +168,129 @@ The following is a sample config.yaml file that depicts two different queue mana
             exclude:
                - type: "STARTSWITH"
                  values: ["SYSTEM"]
+        
+        topicFilters:
+                # For topics, IBM MQ uses the topic wildcard characters ('#' and '+') and does not treat a trailing asterisk as a wildcard
+                # https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.pla.doc/q005020_.htm
+                include: ["#"]
+                exclude:
+                     #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+                   - type: "STARTSWITH"
+                     #The name of the queue or queue name pattern as per queue filter, comma separated values
+                     values: ["SYSTEM","$SYS"]
 
-    mqMertics:
+    mqMetrics:
       # This Object will extract queue manager metrics
       - metricsType: "queueMgrMetrics"
         metrics:
           include:
-            - Status: "Status"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
+            - Status:
+                alias: "Status"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
           
       # This Object will extract queue metrics
       - metricsType: "queueMetrics"
         metrics:
           include:
-            - MaxQueueDepth: "Max Queue Depth"
-              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
-              ibmCommand: "MQCMD_INQUIRE_Q"
+            - MaxQueueDepth:
+                alias: "Max Queue Depth"
+                ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
+                ibmCommand: "MQCMD_INQUIRE_Q"
               
-            - CurrentQueueDepth: "Current Queue Depth"
-              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
-              ibmCommand: "MQCMD_INQUIRE_Q"
+            - CurrentQueueDepth:
+                alias: "Current Queue Depth"
+                ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+                ibmCommand: "MQCMD_INQUIRE_Q"
               
-            - OpenInputCount: "Open Input Count"
-              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
-              ibmCommand: "MQCMD_INQUIRE_Q"
+            - OpenInputCount:
+                alias: "Open Input Count"
+                ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
+                ibmCommand: "MQCMD_INQUIRE_Q"
               
-            - OpenOutputCount: "Open Output Count"
-              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
-              ibmCommand: "MQCMD_INQUIRE_Q"
+            - OpenOutputCount:
+                alias: "Open Output Count"
+                ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
+                ibmCommand: "MQCMD_INQUIRE_Q"
     
-            - OldestMsgAge: "OldestMsgAge"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
-              ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            - OldestMsgAge:
+                alias: "OldestMsgAge"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
+                ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
     
-            - OnQTime: "OnQTime"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
-              ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
-            
-            - UncommittedMsgs: "UncommittedMsgs"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_UNCOMMITTED_MSGS"
-              ibmCommand: "MQCMD_INQUIRE_Q_STATUS"  
+            - OnQTime:
+                alias: "OnQTime"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
+                ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
     
-            - HighQDepth: "HighQDepth"
-              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
-              ibmCommand: "MQCMD_RESET_Q_STATS"
+            - UncommittedMsgs:
+                alias: "UncommittedMsgs"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_UNCOMMITTED_MSGS"
+                ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
     
-            - MsgDeqCount: "MsgDeqCount"
-              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_DEQ_COUNT"
-              ibmCommand: "MQCMD_RESET_Q_STATS"
+            - HighQDepth:
+                alias: "HighQDepth"
+                ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
+                ibmCommand: "MQCMD_RESET_Q_STATS"
     
-            - MsgEnqCount: "MsgEnqCount"
-              ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_ENQ_COUNT"
-              ibmCommand: "MQCMD_RESET_Q_STATS"
+            - MsgDeqCount:
+                alias: "MsgDeqCount"
+                ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_DEQ_COUNT"
+                ibmCommand: "MQCMD_RESET_Q_STATS"
+    
+            - MsgEnqCount:
+                alias: "MsgEnqCount"
+                ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_ENQ_COUNT"
+                ibmCommand: "MQCMD_RESET_Q_STATS"
     
           
       # This Object will extract channel metrics
       - metricsType: "channelMetrics"
         metrics:
           include:
-            - Messages: "Messages"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
+            - Messages:
+                alias: "Messages"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
               
-            - Status: "Status"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"  #http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
+            - Status:
+                alias: "Status"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"  #http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
               
-            - ByteSent: "Byte Sent"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
+            - ByteSent:
+                alias: "Byte Sent"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
               
-            - ByteReceived: "Byte Received"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
+            - ByteReceived:
+                alias: "Byte Received"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
               
-            - BuffersSent: "Buffers Sent"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
+            - BuffersSent:
+                alias: "Buffers Sent"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
               
-            - BuffersReceived: "Buffers Received"
-              ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+            - BuffersReceived:
+                alias: "Buffers Received"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+    
+    
+      - metricsType: "listenerMetrics"
+        metrics:
+          include:
+            - Status:
+                alias: "Status"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_LISTENER_STATUS"
+    
+      # This Object will extract topic metrics
+      - metricsType: "topicMetrics"
+        metrics:
+          include:
+            - PublishCount:
+                alias: "Publish Count"
+                ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_PUB_COUNT"
+                ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
+            - SubscriptionCount:
+                alias: "Subscription Count"
+                ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_SUB_COUNT"
+                ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
 
 
 ```
@@ -286,6 +334,13 @@ Metrics
 --------
 The metrics will be reported under the tree ```Application Infrastructure Performance|$TIER|Custom Metrics|WebsphereMQ```
 
+Credentials Encryption
+----------------------
+Please visit [this page](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-Password-Encryption-with-Extensions/ta-p/29397) to get detailed instructions on password encryption. The steps in this document will guide you through the whole process.
+
+Extensions Workbench
+--------------------
+Workbench is an inbuilt feature provided with each extension in order to assist you to fine tune the extension setup before you actually deploy it on the controller. Please review the following document on [How to use the Extensions WorkBench](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-the-Extensions-WorkBench/ta-p/30130)
 
 Troubleshooting
 ---------------
@@ -299,32 +354,6 @@ Troubleshooting
    This usually happenes when on a windows machine in monitor.xml you give config.yaml file path with linux file path separator `/`. Use Windows file path separator `\` e.g. `monitors\MQMonitor\config.yaml` .
 
 7. Collect Debug Logs: Edit the file, <MachineAgent>/conf/logging/log4j.xml and update the level of the appender com.appdynamics to debug Let it run for 5-10 minutes and attach the logs to a support ticket
-
-
-WorkBench
----------
-
-Workbench is a feature by which you can preview the metrics before registering it with the controller. This is useful if you want to fine tune the configurations. Workbench is embedded into the extension jar.
-To use the workbench
-
-1. Follow all the installation steps
-2. Start the workbench with the command
-
-```
-    java -jar /path/to/MachineAgent/monitors/WMQMonitor/websphere-mq-monitoring-extension.jar
-```
-
-  This starts an http server at http://host:9090/. This can be accessed from the browser.
-3. If the server is not accessible from outside/browser, you can use the following end points to see the list of registered metrics and errors.
-
-```
-    #Get the stats
-    curl http://localhost:9090/api/stats
-    #Get the registered metrics
-    curl http://localhost:9090/api/metric-paths
-```
-4. You can make the changes to config.yml and validate it from the browser or the API
-5. Once the configuration is complete, you can kill the workbench and start the Machine Agent
 
 
 WebSphere MQ Queue Dashboard
@@ -373,7 +402,34 @@ More Troubleshooting
 4. MQJE001: Completion Code '2', Reason '2195'
    This could happen in **Client** mode. One way this could be fixed is to use 7.5.2 version of the jars. 
 
+Support Tickets
+---------------
+If after going through the Troubleshooting Document you have not been able to get your extension working, please file a ticket and add the following information.
 
+Please provide the following in order for us to assist you better.  
+
+1. Stop the running machine agent .
+2. Delete all existing logs under <MachineAgent>/logs .
+3. Please enable debug logging by editing the file <MachineAgent>/conf/logging/log4j.xml. Change the level value of the following <logger> elements to debug. 
+     <logger name="com.singularity">
+     <logger name="com.appdynamics">
+4. Start the machine agent and please let it run for 10 mins. Then zip and upload all the logs in the directory <MachineAgent>/logs/*.
+5. Attach the zipped <MachineAgent>/conf/* directory here.
+ 6. Attach the zipped <MachineAgent>/monitors/ExtensionFolderYouAreHavingIssuesWith directory here .
+
+For any support related questions, you can also contact help@appdynamics.com.
+
+Contributing
+------------
+Always feel free to fork and contribute any changes directly via GitHub.
+
+Version
+-------
+Version: 7.0
+
+Controller Compatibility: 3.7 or Later
+
+Product  Tested On: 7.x, 8.x, 9.x
 
 
 

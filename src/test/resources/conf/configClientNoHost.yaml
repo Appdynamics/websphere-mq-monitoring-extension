@@ -50,7 +50,7 @@ queueManagers:
             #The name of the queue or queue name pattern as per queue filter, comma separated values
               values: ["SYSTEM","AMQ"]
     
-mqMertics:
+mqMetrics:
   # This Object will extract queue manager metrics
   - metricsType: "queueMgrMetrics"
     metrics:

@@ -1,6 +1,6 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.webspheremq.config.MetricOverride;
+import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.pcf.PCFException;
@@ -19,7 +19,7 @@ class InquireQCmdCollector extends QueueMetricsCollector implements Runnable {
 
     protected static final String COMMAND = "MQCMD_INQUIRE_Q";
 
-    public InquireQCmdCollector(QueueMetricsCollector collector, Map<String, ? extends MetricOverride> metricsToReport){
+    public InquireQCmdCollector(QueueMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
         super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager, collector.metricWriteHelper);
     }
 

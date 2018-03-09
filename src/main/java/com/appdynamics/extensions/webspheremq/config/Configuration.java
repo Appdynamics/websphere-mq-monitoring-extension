@@ -11,7 +11,7 @@ public class Configuration {
 
 	private QueueManager[] queueManagers;
 	private String metricPrefix;
-	private MqMetric[] mqMertics;
+	private MqMetric[] mqMetrics;
 	private int numberOfThreads = Constants.DEFAULT_NUMBER_OF_THREADS;
 	private int queueMetricsCollectionTimeoutInSeconds = 20;
 	private String encryptionKey;
@@ -28,12 +28,15 @@ public class Configuration {
 	public void setMetricPrefix(String metricPrefix) {
 		this.metricPrefix = metricPrefix;
 	}
-	public MqMetric[] getMqMertics() {
-		return mqMertics;
+
+	public MqMetric[] getMqMetrics() {
+		return mqMetrics;
 	}
-	public void setMqMertics(MqMetric[] mqMertics) {
-		this.mqMertics = mqMertics;
+
+	public void setMqMetrics(MqMetric[] mqMetrics) {
+		this.mqMetrics = mqMetrics;
 	}
+
 	public int getNumberOfThreads() {
 		return numberOfThreads;
 	}

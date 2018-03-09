@@ -2,9 +2,8 @@ package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
-import com.appdynamics.extensions.webspheremq.common.Constants;
+import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
-import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.google.common.base.Strings;
@@ -13,9 +12,6 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.*;
 
 /**
@@ -28,7 +24,7 @@ import java.util.*;
  */
 public abstract class MetricsCollector {
 
-	protected Map<String, ? extends MetricOverride> metricsToReport;
+	protected Map<String, WMQMetricOverride> metricsToReport;
 	protected MonitorConfiguration monitorConfig;
 	protected PCFMessageAgent agent;
 	protected MetricWriteHelper metricWriteHelper;
@@ -40,7 +36,7 @@ public abstract class MetricsCollector {
 
 	public abstract String getAtrifact();
 
-	public abstract Map<String, ? extends MetricOverride> getMetricsToReport();
+	public abstract Map<String, WMQMetricOverride> getMetricsToReport();
 
 	/**
 	 * Applies include and exclude filters to the artifacts (i.e queue manager, q, or channel),<br>
@@ -50,13 +46,6 @@ public abstract class MetricsCollector {
 	 */
 	public final void process() throws TaskExecutionException {
 		publishMetrics();
-	}
-
-	public void printMetric(String metricName, String value, String aggType, String timeRollup, String clusterRollup) {
-		metricWriteHelper.printMetric(metricName,value, aggType, timeRollup, clusterRollup);
-		/*//TODO remove print statement
-		System.out.println("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value);*/
-		logger.debug("Metric Published to controller:  NAME:" + metricName + " VALUE:" + value + " :" + aggType + ":" + timeRollup + ":" + clusterRollup);
 	}
 
 	protected String getMetricsName(String... pathelements) {
@@ -70,30 +59,19 @@ public abstract class MetricsCollector {
 		return pathBuilder.toString();
 	}
 
-	public BigInteger toBigInteger(Object value, Double multiplier) {
-		try {
-			BigDecimal bigD = new BigDecimal(value.toString());
-			if (multiplier != null && multiplier != Constants.DEFAULT_MULTIPLIER) {
-				bigD = bigD.multiply(new BigDecimal(multiplier));
-			}
-			return bigD.setScale(0, RoundingMode.HALF_UP).toBigInteger();
-		} catch (NumberFormatException nfe) {
+	protected Metric createMetric(String metricName, int metricValue, WMQMetricOverride wmqOverride, String... pathelements) {
+		String metricPath = getMetricsName(pathelements);
+		Metric metric;
+		if (wmqOverride.getMetricProperties() != null) {
+			metric = new Metric(metricName, String.valueOf(metricValue), metricPath, wmqOverride.getMetricProperties());
+		} else {
+			metric = new Metric(metricName, String.valueOf(metricValue), metricPath);
 		}
-		return BigInteger.ZERO;
+		return metric;
 	}
 
-	public Double getMultiplier(MetricOverride override) {
-		if (override.getMultiplier() == 0.0) {
-			return Constants.DEFAULT_MULTIPLIER;
-		}
-		return override.getMultiplier();
-	}
-	
-
-	protected void publishMetric(WMQMetricOverride wmqOverride, int metricVal, String... pathelements) {
-		BigInteger bigVal = toBigInteger(metricVal, getMultiplier(wmqOverride));
-		String metricName = getMetricsName(pathelements);
-		printMetric(metricName, String.valueOf(bigVal.intValue()), wmqOverride.getAggregator(), wmqOverride.getTimeRollup(), wmqOverride.getClusterRollup());	
+	protected void publishMetrics(List<Metric> metrics) {
+		metricWriteHelper.transformAndPrintMetrics(metrics);
 	}
 
 	public static enum FilterType {
@@ -246,9 +224,6 @@ public abstract class MetricsCollector {
 
 		return filteredList;
 	}
-	
-	
-
 
 	protected int[] getIntAttributesArray(int... inputAttrs) {
 		int[] attrs = new int[inputAttrs.length+getMetricsToReport().size()];

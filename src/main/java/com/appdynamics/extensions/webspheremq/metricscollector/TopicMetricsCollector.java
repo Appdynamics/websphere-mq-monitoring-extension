@@ -2,8 +2,8 @@ package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
-import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.google.common.collect.Lists;
@@ -29,7 +29,7 @@ public class TopicMetricsCollector extends MetricsCollector {
     public static final Logger logger = LoggerFactory.getLogger(TopicMetricsCollector.class);
     private final String artifact = "Topics";
 
-    public TopicMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
+    public TopicMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
         this.metricsToReport = metricsToReport;
         this.monitorConfig = monitorConfig;
         this.agent = agent;
@@ -41,7 +41,7 @@ public class TopicMetricsCollector extends MetricsCollector {
         logger.info("Collecting Topic metrics...");
         List<Future> futures = Lists.newArrayList();
 
-        Map<String, ? extends MetricOverride>  metricsForInquireTStatusCmd = getMetricsToReport(InquireTStatusCmdCollector.COMMAND);
+        Map<String, WMQMetricOverride>  metricsForInquireTStatusCmd = getMetricsToReport(InquireTStatusCmdCollector.COMMAND);
         if(!metricsForInquireTStatusCmd.isEmpty()){
             futures.add(monitorConfig.getExecutorService().submit("Topic Status Cmd Collector", new InquireTStatusCmdCollector(this, metricsForInquireTStatusCmd)));
         }
@@ -79,30 +79,33 @@ public class TopicMetricsCollector extends MetricsCollector {
             if(!isExcluded(topicString,excludeFilters)) { //check for exclude filters
                 logger.debug("Pulling out metrics for topic name {} for command {}",topicString,command);
                 Iterator<String> itr = getMetricsToReport().keySet().iterator();
+                List<Metric> metrics = Lists.newArrayList();
                 while (itr.hasNext()) {
                     String metrickey = itr.next();
-                    WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
+                    WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
                     try{
                         PCFParameter pcfParam = response[i].getParameter(wmqOverride.getConstantValue());
                         if(pcfParam instanceof MQCFIN){
                             int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-                            publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), topicString, wmqOverride.getAlias());
+                            Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), topicString, metrickey);
+                            metrics.add(metric);
                         }
                     }
                     catch (PCFException pcfe) {
-                        logger.error("PCFException caught while collecting metric for Queue: {} for metric: {} in command {}",topicString, wmqOverride.getIbmCommand(),command, pcfe);
+                        logger.error("PCFException caught while collecting metric for Topic: {} for metric: {} in command {}",topicString, wmqOverride.getIbmCommand(),command, pcfe);
                     }
 
                 }
+                publishMetrics(metrics);
             }
             else{
-                logger.debug("Queue name {} is excluded.",topicString);
+                logger.debug("Topic name {} is excluded.",topicString);
             }
         }
 
     }
 
-    private Map<String, ? extends MetricOverride> getMetricsToReport(String command) {
+    private Map<String, WMQMetricOverride> getMetricsToReport(String command) {
         Map<String, WMQMetricOverride> commandMetrics = Maps.newHashMap();
         if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
             logger.debug("There are no metrics configured for {}",command);
@@ -111,7 +114,7 @@ public class TopicMetricsCollector extends MetricsCollector {
         Iterator<String> itr = getMetricsToReport().keySet().iterator();
         while (itr.hasNext()) {
             String metrickey = itr.next();
-            WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
+            WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
             if(wmqOverride.getIbmCommand().equalsIgnoreCase(command)){
                 commandMetrics.put(metrickey,wmqOverride);
             }
@@ -123,7 +126,7 @@ public class TopicMetricsCollector extends MetricsCollector {
         return artifact;
     }
 
-    public Map<String, ? extends MetricOverride> getMetricsToReport() {
+    public Map<String, WMQMetricOverride> getMetricsToReport() {
         return this.metricsToReport;
     }
 }

@@ -1,6 +1,6 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.webspheremq.config.MetricOverride;
+import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.pcf.PCFException;
@@ -9,7 +9,6 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,7 +18,7 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnab
 
     protected static final String COMMAND = "MQCMD_INQUIRE_TOPIC_STATUS";
 
-    public InquireTStatusCmdCollector(TopicMetricsCollector collector, Map<String, ? extends MetricOverride> metricsToReport){
+    public InquireTStatusCmdCollector(TopicMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
         super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager,collector.metricWriteHelper);
     }
 

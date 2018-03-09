@@ -153,7 +153,7 @@
                             <target>
                                 <mkdir dir="${target.dir}"/>
                                 <copy todir="${target.dir}">
-                                    <fileset dir="src/main/resources/conf" includes="monitor.xml,config.yaml"/>
+                                    <fileset dir="src/main/resources/conf" includes="monitor.xml,config.yml"/>
                                 </copy>
                                 <copy todir="${target.dir}">
                                     <fileset dir="${project.build.directory}" includes="${project.build.finalName}.${project.packaging}"/>

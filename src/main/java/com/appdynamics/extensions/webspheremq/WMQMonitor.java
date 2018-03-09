@@ -4,7 +4,6 @@ import com.appdynamics.extensions.ABaseMonitor;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.util.AssertUtils;
 import com.appdynamics.extensions.webspheremq.config.Configuration;
-import com.appdynamics.extensions.webspheremq.config.MqMetric;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This class is responsible for executing AManagedMonitor task. 
@@ -45,7 +43,7 @@ public class WMQMonitor extends ABaseMonitor {
 
 					for (QueueManager queueManager : queueManagers) {
 						queueManager.setEncryptionKey(config.getEncryptionKey());
-						WMQMonitorTask wmqTask = new WMQMonitorTask(tasksExecutionServiceProvider, queueManager, config.getMqMertics());
+						WMQMonitorTask wmqTask = new WMQMonitorTask(tasksExecutionServiceProvider, queueManager, config.getMqMetrics());
 						tasksExecutionServiceProvider.submit(queueManager.getName(), wmqTask);
 					}
 				}

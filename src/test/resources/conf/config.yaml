@@ -52,7 +52,7 @@ queueManagers:
 
 
     
-mqMertics:
+mqMetrics:
   # This Object will extract queue manager metrics
   - metricsType: "queueMgrMetrics"
     metrics:
