@@ -80,7 +80,7 @@ Installation
 
 3. If you plan to use **Client** transport type, create a channel of type server connection in each of the queue manager you wish to query. 
 
-4. Edit the config.yaml file.  An example config.yaml file follows these installation instructions.
+4. Edit the config.yml file.  An example config.yml file follows these installation instructions.
 
 5. Restart the Machine Agent.
  
@@ -316,7 +316,7 @@ SSL Support
 Configure the IBM SSL Cipher Suite in the config.yaml. 
 
 Note that, to use some CipherSuites the unrestricted policy needs to be configured in JRE. Please visit [this link] (http://www.ibm.com/support/knowledgecenter/SSYKE2_8.0.0/com.ibm.java.security.component.80.doc/security-component/sdkpolicyfiles.html
-) for more details.
+) for more details. For Oracle JRE, please update with [JCE Unlimited Strength Jurisdiction Policy] (http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html)
 
 To configure SSL, the MA's trust store and keystore needs to be setup with the JKS filepath. 
 
@@ -402,6 +402,9 @@ More Troubleshooting
 4. MQJE001: Completion Code '2', Reason '2195'
    This could happen in **Client** mode. One way this could be fixed is to use 7.5.2 version of the jars. 
 
+5. MQJE001: Completion Code '2', Reason '2400'
+   This could happen if unsupported cipherSuite is provided or JRE not having/enabled unlimited jurisdiction policy files. Please check SSL Support section.
+
 Support Tickets
 ---------------
 If after going through the Troubleshooting Document you have not been able to get your extension working, please file a ticket and add the following information.
@@ -430,6 +433,10 @@ Version: 7.0
 Controller Compatibility: 3.7 or Later
 
 Product  Tested On: 7.x, 8.x, 9.x
+
+Last updated On: 21st March, 2018
+
+List of Changes to this extension (Link this page with the changelog.md page on github)
 
 
 

@@ -1,5 +1,13 @@
+/*
+ * Copyright 2018. AppDynamics LLC and its affiliates.
+ * All Rights Reserved.
+ * This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ * The copyright notice above does not evidence any actual or intended publication of such source code.
+ */
+
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
@@ -12,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.Set;
 
-class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnable{
+class InquireTStatusCmdCollector extends TopicMetricsCollector implements AMonitorTaskRunnable{
 
     public static final Logger logger = LoggerFactory.getLogger(InquireTStatusCmdCollector.class);
 
@@ -64,4 +72,7 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnab
     }
 
 
+    public void onTaskComplete() {
+        logger.info("WebSphereMQ task for command MQCMD_INQUIRE_TOPIC_STATUS completed for queueManager" + queueManager.getName());
+    }
 }

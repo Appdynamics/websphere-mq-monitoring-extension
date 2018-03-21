@@ -1,3 +1,10 @@
+/*
+ * Copyright 2018. AppDynamics LLC and its affiliates.
+ * All Rights Reserved.
+ * This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ * The copyright notice above does not evidence any actual or intended publication of such source code.
+ */
+
 package com.appdynamics.extensions.webspheremq;
 
 
@@ -114,7 +121,7 @@ public class WMQContext {
 		String encryptedPassword = queueManager.getEncryptedPassword();
 		if (!Strings.isNullOrEmpty(encryptionKey) && !Strings.isNullOrEmpty(encryptedPassword)) {
 			java.util.Map<String, String> cryptoMap = Maps.newHashMap();
-			cryptoMap.put(TaskInputArgs.PASSWORD_ENCRYPTED, encryptedPassword);
+			cryptoMap.put(TaskInputArgs.ENCRYPTED_PASSWORD, encryptedPassword);
 			cryptoMap.put(TaskInputArgs.ENCRYPTION_KEY, encryptionKey);
 			return CryptoUtil.getPassword(cryptoMap);
 		}

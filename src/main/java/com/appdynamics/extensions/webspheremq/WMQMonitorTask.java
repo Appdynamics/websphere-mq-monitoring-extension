@@ -1,9 +1,17 @@
+/*
+ * Copyright 2018. AppDynamics LLC and its affiliates.
+ * All Rights Reserved.
+ * This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ * The copyright notice above does not evidence any actual or intended publication of such source code.
+ */
+
 package com.appdynamics.extensions.webspheremq;
 
 import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.util.StringUtils;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.MqMetric;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -18,6 +26,7 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +58,9 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		try {
 			logger.debug("WebSphereMQ monitor thread for queueManager " + queueManager.getName() + " started.");
 			extractAndReportMetrics();
+			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), BigDecimal.ONE, "AVG.AVG.IND");
 		} catch (Exception e) {
+			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), BigDecimal.ZERO, "AVG.AVG.IND");
 			logger.error("Error in run of " + Thread.currentThread().getName(), e);
 		} finally {
 			long endTime = System.currentTimeMillis() - startTime;
@@ -58,7 +69,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 	}
 
 	private void extractAndReportMetrics() throws MQException, TaskExecutionException {
-		Map<String, Map<String, WMQMetricOverride>> metricsMap = getMetricsToReport();
+		Map<String, Map<String, WMQMetricOverride>> metricsMap = getMetricsToReportFromConfigYml();
 		WMQContext auth = new WMQContext(queueManager);
 		Hashtable env = auth.getMQEnvironment();
 		extractAndReportInternal(env, metricsMap);
@@ -69,7 +80,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 	 * It contains metric type as key and a map of metric and WMQMetricOverride as value,<br>
 	 * entryset of internal map implicitly represents metrics to be reported.
 	 */
-	private Map<String, Map<String, WMQMetricOverride>> getMetricsToReport() {
+	private Map<String, Map<String, WMQMetricOverride>> getMetricsToReportFromConfigYml() {
 		Map<String, Map<String, WMQMetricOverride>> metricsMap = Maps.newHashMap();
 		for (MqMetric mqMetric : mqMetrics) {
 			String metricType = mqMetric.getMetricsType();
@@ -191,8 +202,6 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			cleanUp(ibmQueueManager, agent);
 		}
 	}
-
-
 
 	/**
 	 * Destroy the agent and disconnect from queue manager
