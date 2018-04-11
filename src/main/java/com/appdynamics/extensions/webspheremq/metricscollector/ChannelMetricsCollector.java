@@ -63,6 +63,8 @@ public class ChannelMetricsCollector extends MetricsCollector {
 		logger.debug("Attributes being sent along PCF agent request to query channel metrics: " + Arrays.toString(attrs));
 
 		Set<String> channelGenericNames = this.queueManager.getChannelFilters().getInclude();
+
+		Integer activeChannelsCount = null;
 		for(String channelGenericName : channelGenericNames){
 			PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS);
 			request.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, channelGenericName);
@@ -91,6 +93,11 @@ public class ChannelMetricsCollector extends MetricsCollector {
 							int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
 							Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), channelName, metrickey);
 							metrics.add(metric);
+							if ("Status".equals(metrickey)) {
+								if (metricVal == 3) {
+									activeChannelsCount = (activeChannelsCount == null) ? new Integer(0).intValue() + 1 : activeChannelsCount++;
+								}
+							}
 						}
 						publishMetrics(metrics);
 					}
@@ -113,6 +120,11 @@ public class ChannelMetricsCollector extends MetricsCollector {
 				logger.error("Unexpected Error occoured while collecting metrics for channel " + channelGenericName, e);
 			}
 		}
+		if (activeChannelsCount != null) {
+			Metric activeChannelsCountMetric = createMetric("ActiveChannelsCount", activeChannelsCount, null, queueManager.getName(), getAtrifact(), "ActiveChannelsCount");
+			publishMetrics(Lists.newArrayList(Arrays.asList(activeChannelsCountMetric)));
+		}
+
 		long exitTime = System.currentTimeMillis() - entryTime;
 		logger.debug("Time taken to publish metrics for all channels is {} milliseconds", exitTime);
 

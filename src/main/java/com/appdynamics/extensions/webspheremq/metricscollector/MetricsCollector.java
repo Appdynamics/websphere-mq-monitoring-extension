@@ -69,7 +69,7 @@ public abstract class MetricsCollector {
 	protected Metric createMetric(String metricName, int metricValue, WMQMetricOverride wmqOverride, String... pathelements) {
 		String metricPath = getMetricsName(pathelements);
 		Metric metric;
-		if (wmqOverride.getMetricProperties() != null) {
+		if (wmqOverride != null && wmqOverride.getMetricProperties() != null) {
 			metric = new Metric(metricName, String.valueOf(metricValue), metricPath, wmqOverride.getMetricProperties());
 		} else {
 			metric = new Metric(metricName, String.valueOf(metricValue), metricPath);

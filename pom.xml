@@ -20,7 +20,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
         <lib.dir>${basedir}/lib</lib.dir>
-        <ibm.mq.lib.version>7.5.0.2</ibm.mq.lib.version>
+        <ibm.mq.lib.version>7.5.0.8</ibm.mq.lib.version>
         <target.dir>${project.build.directory}/WMQMonitor</target.dir>
     </properties>
     <dependencies>
