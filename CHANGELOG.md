@@ -9,5 +9,6 @@
 
 ### Version 7.0
 * Addition of Topic Metrics, porting to Extensions 2.+ framework
-* extension of config file changed from yaml to yml
+* config file extension changed from yaml to yml
 * config.yml changes to metric alias and formatting.
+* ActiveChannelsCount metric added

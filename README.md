@@ -3,7 +3,7 @@ AppDynamics Monitoring Extension for use with IBM WebSphere MQ
 
 Use case
 -------------
-
+Websphere MQ, formerly known as MQ (message queue) series, is an IBM standard for program-to-program messaging across multiple platforms. 
 
 The WebSphere MQ monitoring extension can monitor multiple queues managers and their resources, namely queues, topics, channels and listeners.
 
@@ -56,21 +56,20 @@ Installation
 1. Unzip contents of WMQMonitor-<version>.zip file and copy to <code><machine-agent-dir>/monitors</code> directory. Please place the extension in the "monitors" directory of your Machine Agent installation directory. Do not place the extension in the "extensions" directory of your Machine Agent installation directory.
 2. There are two transport modes in which this extension can be run
 
-  **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
+  a) **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
 
-  **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://www-01.ibm.com/software/integration/wmq/clients/) for this mode to get the necessary jars as mentioned previously.
+  b) **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://www-01.ibm.com/software/integration/wmq/clients/) for this mode to get the necessary jars as mentioned previously.
   
    Copy the following jars to the WMQMonitor directory
+   
  	```
-
-	    com.ibm.mq.commonservices.jar
-	    com.ibm.mq.jar
-	    com.ibm.mq.jmqi.jar
-	    dhbcore.jar
-	    com.ibm.mq.headers.jar
-	    connector.jar
-	    com.ibm.mq.pcf.jar
-
+    com.ibm.mq.commonservices.jar
+    com.ibm.mq.jar
+    com.ibm.mq.jmqi.jar
+    dhbcore.jar
+    com.ibm.mq.headers.jar
+    connector.jar
+    com.ibm.mq.pcf.jar
  	```
 
    As mentioned previously, If you don't find the **connector.jar** & **dhbcore.jar**, please copy the **com.ibm.mq.allclient.jar**. If you are copying the **com.ibm.mq.allclient.jar**, please edit the monitor.xml to replace the **connector.jar** & **dhbcore.jar** entries with  **com.ibm.mq.allclient.jar**
@@ -87,11 +86,9 @@ Installation
 Sample config.yaml
 ------------------
  
-The following is a sample config.yaml file that depicts two different queue managers defined. The different fields are explained in the in-line comments. 
- 
+The following is a sample config.yaml file that depicts two different queue managers defined. The different fields are explained in the in-line comments.  
 
 ```
-
     #For most purposes, no need to change this.
     numberOfThreads: 10
 
@@ -295,8 +292,8 @@ The following is a sample config.yaml file that depicts two different queue mana
 
 ```
 
-Internals
----------
+Extension Working - Internals
+-----------------------------
 This extension extracts metrics through [PCF framework](https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q019990_.htm). A complete list of PCF commands are listed [here] (https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q086870_.htm)
 Each queue manager has an administration queue with a standard queue name and the extension sends PCF command messages to that queue. On Windows and Unix platforms, the PCF commands are sent is always sent to the SYSTEM.ADMIN.COMMAND.QUEUE queue. 
 More details about that is mentioned [here](https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q020010_.htm)
@@ -334,6 +331,156 @@ Metrics
 --------
 The metrics will be reported under the tree ```Application Infrastructure Performance|$TIER|Custom Metrics|WebsphereMQ```
 
+### [QueueManagerMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087850_.htm)
+
+<table><tbody>
+<tr>
+<th align="left"> Metric Name </th>
+<th align="left"> Description </th>
+</tr>
+<tr>
+<td class='confluenceTd'> Status </td>
+<td class='confluenceTd'> 1 - starting, 2 - running, 3 - quiescing </td>
+</tr>
+</tbody>
+</table>
+
+### QueueMetrics
+
+#### [QueueMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087810_.htm)
+<table><tbody>
+<tr>
+<th align="left"> Metric Name </th>
+<th align="left"> Description </th>
+</tr>
+<tr>
+<td class='confluenceTd'> MaxQueueDepth </td>
+<td class='confluenceTd'> Maximum queue depth </td>
+</tr>
+<tr>
+<td class='confluenceTd'> CurrentQueueDepth </td>
+<td class='confluenceTd'> Current queue depth </td>
+</tr>
+<tr>
+<td class='confluenceTd'> OpenInputCount </td>
+<td class='confluenceTd'> Number of MQOPEN calls that have the queue open for input </td>
+</tr>
+<tr>
+<td class='confluenceTd'> OpenOutputCount </td>
+<td class='confluenceTd'> Number of MQOPEN calls that have the queue open for output </td>
+</tr>
+</tbody>
+</table>
+
+#### [QueueStatusMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087890_.htm)
+<table><tbody>
+<tr>
+<th align="left"> Metric Name </th>
+<th align="left"> Description </th>
+</tr>
+<tr>
+<td class='confluenceTd'> OldestMsgAge </td>
+<td class='confluenceTd'> Age of the oldest message </td>
+</tr>
+<tr>
+<td class='confluenceTd'> OnQTime </td>
+<td class='confluenceTd'> Indicator of the time that messages remain on the queue </td>
+</tr>
+<tr>
+<td class='confluenceTd'> UncommittedMsgs </td>
+<td class='confluenceTd'> The number of uncommitted changes (puts and gets) pending for the queue </td>
+</tr>
+</tbody>
+</table>
+
+#### [ResetQueueStatistics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q088310_.htm)
+<table><tbody>
+<tr>
+<th align="left"> Metric Name </th>
+<th align="left"> Description </th>
+</tr>
+<tr>
+<td class='confluenceTd'> HighQDepth </td>
+<td class='confluenceTd'> Maximum number of messages on a queue </td>
+</tr>
+<tr>
+<td class='confluenceTd'> MsgDeqCount </td>
+<td class='confluenceTd'> Number of messages dequeued </td>
+</tr>
+<tr>
+<td class='confluenceTd'> MsgEnqCount </td>
+<td class='confluenceTd'> Number of messages enqueued </td>
+</tr>
+</tbody>
+</table>
+
+### [ChannelMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087850_.htm)
+
+<table><tbody>
+<tr>
+<th align="left"> Metric Name </th>
+<th align="left"> Description </th>
+</tr>
+<tr>
+<td class='confluenceTd'> Messages </td>
+<td class='confluenceTd'> Number of messages sent or received, or number of MQI calls handled </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Status </td>
+<td class='confluenceTd'> 1 - binding, 2 - starting, 3 - running, 4 - paused, 5 - stopping, 6 - retrying, 7 - stopped, 8 - requesting, 9 - switching, 10 - initializing </td>
+</tr>
+<tr>
+<td class='confluenceTd'> ByteSent </td>
+<td class='confluenceTd'> Number of bytes sent </td>
+</tr>
+<tr>
+<td class='confluenceTd'> ByteReceived </td>
+<td class='confluenceTd'> Number of bytes received </td>
+</tr>
+<tr>
+<td class='confluenceTd'> BuffersSent </td>
+<td class='confluenceTd'> Number of buffers sent </td>
+</tr>
+<tr>
+<td class='confluenceTd'> BuffersReceived </td>
+<td class='confluenceTd'> Number of buffers received </td>
+</tr>
+</tbody>
+</table>
+
+### [ListenerMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087510_.htm)
+
+<table><tbody>
+<tr>
+<th align="left"> Metric Name </th>
+<th align="left"> Description </th>
+</tr>
+<tr>
+<td class='confluenceTd'> Status </td>
+<td class='confluenceTd'> 1 - starting, 2 - running, 3 - stopping </td>
+</tr>
+</tbody>
+</table>
+
+### [TopicMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_8.0.0/com.ibm.mq.ref.adm.doc/q088150_.htm)
+
+<table><tbody>
+<tr>
+<th align="left"> Metric Name </th>
+<th align="left"> Description </th>
+</tr>
+<tr>
+<td class='confluenceTd'> PublishCount </td>
+<td class='confluenceTd'> The number of applications currently publishing to the topic. </td>
+</tr>
+<tr>
+<td class='confluenceTd'> SubscriptionCount </td>
+<td class='confluenceTd'> The number of subscribers for this topic string, including durable subscribers who are not currently connected. </td>
+</tr>
+</tbody>
+</table>
+
+
 Credentials Encryption
 ----------------------
 Please visit [this page](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-Password-Encryption-with-Extensions/ta-p/29397) to get detailed instructions on password encryption. The steps in this document will guide you through the whole process.
@@ -345,35 +492,10 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
 Troubleshooting
 ---------------
 
-1. Verify Machine Agent Data: Please start the Machine Agent without the extension and make sure that it reports data. Verify that the machine agent status is UP and it is reporting Hardware Metrics.
-2. config.yml: Validate the file [here](http://www.yamllint.com/)
-3.  MQ Version incompatibilities :  In case of any jar incompatibility issue, the rule of thumb is to **Use the jars from MQ version 7.5**. We have seen some jar incompatibility issues on IBM version 7.0.x ,version 7.1.x and version 8.x when the extension is configured in **Client** mode. However, after replacing the jars with MQ version 7.5's jars, everything worked fine. 
-4. Metric Limit: Please start the machine agent with the argument -Dappdynamics.agent.maxMetrics=5000 if there is a metric limit reached error in the logs. If you don't see the expected metrics, this could be the cause.
-5. Check Logs: There could be some obvious errors in the machine agent logs. Please take a look.
-6. `The config cannot be null` error.
+1. Please follow the steps listed in this [troubleshooting-document](https://community.appdynamics.com/t5/Knowledge-Base/How-to-troubleshoot-missing-custom-metrics-or-extensions-metrics/ta-p/28695) in order to troubleshoot your issue. These are a set of common issues that customers might have faced during the installation of the extension. If these don't solve your issue, please follow the last step on the troubleshooting-document to contact the support team.
+2. MQ Version incompatibilities :  In case of any jar incompatibility issue, the rule of thumb is to **Use the jars from MQ version 7.5**. We have seen some jar incompatibility issues on IBM version 7.0.x ,version 7.1.x and version 8.x when the extension is configured in **Client** mode. However, after replacing the jars with MQ version 7.5's jars, everything worked fine. 
+3. `The config cannot be null` error.
    This usually happenes when on a windows machine in monitor.xml you give config.yaml file path with linux file path separator `/`. Use Windows file path separator `\` e.g. `monitors\MQMonitor\config.yaml` .
-
-7. Collect Debug Logs: Edit the file, <MachineAgent>/conf/logging/log4j.xml and update the level of the appender com.appdynamics to debug Let it run for 5-10 minutes and attach the logs to a support ticket
-
-
-WebSphere MQ Queue Dashboard
- 
-![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/117iCEAEF182B361D1AA/image-size/original?v=mpbl-1&px=-1)
-
-WebSphere MQ Queue Metric Browser
- 
-![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/121iBB4C49BE5A21431B/image-size/original?v=mpbl-1&px=-1)
-WebSphere MQ Queue Policies
- 
-![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/123i935D8EB16AF07B67/image-size/original?v=mpbl-1&px=-1)
-
-WebSphere MQ Queue Alert Email
- 
-![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/125iD09F37B355E70A55/image-size/original?v=mpbl-1&px=-1)
- 
-WebSphere MQ Queue Policy Remediation
- 
-![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/127iF9FD2336797A0D2E/image-size/original?v=mpbl-1&px=-1)
 
 More Troubleshooting
 ---------------------
@@ -404,6 +526,27 @@ More Troubleshooting
 
 5. MQJE001: Completion Code '2', Reason '2400'
    This could happen if unsupported cipherSuite is provided or JRE not having/enabled unlimited jurisdiction policy files. Please check SSL Support section.
+
+
+WebSphere MQ Queue Dashboard
+----------------------------
+ 
+![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/117iCEAEF182B361D1AA/image-size/original?v=mpbl-1&px=-1)
+
+WebSphere MQ Queue Metric Browser
+ 
+![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/121iBB4C49BE5A21431B/image-size/original?v=mpbl-1&px=-1)
+WebSphere MQ Queue Policies
+ 
+![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/123i935D8EB16AF07B67/image-size/original?v=mpbl-1&px=-1)
+
+WebSphere MQ Queue Alert Email
+ 
+![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/125iD09F37B355E70A55/image-size/original?v=mpbl-1&px=-1)
+ 
+WebSphere MQ Queue Policy Remediation
+ 
+![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/127iF9FD2336797A0D2E/image-size/original?v=mpbl-1&px=-1)
 
 Support Tickets
 ---------------
@@ -436,7 +579,7 @@ Product  Tested On: 7.x, 8.x, 9.x
 
 Last updated On: 21st March, 2018
 
-List of Changes to this extension (Link this page with the changelog.md page on github)
+List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/v7.0/CHANGELOG.md)
 
 
 
