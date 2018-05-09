@@ -13,12 +13,12 @@ import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
 import com.appdynamics.extensions.util.StringUtils;
 import com.appdynamics.extensions.webspheremq.common.Constants;
-import com.appdynamics.extensions.webspheremq.config.MqMetric;
+import com.appdynamics.extensions.webspheremq.common.WMQUtil;
+import com.appdynamics.extensions.webspheremq.config.Configuration;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.appdynamics.extensions.webspheremq.metricscollector.*;
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
 import com.ibm.mq.pcf.PCFMessageAgent;
@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -43,13 +42,13 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 	public static final Logger logger = LoggerFactory.getLogger(WMQMonitorTask.class);
 	private QueueManager queueManager;
 	private MonitorConfiguration monitorConfig;
-	private MqMetric[] mqMetrics;
+	Configuration configuration;
 	private MetricWriteHelper metricWriteHelper;
 
-	public WMQMonitorTask(TasksExecutionServiceProvider tasksExecutionServiceProvider, QueueManager queueManager, MqMetric[] mqMetrics) {
+	public WMQMonitorTask(TasksExecutionServiceProvider tasksExecutionServiceProvider, QueueManager queueManager, Configuration configuration) {
 		this.monitorConfig = tasksExecutionServiceProvider.getMonitorConfiguration();
 		this.queueManager = queueManager;
-		this.mqMetrics = mqMetrics;
+		this.configuration = configuration;
 		metricWriteHelper = tasksExecutionServiceProvider.getMetricWriteHelper();
 	}
 
@@ -69,54 +68,13 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 	}
 
 	private void extractAndReportMetrics() throws MQException, TaskExecutionException {
-		Map<String, Map<String, WMQMetricOverride>> metricsMap = getMetricsToReportFromConfigYml();
+		Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml(configuration.getMqMetrics());
 		WMQContext auth = new WMQContext(queueManager);
 		Hashtable env = auth.getMQEnvironment();
 		extractAndReportInternal(env, metricsMap);
 	}
 
-	/**
-	 * Returns master data structure,This map will contain only those metrics which are to be reported to controller.<br>
-	 * It contains metric type as key and a map of metric and WMQMetricOverride as value,<br>
-	 * entryset of internal map implicitly represents metrics to be reported.
-	 */
-	private Map<String, Map<String, WMQMetricOverride>> getMetricsToReportFromConfigYml() {
-		Map<String, Map<String, WMQMetricOverride>> metricsMap = Maps.newHashMap();
-		for (MqMetric mqMetric : mqMetrics) {
-			String metricType = mqMetric.getMetricsType();
-			List includeMetrics = (List) mqMetric.getMetrics().get("include");
-			Map<String, WMQMetricOverride> metricToReport = Maps.newHashMap();
-			if (includeMetrics != null) {
-				metricToReport = gatherMetricNamesByApplyingIncludeFilter(includeMetrics);
-			}
-			metricsMap.put(metricType, metricToReport);
-		}
-		return metricsMap;
-	}
 
-	private Map<String, WMQMetricOverride> gatherMetricNamesByApplyingIncludeFilter(List includeMetrics) {
-		Map<String, WMQMetricOverride> overrideMap = Maps.newHashMap();
-		for (Object inc : includeMetrics) {
-			Map metric = (Map) inc;
-			// Get the First Entry which is the metric
-			Map.Entry firstEntry = (Map.Entry) metric.entrySet().iterator().next();
-			String metricName = firstEntry.getKey().toString();
-			Map<String, ?> metricPropsMap = (Map<String, ?>) metric.get(metricName);
-			WMQMetricOverride override = new WMQMetricOverride();
-			override.setIbmCommand((String) metricPropsMap.get("ibmCommand"));
-			override.setIbmConstant((String) metricPropsMap.get("ibmConstant"));
-			override.setMetricProperties(metricPropsMap);
-			if (override.getConstantValue() == -1) {
-				// Only add the metric which is valid, if constant value
-				// resolutes to -1 then it is invalid.
-				logger.warn("{} is not a valid valid metric, this metric will not be processed", override.getIbmConstant());
-			} else {
-				overrideMap.put(metricName, override);
-			}
-			logger.debug("Override Definition: " + override.toString());
-		}
-		return overrideMap;
-	}
 
 	private void extractAndReportInternal(Hashtable env, Map<String, Map<String, WMQMetricOverride>> metricsMap) throws TaskExecutionException {
 

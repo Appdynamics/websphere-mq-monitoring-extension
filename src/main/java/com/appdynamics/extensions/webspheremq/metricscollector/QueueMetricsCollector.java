@@ -87,7 +87,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 		Iterator<String> itr = getMetricsToReport().keySet().iterator();
 		while (itr.hasNext()) {
 			String metrickey = itr.next();
-			WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
+			WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
 			if(wmqOverride.getIbmCommand().equalsIgnoreCase(command)){
 				commandMetrics.put(metrickey,wmqOverride);
 			}

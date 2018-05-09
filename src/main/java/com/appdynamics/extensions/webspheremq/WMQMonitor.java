@@ -50,7 +50,7 @@ public class WMQMonitor extends ABaseMonitor {
 
 					for (QueueManager queueManager : queueManagers) {
 						queueManager.setEncryptionKey(config.getEncryptionKey());
-						WMQMonitorTask wmqTask = new WMQMonitorTask(tasksExecutionServiceProvider, queueManager, config.getMqMetrics());
+						WMQMonitorTask wmqTask = new WMQMonitorTask(tasksExecutionServiceProvider, queueManager, config);
 						tasksExecutionServiceProvider.submit(queueManager.getName(), wmqTask);
 					}
 				}

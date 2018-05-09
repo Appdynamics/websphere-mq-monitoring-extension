@@ -15,7 +15,6 @@ import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.ibm.mq.MQC;
 import com.ibm.mq.constants.CMQC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
