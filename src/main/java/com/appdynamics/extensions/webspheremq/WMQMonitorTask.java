@@ -57,6 +57,8 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		try {
 			logger.debug("WebSphereMQ monitor thread for queueManager " + queueManager.getName() + " started.");
 			extractAndReportMetrics();
+			//TODO If extractAndReportMetrics()method fails to connect to the MQ, but it does not throw an exception(It can be a case, please check), this will still give the HeartBeat metric as 1.
+			//TODO The right thing to do is can be moving this to a more specific place inside the extractAndReportInternal(Hashtable env, Map<String, WMQMetricOverride>> metricMap) method.
 			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), BigDecimal.ONE, "AVG.AVG.IND");
 		} catch (Exception e) {
 			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), BigDecimal.ZERO, "AVG.AVG.IND");
@@ -110,6 +112,8 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			logger.debug("Intialized PCFMessageAgent for queue manager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 
 			Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
+
+			/*TODO Why can't the different metrics collection happen parallely? Right now it is happening sequentially. Can this be done concurrently?*/
 			if (qMgrMetricsToReport != null) {
 				MetricsCollector qMgrMetricsCollector = new QueueManagerMetricsCollector(qMgrMetricsToReport, this.monitorConfig, agent, queueManager, metricWriteHelper);
 				qMgrMetricsCollector.process();

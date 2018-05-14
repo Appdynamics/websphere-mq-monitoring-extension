@@ -104,6 +104,7 @@
             <version>1.7.0</version>
             <scope>test</scope>
         </dependency>
+        <!--TODO The following library is available from appd-exts-commons-->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>

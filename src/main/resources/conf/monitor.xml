@@ -6,9 +6,10 @@
   -->
 
 <monitor>
+	<!--TODO Can the IBM in the monitor name be removed and made consistent -->
 	<name>IBMWebSphereMQMonitor</name>
 	<type>managed</type>
-        <enabled>true</enabled>
+	<enabled>true</enabled>
 	<description>Monitors Websphere Messaging Queues</description>
 	<monitor-configuration>
 	</monitor-configuration>

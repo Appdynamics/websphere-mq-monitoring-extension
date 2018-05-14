@@ -34,6 +34,7 @@ public class WMQMonitor extends ABaseMonitor {
 		return "Custom Metrics|WMQMonitor|";
 	}
 
+	//TODO Please change the following to WMQMonitor to be consistent with all other extensions.
 	public String getMonitorName() {
 		return "WebsphereMQ Monitoring Extension";
 	}
