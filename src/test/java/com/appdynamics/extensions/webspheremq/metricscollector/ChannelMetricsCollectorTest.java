@@ -9,11 +9,11 @@ package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.AMonitorJob;
 import com.appdynamics.extensions.MetricWriteHelper;
-import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
+import com.appdynamics.extensions.util.PathResolver;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.common.WMQUtil;
-import com.appdynamics.extensions.webspheremq.config.Configuration;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.google.common.collect.Lists;
@@ -21,6 +21,7 @@ import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.pcf.PCFMessage;
 import com.ibm.mq.pcf.PCFMessageAgent;
+import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
@@ -29,6 +30,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -40,6 +42,7 @@ import static org.mockito.Mockito.*;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ChannelMetricsCollector.class})
+@PowerMockIgnore("javax.management.*")
 public class ChannelMetricsCollectorTest {
     private ChannelMetricsCollector classUnderTest;
 
@@ -52,27 +55,26 @@ public class ChannelMetricsCollectorTest {
     @Mock
     private MetricWriteHelper metricWriteHelper;
 
-    private MonitorConfiguration monitorConfiguration;
+    private MonitorContextConfiguration monitorContextConfig;
     private Map<String, WMQMetricOverride> channelMetricsToReport;
     private QueueManager queueManager;
     ArgumentCaptor<List> pathCaptor = ArgumentCaptor.forClass(List.class);
 
     @Before
     public void setup() {
-        monitorConfiguration = new MonitorConfiguration("WebsphereMQ Monitoring Extension", "Custom Metrics|WMQMonitor|", aMonitorJob);
-        monitorConfiguration.setConfigYml("src/test/resources/conf/config.yml");
-        Map<String, ?> configMap = monitorConfiguration.getConfigYml();
+        monitorContextConfig = new MonitorContextConfiguration("WMQMonitor", "Custom Metrics|WMQMonitor|", PathResolver.resolveDirectory(AManagedMonitor.class),aMonitorJob);
+        monitorContextConfig.setConfigYml("src/test/resources/conf/config.yml");
+        Map<String, ?> configMap = monitorContextConfig.getConfigYml();
         ObjectMapper mapper = new ObjectMapper();
-        Configuration configuration = mapper.convertValue(configMap,Configuration.class);
-        queueManager = configuration.getQueueManagers()[0];
-        Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml(configuration.getMqMetrics());
+        queueManager = mapper.convertValue(((List)configMap.get("queueManagers")).get(0), QueueManager.class);
+        Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
         channelMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_CHANNEL);
     }
 
     @Test
     public void testpublishMetrics() throws MQException, IOException, TaskExecutionException {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireChannelStatusCmd());
-        classUnderTest = new ChannelMetricsCollector(channelMetricsToReport, monitorConfiguration, pcfMessageAgent, queueManager, metricWriteHelper);
+        classUnderTest = new ChannelMetricsCollector(channelMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper);
         classUnderTest.publishMetrics();
         verify(metricWriteHelper, times(3)).transformAndPrintMetrics(pathCaptor.capture());
         List<String> metricPathsList = Lists.newArrayList();

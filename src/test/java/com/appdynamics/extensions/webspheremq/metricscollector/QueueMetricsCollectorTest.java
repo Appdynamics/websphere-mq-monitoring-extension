@@ -9,11 +9,11 @@ package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.AMonitorJob;
 import com.appdynamics.extensions.MetricWriteHelper;
-import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
+import com.appdynamics.extensions.util.PathResolver;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.common.WMQUtil;
-import com.appdynamics.extensions.webspheremq.config.Configuration;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.google.common.collect.Lists;
@@ -22,6 +22,7 @@ import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.pcf.PCFMessage;
 import com.ibm.mq.pcf.PCFMessageAgent;
+import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,6 +30,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -40,6 +42,7 @@ import static org.mockito.Mockito.*;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({QueueMetricsCollector.class})
+@PowerMockIgnore("javax.management.*")
 public class QueueMetricsCollectorTest {
     private QueueMetricsCollector classUnderTest;
 
@@ -52,20 +55,19 @@ public class QueueMetricsCollectorTest {
     @Mock
     private MetricWriteHelper metricWriteHelper;
 
-    private MonitorConfiguration monitorConfiguration;
+    private MonitorContextConfiguration monitorContextConfig;
     private Map<String, WMQMetricOverride> queueMetricsToReport;
     private QueueManager queueManager;
     ArgumentCaptor<List> pathCaptor = ArgumentCaptor.forClass(List.class);
 
     @Before
     public void setup() {
-        monitorConfiguration = new MonitorConfiguration("WebsphereMQ Monitoring Extension", "Custom Metrics|WMQMonitor|", aMonitorJob);
-        monitorConfiguration.setConfigYml("src/test/resources/conf/config.yml");
-        Map<String, ?> configMap = monitorConfiguration.getConfigYml();
+        monitorContextConfig = new MonitorContextConfiguration("WMQMonitor", "Custom Metrics|WMQMonitor|", PathResolver.resolveDirectory(AManagedMonitor.class), aMonitorJob);
+        monitorContextConfig.setConfigYml("src/test/resources/conf/config.yml");
+        Map<String, ?> configMap = monitorContextConfig.getConfigYml();
         ObjectMapper mapper = new ObjectMapper();
-        Configuration configuration = mapper.convertValue(configMap,Configuration.class);
-        queueManager = configuration.getQueueManagers()[0];
-        Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml(configuration.getMqMetrics());
+        queueManager = mapper.convertValue(((List)configMap.get("queueManagers")).get(0), QueueManager.class);
+        Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
         queueMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE);
     }
 
@@ -73,7 +75,7 @@ public class QueueMetricsCollectorTest {
     public void testProcessPCFRequestAndPublishQMetricsForInquireQStatusCmd() throws MQException, IOException {
         PCFMessage request = createPCFRequestForInquireQStatusCmd();
         when(pcfMessageAgent.send(request)).thenReturn(createPCFResponseForInquireQStatusCmd());
-        classUnderTest = new QueueMetricsCollector(queueMetricsToReport, monitorConfiguration, pcfMessageAgent, queueManager, metricWriteHelper);
+        classUnderTest = new QueueMetricsCollector(queueMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper);
         classUnderTest.processPCFRequestAndPublishQMetrics("*", request, "MQCMD_INQUIRE_Q_STATUS");
 
         verify(metricWriteHelper, times(2)).transformAndPrintMetrics(pathCaptor.capture());
@@ -99,7 +101,7 @@ public class QueueMetricsCollectorTest {
     public void testProcessPCFRequestAndPublishQMetricsForInquireQCmd() throws MQException, IOException {
         PCFMessage request = createPCFRequestForInquireQCmd();
         when(pcfMessageAgent.send(request)).thenReturn(createPCFResponseForInquireQCmd());
-        classUnderTest = new QueueMetricsCollector(queueMetricsToReport, monitorConfiguration, pcfMessageAgent, queueManager, metricWriteHelper);
+        classUnderTest = new QueueMetricsCollector(queueMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper);
         classUnderTest.processPCFRequestAndPublishQMetrics("*", request, "MQCMD_INQUIRE_Q");
 
         verify(metricWriteHelper, times(2)).transformAndPrintMetrics(pathCaptor.capture());
@@ -125,7 +127,7 @@ public class QueueMetricsCollectorTest {
     public void testProcessPCFRequestAndPublishQMetricsForResetQStatsCmd() throws MQException, IOException {
         PCFMessage request = createPCFRequestForResetQStatsCmd();
         when(pcfMessageAgent.send(request)).thenReturn(createPCFResponseForResetQStatsCmd());
-        classUnderTest = new QueueMetricsCollector(queueMetricsToReport, monitorConfiguration, pcfMessageAgent, queueManager, metricWriteHelper);
+        classUnderTest = new QueueMetricsCollector(queueMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper);
         classUnderTest.processPCFRequestAndPublishQMetrics("*", request, "MQCMD_RESET_Q_STATS");
 
         verify(metricWriteHelper, times(1)).transformAndPrintMetrics(pathCaptor.capture());

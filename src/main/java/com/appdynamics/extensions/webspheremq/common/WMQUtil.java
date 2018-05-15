@@ -7,7 +7,6 @@
 
 package com.appdynamics.extensions.webspheremq.common;
 
-import com.appdynamics.extensions.webspheremq.config.MqMetric;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
@@ -23,11 +22,11 @@ public class WMQUtil {
      * It contains metric type as key and a map of metric and WMQMetricOverride as value,<br>
      * entryset of internal map implicitly represents metrics to be reported.
      */
-    public static Map<String, Map<String, WMQMetricOverride>> getMetricsToReportFromConfigYml(MqMetric[] mqMetrics) {
+    public static Map<String, Map<String, WMQMetricOverride>> getMetricsToReportFromConfigYml(List<Map> mqMetrics) {
         Map<String, Map<String, WMQMetricOverride>> metricsMap = Maps.newHashMap();
-        for (MqMetric mqMetric : mqMetrics) {
-            String metricType = mqMetric.getMetricsType();
-            List includeMetrics = (List) mqMetric.getMetrics().get("include");
+        for (Map mqMetric : mqMetrics) {
+            String metricType = (String) mqMetric.get("metricsType");
+            List includeMetrics = (List) ((Map) mqMetric.get("metrics")).get("include");
             Map<String, WMQMetricOverride> metricToReport = Maps.newHashMap();
             if (includeMetrics != null) {
                 metricToReport = gatherMetricNamesByApplyingIncludeFilter(includeMetrics);

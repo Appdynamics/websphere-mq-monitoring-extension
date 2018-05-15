@@ -8,7 +8,7 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.MetricWriteHelper;
-import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -32,7 +32,7 @@ import java.util.*;
 public abstract class MetricsCollector {
 
 	protected Map<String, WMQMetricOverride> metricsToReport;
-	protected MonitorConfiguration monitorConfig;
+	protected MonitorContextConfiguration monitorContextConfig;
 	protected PCFMessageAgent agent;
 	protected MetricWriteHelper metricWriteHelper;
 	protected QueueManager queueManager;
@@ -56,7 +56,7 @@ public abstract class MetricsCollector {
 	}
 
 	protected String getMetricsName(String... pathelements) {
-		StringBuilder pathBuilder = new StringBuilder(monitorConfig.getMetricPrefix()).append("|");
+		StringBuilder pathBuilder = new StringBuilder(monitorContextConfig.getMetricPrefix()).append("|");
 		for (int i = 0; i < pathelements.length; i++) {
 			pathBuilder.append(pathelements[i]);
 			if (i != pathelements.length - 1) {

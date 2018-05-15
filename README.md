@@ -37,18 +37,10 @@ These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server 
 3. There are two transport modes in which this extension can be run
    * **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
    * **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://www-01.ibm.com/software/integration/wmq/clients/) for this mode to get the necessary jars as mentioned previously. 
-4. Copy the following jars to the WMQMonitor directory   
- 	```
-    com.ibm.mq.commonservices.jar
-    com.ibm.mq.jar
-    com.ibm.mq.jmqi.jar
-    dhbcore.jar
-    com.ibm.mq.headers.jar
-    connector.jar
-    com.ibm.mq.pcf.jar
- 	```
-   **Note**: If you don't find the **connector.jar** & **dhbcore.jar**, please copy the **com.ibm.mq.allclient.jar**. If you are copying the **com.ibm.mq.allclient.jar**, please edit the monitor.xml to replace the **connector.jar** & **dhbcore.jar** entries with  **com.ibm.mq.allclient.jar**
-   If you don't want to copy the jar files, you can point to the jar files by providing the absolute paths to the jar files in the  monitor.xml.
+4. Edit the classpath element in WMQMonitor/monitor.xml with the absolute path to the required jar files.
+   ```
+    <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.commonservices.jar;/opt/mqm/java/lib/com.ibm.mq.jar;/opt/mqm/java/lib/com.ibm.mq.jmqi.jar;/opt/mqm/java/lib/com.ibm.mq.headers.jar;/opt/mqm/java/lib/com.ibm.mq.pcf.jar;/opt/mqm/java/lib/com.ibm.mq.allclient.jar</classpath>
+   ```
 5. If you plan to use **Client** transport type, create a channel of type server connection in each of the queue manager you wish to query. 
 6. Edit the config.yml file.  An example config.yml file follows these installation instructions.
 7. Restart the Machine Agent.
@@ -275,7 +267,7 @@ This extension extracts metrics through [PCF framework](https://www.ibm.com/supp
 Each queue manager has an administration queue with a standard queue name and the extension sends PCF command messages to that queue. On Windows and Unix platforms, the PCF commands are sent is always sent to the SYSTEM.ADMIN.COMMAND.QUEUE queue. 
 More details about that is mentioned [here](https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q020010_.htm)
 
-By default, the PCF responses are sent to the SYSTEM.DEFAULT.MODEL.QUEUE. Using this queue causes a temporary dynamic queue to be created. You can override the default here by using the `modelQueueName` and `replyQueuePrefix` fields in the config.yaml.
+By default, the PCF responses are sent to the SYSTEM.DEFAULT.MODEL.QUEUE. Using this queue causes a temporary dynamic queue to be created. You can override the default here by using the `modelQueueName` and `replyQueuePrefix` fields in the config.yml.
 More details mentioned [here](https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q083240_.htm)
 
 ### Access Permissions
@@ -284,8 +276,8 @@ If you are in **Bindings** mode, please make sure to start the MA process under 
 ### SSL Support
 Configure the IBM SSL Cipher Suite in the config.yaml. 
 
-Note that, to use some CipherSuites the unrestricted policy needs to be configured in JRE. Please visit [this link] (http://www.ibm.com/support/knowledgecenter/SSYKE2_8.0.0/com.ibm.java.security.component.80.doc/security-component/sdkpolicyfiles.html
-) for more details. For Oracle JRE, please update with [JCE Unlimited Strength Jurisdiction Policy] (http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html)
+Note that, to use some CipherSuites the unrestricted policy needs to be configured in JRE. Please visit [this link](http://www.ibm.com/support/knowledgecenter/SSYKE2_8.0.0/com.ibm.java.security.component.80.doc/security-component/sdkpolicyfiles.html
+) for more details. For Oracle JRE, please update with [JCE Unlimited Strength Jurisdiction Policy](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html)
 
 To configure SSL, the MA's trust store and keystore needs to be setup with the JKS filepath. 
 
@@ -485,30 +477,10 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
    For Bindings mode, please make sure that the MA is owned by a mqm user. Please check [this doc](https://www-01.ibm.com/support/docview.wss?uid=swg21636093) 
   
 6. MQJE001: Completion Code '2', Reason '2195'
-   This could happen in **Client** mode. One way this could be fixed is to use 7.5.2 version of the jars. 
+   This could happen in **Client** mode. Please make sure that the IBM MQ dependency jars are correctly referenced in classpath of monitor.xml, copying jars to a different directory is not recommended by IBM. Another way this could be fixed is to use 7.5.2 version of the jars. 
 
 7. MQJE001: Completion Code '2', Reason '2400'
    This could happen if unsupported cipherSuite is provided or JRE not having/enabled unlimited jurisdiction policy files. Please check SSL Support section.
-
-
-## WebSphere MQ Queue Dashboard
- 
-![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/117iCEAEF182B361D1AA/image-size/original?v=mpbl-1&px=-1)
-
-WebSphere MQ Queue Metric Browser
- 
-![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/121iBB4C49BE5A21431B/image-size/original?v=mpbl-1&px=-1)
-WebSphere MQ Queue Policies
- 
-![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/123i935D8EB16AF07B67/image-size/original?v=mpbl-1&px=-1)
-
-WebSphere MQ Queue Alert Email
- 
-![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/125iD09F37B355E70A55/image-size/original?v=mpbl-1&px=-1)
- 
-WebSphere MQ Queue Policy Remediation
- 
-![alt tag](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/127iF9FD2336797A0D2E/image-size/original?v=mpbl-1&px=-1)
 
 ## Support Tickets
 If after going through the Troubleshooting Document you have not been able to get your extension working, please file a ticket and add the following information.

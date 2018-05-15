@@ -18,7 +18,7 @@ queueManagers:
     port: 1414
 
     #Actual name of the queue manager
-    name: ""
+    name: "QM1"
 
     #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
     #For bindings type, connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
@@ -27,12 +27,12 @@ queueManagers:
 
     #Channel name of the queue manager, channel should be server-conn type.
     #This field is not required in case of transportType: Bindings
-    channelName: "SYSTEM.ADMIN.SVRCONN"
+    #channelName: "SYSTEM.ADMIN.SVRCONN"
 
     #user with admin level access.
     #comment out the username and password in case of transportType: Bindings.
-    username: ""
-    password: ""
+    #username: ""
+    #password: ""
 
     #Uncomment only if encryption of passwords is wanted.
     #encryptedPassword: ""
@@ -213,3 +213,9 @@ mqMetrics:
             alias: "Subscription Count"
             ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_SUB_COUNT"
             ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
+
+#Run it as a scheduled task instead of running every minute.
+#If you want to run this every minute, comment this out
+#taskSchedule:
+#  numberOfThreads: 1
+#  taskDelaySeconds: 300

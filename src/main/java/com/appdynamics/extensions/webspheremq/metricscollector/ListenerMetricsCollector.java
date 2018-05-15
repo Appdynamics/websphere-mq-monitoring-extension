@@ -8,7 +8,7 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.MetricWriteHelper;
-import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -30,9 +30,9 @@ public class ListenerMetricsCollector extends MetricsCollector {
     private final String artifact = "Listeners";
 
 
-    public ListenerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
+    public ListenerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
         this.metricsToReport = metricsToReport;
-        this.monitorConfig = monitorConfig;
+        this.monitorContextConfig = monitorContextConfig;
         this.agent = agent;
         this.metricWriteHelper = metricWriteHelper;
         this.queueManager = queueManager;

@@ -27,7 +27,7 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements AMonit
     protected static final String COMMAND = "MQCMD_INQUIRE_TOPIC_STATUS";
 
     public InquireTStatusCmdCollector(TopicMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager,collector.metricWriteHelper);
+        super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper);
     }
 
     public void run() {

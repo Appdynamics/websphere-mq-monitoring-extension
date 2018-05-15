@@ -8,7 +8,7 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.MetricWriteHelper;
-import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -36,9 +36,9 @@ public class TopicMetricsCollector extends MetricsCollector {
     public static final Logger logger = LoggerFactory.getLogger(TopicMetricsCollector.class);
     private final String artifact = "Topics";
 
-    public TopicMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
+    public TopicMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
         this.metricsToReport = metricsToReport;
-        this.monitorConfig = monitorConfig;
+        this.monitorContextConfig = monitorContextConfig;
         this.agent = agent;
         this.metricWriteHelper = metricWriteHelper;
         this.queueManager = queueManager;
@@ -50,13 +50,13 @@ public class TopicMetricsCollector extends MetricsCollector {
 
         Map<String, WMQMetricOverride>  metricsForInquireTStatusCmd = getMetricsToReport(InquireTStatusCmdCollector.COMMAND);
         if(!metricsForInquireTStatusCmd.isEmpty()){
-            futures.add(monitorConfig.getExecutorService().submit("Topic Status Cmd Collector", new InquireTStatusCmdCollector(this, metricsForInquireTStatusCmd)));
+            futures.add(monitorContextConfig.getContext().getExecutorService().submit("Topic Status Cmd Collector", new InquireTStatusCmdCollector(this, metricsForInquireTStatusCmd)));
         }
         for(Future f: futures){
             try {
                 long timeout = 20;
-                if(monitorConfig.getConfigYml().get("topicsMetricsCollectionTimeoutInSeconds") != null){
-                    timeout = (Integer)monitorConfig.getConfigYml().get("topicMetricsCollectionTimeoutInSeconds");
+                if(monitorContextConfig.getConfigYml().get("topicsMetricsCollectionTimeoutInSeconds") != null){
+                    timeout = (Integer)monitorContextConfig.getConfigYml().get("topicMetricsCollectionTimeoutInSeconds");
                 }
                 f.get(timeout, TimeUnit.SECONDS);
             } catch (InterruptedException e) {

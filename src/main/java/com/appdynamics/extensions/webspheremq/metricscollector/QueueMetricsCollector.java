@@ -8,7 +8,7 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
 import com.appdynamics.extensions.MetricWriteHelper;
-import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -37,9 +37,9 @@ public class QueueMetricsCollector extends MetricsCollector {
 	public static final Logger logger = LoggerFactory.getLogger(QueueMetricsCollector.class);
 	private final String artifact = "Queues";
 
-	public QueueMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
+	public QueueMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
 		this.metricsToReport = metricsToReport;
-		this.monitorConfig = monitorConfig;
+		this.monitorContextConfig = monitorContextConfig;
 		this.agent = agent;
 		this.metricWriteHelper = metricWriteHelper;
 		this.queueManager = queueManager;
@@ -51,21 +51,21 @@ public class QueueMetricsCollector extends MetricsCollector {
 		List<Future> futures = Lists.newArrayList();
 		Map<String, WMQMetricOverride>  metricsForInquireQCmd = getMetricsToReport(InquireQCmdCollector.COMMAND);
 		if(!metricsForInquireQCmd.isEmpty()){
-			futures.add(monitorConfig.getExecutorService().submit("InquireQCmdCollector", new InquireQCmdCollector(this,metricsForInquireQCmd)));
+			futures.add(monitorContextConfig.getContext().getExecutorService().submit("InquireQCmdCollector", new InquireQCmdCollector(this,metricsForInquireQCmd)));
 		}
 		Map<String, WMQMetricOverride>  metricsForInquireQStatusCmd = getMetricsToReport(InquireQStatusCmdCollector.COMMAND);
 		if(!metricsForInquireQStatusCmd.isEmpty()){
-			futures.add(monitorConfig.getExecutorService().submit("InquireQStatusCmdCollector", new InquireQStatusCmdCollector(this,metricsForInquireQStatusCmd)));
+			futures.add(monitorContextConfig.getContext().getExecutorService().submit("InquireQStatusCmdCollector", new InquireQStatusCmdCollector(this,metricsForInquireQStatusCmd)));
 		}
 		Map<String, WMQMetricOverride>  metricsForResetQStatsCmd = getMetricsToReport(ResetQStatsCmdCollector.COMMAND);
 		if(!metricsForResetQStatsCmd.isEmpty()){
-			futures.add(monitorConfig.getExecutorService().submit("ResetQStatsCmdCollector", new ResetQStatsCmdCollector(this,metricsForResetQStatsCmd)));
+			futures.add(monitorContextConfig.getContext().getExecutorService().submit("ResetQStatsCmdCollector", new ResetQStatsCmdCollector(this,metricsForResetQStatsCmd)));
 		}
 		for(Future f: futures){
 			try {
 				long timeout = 20;
-				if(monitorConfig.getConfigYml().get("queueMetricsCollectionTimeoutInSeconds") != null){
-					timeout = (Integer)monitorConfig.getConfigYml().get("queueMetricsCollectionTimeoutInSeconds");
+				if(monitorContextConfig.getConfigYml().get("queueMetricsCollectionTimeoutInSeconds") != null){
+					timeout = (Integer)monitorContextConfig.getConfigYml().get("queueMetricsCollectionTimeoutInSeconds");
 				}
 				f.get(timeout, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {

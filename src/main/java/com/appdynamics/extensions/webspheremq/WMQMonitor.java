@@ -10,7 +10,6 @@ package com.appdynamics.extensions.webspheremq;
 import com.appdynamics.extensions.ABaseMonitor;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.util.AssertUtils;
-import com.appdynamics.extensions.webspheremq.config.Configuration;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -34,27 +33,19 @@ public class WMQMonitor extends ABaseMonitor {
 		return "Custom Metrics|WMQMonitor|";
 	}
 
-	//TODO Please change the following to WMQMonitor to be consistent with all other extensions.
 	public String getMonitorName() {
-		return "WebsphereMQ Monitoring Extension";
+		return "WMQMonitor";
 	}
 
 	protected void doRun(TasksExecutionServiceProvider tasksExecutionServiceProvider) {
 		try {
-			Map<String, ?> configMap = configuration.getConfigYml();
-			if (configMap != null) {
-				ObjectMapper mapper = new ObjectMapper();
-				Configuration config = mapper.convertValue(configMap,Configuration.class);
-				if (config != null && config.getQueueManagers() != null) {
-					QueueManager[] queueManagers = config.getQueueManagers();
-					AssertUtils.assertNotNull(queueManagers, "The 'queueManagers' section in config.yml is not initialised");
-
-					for (QueueManager queueManager : queueManagers) {
-						queueManager.setEncryptionKey(config.getEncryptionKey());
-						WMQMonitorTask wmqTask = new WMQMonitorTask(tasksExecutionServiceProvider, queueManager, config);
-						tasksExecutionServiceProvider.submit(queueManager.getName(), wmqTask);
-					}
-				}
+			List<Map> queueManagers = (List<Map>) this.getContextConfiguration().getConfigYml().get("queueManagers");
+			ObjectMapper mapper = new ObjectMapper();
+			AssertUtils.assertNotNull(queueManagers, "The 'queueManagers' section in config.yml is not initialised");
+			for (Map queueManager : queueManagers) {
+				QueueManager qManager = mapper.convertValue(queueManager, QueueManager.class);
+				WMQMonitorTask wmqTask = new WMQMonitorTask(tasksExecutionServiceProvider, this.getContextConfiguration(), qManager);
+				tasksExecutionServiceProvider.submit((String) queueManager.get("name"), wmqTask);
 			}
 			logger.info("WebsphereMQ monitoring task completed successfully.");
 		} catch (Exception e) {
@@ -63,7 +54,7 @@ public class WMQMonitor extends ABaseMonitor {
 	}
 
 	protected int getTaskCount() {
-		List queueManagers = ((List)configuration.getConfigYml().get("queueManagers"));
+		List queueManagers = ((List)this.getContextConfiguration().getConfigYml().get("queueManagers"));
 		AssertUtils.assertNotNull(queueManagers, "The 'queueManagers' section in config.yml is not initialised");
 		return queueManagers.size();
 	}

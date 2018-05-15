@@ -10,11 +10,10 @@ package com.appdynamics.extensions.webspheremq;
 import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
-import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.util.StringUtils;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.common.WMQUtil;
-import com.appdynamics.extensions.webspheremq.config.Configuration;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.appdynamics.extensions.webspheremq.metricscollector.*;
@@ -28,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,14 +41,14 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 
 	public static final Logger logger = LoggerFactory.getLogger(WMQMonitorTask.class);
 	private QueueManager queueManager;
-	private MonitorConfiguration monitorConfig;
-	Configuration configuration;
+	private MonitorContextConfiguration monitorContextConfig;
+	private Map<String, ?> configMap;
 	private MetricWriteHelper metricWriteHelper;
 
-	public WMQMonitorTask(TasksExecutionServiceProvider tasksExecutionServiceProvider, QueueManager queueManager, Configuration configuration) {
-		this.monitorConfig = tasksExecutionServiceProvider.getMonitorConfiguration();
+	public WMQMonitorTask(TasksExecutionServiceProvider tasksExecutionServiceProvider, MonitorContextConfiguration monitorContextConfig, QueueManager queueManager) {
+		this.monitorContextConfig = monitorContextConfig;
 		this.queueManager = queueManager;
-		this.configuration = configuration;
+		this.configMap = monitorContextConfig.getConfigYml();
 		metricWriteHelper = tasksExecutionServiceProvider.getMetricWriteHelper();
 	}
 
@@ -57,11 +57,9 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		try {
 			logger.debug("WebSphereMQ monitor thread for queueManager " + queueManager.getName() + " started.");
 			extractAndReportMetrics();
-			//TODO If extractAndReportMetrics()method fails to connect to the MQ, but it does not throw an exception(It can be a case, please check), this will still give the HeartBeat metric as 1.
-			//TODO The right thing to do is can be moving this to a more specific place inside the extractAndReportInternal(Hashtable env, Map<String, WMQMetricOverride>> metricMap) method.
-			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), BigDecimal.ONE, "AVG.AVG.IND");
+
 		} catch (Exception e) {
-			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), BigDecimal.ZERO, "AVG.AVG.IND");
+			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorContextConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), BigDecimal.ZERO, "AVG.AVG.IND");
 			logger.error("Error in run of " + Thread.currentThread().getName(), e);
 		} finally {
 			long endTime = System.currentTimeMillis() - startTime;
@@ -70,7 +68,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 	}
 
 	private void extractAndReportMetrics() throws MQException, TaskExecutionException {
-		Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml(configuration.getMqMetrics());
+		Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
 		WMQContext auth = new WMQContext(queueManager);
 		Hashtable env = auth.getMQEnvironment();
 		extractAndReportInternal(env, metricsMap);
@@ -109,13 +107,15 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 				agent.setEncoding(queueManager.getEncoding());
 			}
 
+			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorContextConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), BigDecimal.ONE, "AVG.AVG.IND");
+
 			logger.debug("Intialized PCFMessageAgent for queue manager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 
 			Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
 
 			/*TODO Why can't the different metrics collection happen parallely? Right now it is happening sequentially. Can this be done concurrently?*/
 			if (qMgrMetricsToReport != null) {
-				MetricsCollector qMgrMetricsCollector = new QueueManagerMetricsCollector(qMgrMetricsToReport, this.monitorConfig, agent, queueManager, metricWriteHelper);
+				MetricsCollector qMgrMetricsCollector = new QueueManagerMetricsCollector(qMgrMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper);
 				qMgrMetricsCollector.process();
 			} else {
 				logger.warn("No queue manager metrics to report");
@@ -123,7 +123,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 
 			Map<String, WMQMetricOverride> channelMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_CHANNEL);
 			if (channelMetricsToReport != null) {
-				MetricsCollector channelMetricsCollector = new ChannelMetricsCollector(channelMetricsToReport, this.monitorConfig, agent, queueManager, metricWriteHelper);
+				MetricsCollector channelMetricsCollector = new ChannelMetricsCollector(channelMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper);
 				channelMetricsCollector.process();
 			} else {
 				logger.warn("No channel metrics to report");
@@ -131,7 +131,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 
 			Map<String, WMQMetricOverride> queueMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE);
 			if (queueMetricsToReport != null) {
-				MetricsCollector queueMetricsCollector = new QueueMetricsCollector(queueMetricsToReport, this.monitorConfig, agent, queueManager, metricWriteHelper);
+				MetricsCollector queueMetricsCollector = new QueueMetricsCollector(queueMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper);
 				queueMetricsCollector.process();
 			} else {
 				logger.warn("No queue metrics to report");
@@ -139,7 +139,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 
 			Map<String, WMQMetricOverride> listenerMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_LISTENER);
 			if (queueMetricsToReport != null) {
-				MetricsCollector listenerMetricsCollector = new ListenerMetricsCollector(listenerMetricsToReport, this.monitorConfig, agent, queueManager, metricWriteHelper);
+				MetricsCollector listenerMetricsCollector = new ListenerMetricsCollector(listenerMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper);
 				listenerMetricsCollector.process();
 			} else {
 				logger.warn("No listener metrics to report");
@@ -147,7 +147,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 
 			Map<String, WMQMetricOverride> topicMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_TOPIC);
 			if (topicMetricsToReport != null) {
-				MetricsCollector topicsMetricsCollector = new TopicMetricsCollector(topicMetricsToReport, this.monitorConfig, agent, queueManager, metricWriteHelper);
+				MetricsCollector topicsMetricsCollector = new TopicMetricsCollector(topicMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper);
 				topicsMetricsCollector.process();
 			} else {
 				logger.warn("No topic metrics to report");

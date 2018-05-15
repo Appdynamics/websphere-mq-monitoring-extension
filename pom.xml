@@ -10,9 +10,9 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.appdynamics.wmqmonitor</groupId>
+    <groupId>com.appdynamics.extensions</groupId>
     <artifactId>websphere-mq-monitoring-extension</artifactId>
-    <version>7.0</version>
+    <version>7.0.0</version>
     <packaging>jar</packaging>
     <name>websphere-mq-monitoring-extension</name>
     <url>http://maven.apache.org</url>
@@ -65,33 +65,31 @@
             <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.commonservices.jar</systemPath>
         </dependency>
-       <dependency>
+        <!--<dependency>
             <groupId>com.ibm</groupId>
             <artifactId>connector</artifactId>
             <version>${ibm.mq.lib.version}</version>
             <scope>system</scope>
             <systemPath>${lib.dir}/connector.jar</systemPath>
-        </dependency>
-        <!--<dependency>
+        </dependency>-->
+        <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>com.ibm.mq.allclient</artifactId>
             <scope>system</scope>
             <version>${ibm.mq.lib.version}</version>
             <systemPath>${lib.dir}/com.ibm.mq.allclient.jar</systemPath>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>com.appdynamics</groupId>
             <artifactId>appd-exts-commons</artifactId>
-            <version>2.0.4</version>
+            <version>2.1.0</version>
         </dependency>
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
@@ -104,12 +102,12 @@
             <version>1.7.0</version>
             <scope>test</scope>
         </dependency>
-        <!--TODO The following library is available from appd-exts-commons-->
+        <!--Required by FileAlterationMonitor in FileWatchListenerModule, else tests will fail -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>

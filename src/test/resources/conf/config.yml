@@ -213,3 +213,10 @@ mqMetrics:
             alias: "Subscription Count"
             ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_SUB_COUNT"
             ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
+
+
+#Run it as a scheduled task instead of running every minute.
+#If you want to run this every minute, comment this out
+taskSchedule:
+  numberOfThreads: 1
+  taskDelaySeconds: 1800
