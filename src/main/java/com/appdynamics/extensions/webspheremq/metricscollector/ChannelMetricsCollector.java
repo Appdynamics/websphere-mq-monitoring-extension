@@ -7,6 +7,7 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -25,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.Phaser;
 
 /**
  * This class is responsible for channel metric collection.
@@ -33,21 +35,36 @@ import java.util.*;
  * @version 2.0
  *
  */
-public class ChannelMetricsCollector extends MetricsCollector {
+public class ChannelMetricsCollector extends MetricsCollector implements AMonitorTaskRunnable {
 
 	public static final Logger logger = LoggerFactory.getLogger(ChannelMetricsCollector.class);
 	private final String artifact = "Channels";
+	private Phaser phaser;
 
 	/*
 	 * The Channel Status values are mentioned here http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
 	 */
 
-	public ChannelMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
+	public ChannelMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, Phaser phaser) {
 		this.metricsToReport = metricsToReport;
 		this.monitorContextConfig = monitorContextConfig;
 		this.agent = agent;
 		this.metricWriteHelper = metricWriteHelper;
 		this.queueManager = queueManager;
+		this.phaser = phaser;
+	}
+
+	@Override
+	public void run() {
+		try {
+			logger.debug("Registering phaser: ChannelMetricsCollector for {} ", queueManager.getName());
+			phaser.register();
+			this.process();
+		} catch (TaskExecutionException e) {
+			logger.error("Error in ChannelMetricsCollector ", e);
+		} finally {
+			phaser.arriveAndDeregister();
+		}
 	}
 
 	@Override
@@ -140,4 +157,8 @@ public class ChannelMetricsCollector extends MetricsCollector {
 	}
 
 
+	@Override
+	public void onTaskComplete() {
+		logger.info("ChannelMetricsCollector task completed for queueManager" + queueManager.getName());
+	}
 }

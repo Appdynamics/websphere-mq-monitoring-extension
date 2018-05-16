@@ -8,9 +8,6 @@
 package com.appdynamics.extensions.webspheremq.common;
 
 public class Constants {
-	
-	public static final int DEFAULT_NUMBER_OF_THREADS = 10;
-	
 	public static final String METRIC_TYPE_QUEUE_MANAGER = "queueMgrMetrics";
 	public static final String METRIC_TYPE_QUEUE = "queueMetrics";
 	public static final String METRIC_TYPE_CHANNEL = "channelMetrics";

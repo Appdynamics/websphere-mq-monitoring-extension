@@ -29,7 +29,7 @@ class ResetQStatsCmdCollector extends QueueMetricsCollector implements AMonitorT
     protected static final String COMMAND = "MQCMD_RESET_Q_STATS";
 
     public ResetQStatsCmdCollector(QueueMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper);
+        super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.phaser);
     }
 
     public void run() {
@@ -80,6 +80,6 @@ class ResetQStatsCmdCollector extends QueueMetricsCollector implements AMonitorT
 
 
     public void onTaskComplete() {
-        logger.info("WebSphereMQ task for command MQCMD_RESET_Q_STATS completed for queueManager" + queueManager.getName());
+        logger.info("ResetQStatsCmdCollector task for command MQCMD_RESET_Q_STATS completed for queueManager" + queueManager.getName());
     }
 }

@@ -7,6 +7,7 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -27,22 +28,34 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
-public class QueueMetricsCollector extends MetricsCollector {
+public class QueueMetricsCollector extends MetricsCollector implements AMonitorTaskRunnable {
 
 	public static final Logger logger = LoggerFactory.getLogger(QueueMetricsCollector.class);
 	private final String artifact = "Queues";
+	protected Phaser phaser;
 
-	public QueueMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
+	public QueueMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, Phaser phaser) {
 		this.metricsToReport = metricsToReport;
 		this.monitorContextConfig = monitorContextConfig;
 		this.agent = agent;
 		this.metricWriteHelper = metricWriteHelper;
 		this.queueManager = queueManager;
+		this.phaser = phaser;
+	}
+
+	@Override
+	public void run() {
+		try {
+			logger.debug("Registering phaser: QueueMetricsCollector for {} ", queueManager.getName());
+			phaser.register();
+			this.process();
+		} catch (TaskExecutionException e) {
+			logger.error("Error in QueueMetricsCollector ", e);
+		} finally {
+			phaser.arriveAndDeregister();
+		}
 	}
 
 	@Override
@@ -157,5 +170,10 @@ public class QueueMetricsCollector extends MetricsCollector {
 			}
 		}
 
+	}
+
+	@Override
+	public void onTaskComplete() {
+		logger.info("QueueMetricsCollector task completed for queueManager" + queueManager.getName());
 	}
 }

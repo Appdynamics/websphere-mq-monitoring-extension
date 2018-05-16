@@ -1,5 +1,5 @@
 ### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
-numberOfThreads: 10
+numberOfThreads: 20
 
 #This will create it in specific Tier aka Component. Replace <COMPONENT_ID>. Please make sure to have a trailing |.
 #To find out the COMPONENT_ID, please see the screen shot here https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java

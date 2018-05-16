@@ -7,6 +7,7 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Phaser;
 
 /**
  * This class is responsible for queue metric collection.
@@ -31,21 +33,35 @@ import java.util.Map;
  * @version 2.0
  *
  */
-public class QueueManagerMetricsCollector extends MetricsCollector {
+public class QueueManagerMetricsCollector extends MetricsCollector implements AMonitorTaskRunnable {
 
 	public static final Logger logger = LoggerFactory.getLogger(QueueManagerMetricsCollector.class);
 	private final String artifact = "Queue Manager";
+	private Phaser phaser;
 
-	public QueueManagerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
+	public QueueManagerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, Phaser phaser) {
 		this.metricsToReport = metricsToReport;
 		this.monitorContextConfig = monitorContextConfig;
 		this.agent = agent;
 		this.metricWriteHelper = metricWriteHelper;
 		this.queueManager = queueManager;
+		this.phaser = phaser;
 	}
 
 	public String getAtrifact() {
 		return artifact;
+	}
+
+	public void run() {
+		try {
+			logger.debug("Registering phaser: QueueManagerMetricsCollector for {} ", queueManager.getName());
+			phaser.register();
+			this.process();
+		} catch (TaskExecutionException e) {
+			logger.error("Error in QueueManagerMetricsCollector ", e);
+		} finally {
+			phaser.arriveAndDeregister();
+		}
 	}
 
 	public void publishMetrics() throws TaskExecutionException {
@@ -94,4 +110,7 @@ public class QueueManagerMetricsCollector extends MetricsCollector {
 		return metricsToReport;
 	}
 
+	public void onTaskComplete() {
+		logger.info("QueueManagerMetricsCollector task completed for queueManager" + queueManager.getName());
+	}
 }

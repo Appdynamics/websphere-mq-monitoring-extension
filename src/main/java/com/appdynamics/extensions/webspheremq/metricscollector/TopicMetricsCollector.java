@@ -7,6 +7,7 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -27,21 +28,33 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
-public class TopicMetricsCollector extends MetricsCollector {
+public class TopicMetricsCollector extends MetricsCollector implements AMonitorTaskRunnable {
     public static final Logger logger = LoggerFactory.getLogger(TopicMetricsCollector.class);
     private final String artifact = "Topics";
+    protected Phaser phaser;
 
-    public TopicMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
+    public TopicMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, Phaser phaser) {
         this.metricsToReport = metricsToReport;
         this.monitorContextConfig = monitorContextConfig;
         this.agent = agent;
         this.metricWriteHelper = metricWriteHelper;
         this.queueManager = queueManager;
+        this.phaser = phaser;
+    }
+
+    @Override
+    public void run() {
+        try {
+            logger.debug("Registering phaser: TopicMetricsCollector for {} ", queueManager.getName());
+            phaser.register();
+            this.process();
+        } catch (TaskExecutionException e) {
+            logger.error("Error in TopicMetricsCollector ", e);
+        } finally {
+            phaser.arriveAndDeregister();
+        }
     }
 
     protected void publishMetrics() throws TaskExecutionException {
@@ -135,5 +148,10 @@ public class TopicMetricsCollector extends MetricsCollector {
 
     public Map<String, WMQMetricOverride> getMetricsToReport() {
         return this.metricsToReport;
+    }
+
+    @Override
+    public void onTaskComplete() {
+        logger.info("TopicMetricsCollector task completed for queueManager" + queueManager.getName());
     }
 }

@@ -7,6 +7,7 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -20,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.Phaser;
 
 /**
  * MetricsCollector class is abstract and serves as superclass for all types of metric collection class.<br>
@@ -29,13 +31,14 @@ import java.util.*;
  * @version 2.0
  *
  */
-public abstract class MetricsCollector {
+public abstract class MetricsCollector implements AMonitorTaskRunnable {
 
 	protected Map<String, WMQMetricOverride> metricsToReport;
 	protected MonitorContextConfiguration monitorContextConfig;
 	protected PCFMessageAgent agent;
 	protected MetricWriteHelper metricWriteHelper;
 	protected QueueManager queueManager;
+	protected Phaser phaser;
 
 	public static final Logger logger = LoggerFactory.getLogger(MetricsCollector.class);
 

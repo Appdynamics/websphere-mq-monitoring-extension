@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Phaser;
 
 /**
  * Encapsulates all metrics collection for all artifacts related to a queue manager.
@@ -44,56 +45,68 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 	private MonitorContextConfiguration monitorContextConfig;
 	private Map<String, ?> configMap;
 	private MetricWriteHelper metricWriteHelper;
+	private BigDecimal heartBeatMetricValue = BigDecimal.ZERO;
 
 	public WMQMonitorTask(TasksExecutionServiceProvider tasksExecutionServiceProvider, MonitorContextConfiguration monitorContextConfig, QueueManager queueManager) {
 		this.monitorContextConfig = monitorContextConfig;
 		this.queueManager = queueManager;
 		this.configMap = monitorContextConfig.getConfigYml();
-		metricWriteHelper = tasksExecutionServiceProvider.getMetricWriteHelper();
+		this.metricWriteHelper = tasksExecutionServiceProvider.getMetricWriteHelper();
 	}
 
 	public void run() {
+		logger.debug("WMQMonitor thread for queueManager " + queueManager.getName() + " started.");
 		long startTime = System.currentTimeMillis();
+		MQQueueManager ibmQueueManager = null;
+		PCFMessageAgent agent = null;
 		try {
-			logger.debug("WebSphereMQ monitor thread for queueManager " + queueManager.getName() + " started.");
-			extractAndReportMetrics();
-
+			ibmQueueManager = initMQQueueManager();
+			if (ibmQueueManager != null) {
+				logger.debug("MQQueueManager connection initiated for queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName());
+				heartBeatMetricValue = BigDecimal.ONE;
+				agent = initPCFMesageAgent(ibmQueueManager);
+				extractAndReportMetrics(agent);
+			} else {
+				logger.error("MQQueueManager connection could not be initiated for queueManager {} in thread {} ", queueManager.getName(), Thread.currentThread().getName());
+			}
 		} catch (Exception e) {
-			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorContextConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), BigDecimal.ZERO, "AVG.AVG.IND");
 			logger.error("Error in run of " + Thread.currentThread().getName(), e);
 		} finally {
+			cleanUp(ibmQueueManager, agent);
+			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorContextConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), heartBeatMetricValue, "AVG.AVG.IND");
 			long endTime = System.currentTimeMillis() - startTime;
-			logger.debug("WebSphereMQ monitor thread for queueManager " + queueManager.getName() + " ended. Time taken = " + endTime);
+			logger.debug("WMQMonitor thread for queueManager " + queueManager.getName() + " ended. Time taken = " + endTime);
 		}
 	}
 
-	private void extractAndReportMetrics() throws MQException, TaskExecutionException {
-		Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
+	private MQQueueManager initMQQueueManager() throws TaskExecutionException {
+		MQQueueManager ibmQueueManager = null;
+		// encryptionKey is global but encryptedPassword is queueManager specific
+		queueManager.setEncryptionKey((String) configMap.get("encryptionKey"));
 		WMQContext auth = new WMQContext(queueManager);
 		Hashtable env = auth.getMQEnvironment();
-		extractAndReportInternal(env, metricsMap);
-	}
-
-
-
-	private void extractAndReportInternal(Hashtable env, Map<String, Map<String, WMQMetricOverride>> metricsMap) throws TaskExecutionException {
-
-		MQQueueManager ibmQueueManager = null;
-		PCFMessageAgent agent = null;
 		try {
 			if (env != null) {
 				ibmQueueManager = new MQQueueManager(queueManager.getName(), env);
 			} else {
 				ibmQueueManager = new MQQueueManager(queueManager.getName());
 			}
-			logger.debug("Connection initiated for queue manager {} in thread {}", queueManager.getName(), Thread.currentThread().getName());
+		} catch (MQException mqe) {
+			logger.error(mqe.getMessage(), mqe);
+			throw new TaskExecutionException(mqe.getMessage());
+		}
+		return ibmQueueManager;
+	}
 
+	private PCFMessageAgent initPCFMesageAgent(MQQueueManager ibmQueueManager) {
+		PCFMessageAgent agent = null;
+		try {
 			if(!Strings.isNullOrEmpty(queueManager.getModelQueueName()) && !Strings.isNullOrEmpty(queueManager.getReplyQueuePrefix())){
 				logger.debug("Initializing the PCF agent for model queue and reply queue prefix.");
 				agent = new PCFMessageAgent();
 				agent.setModelQueueName(queueManager.getModelQueueName());
 				agent.setReplyQueuePrefix(queueManager.getReplyQueuePrefix());
-				logger.debug("Connecting to queue manager to set the modelQueueName and replyQueuePrefix.");
+				logger.debug("Connecting to queueManager to set the modelQueueName and replyQueuePrefix.");
 				agent.connect(ibmQueueManager);
 			}
 			else{
@@ -106,63 +119,60 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			if(queueManager.getEncoding() != Integer.MIN_VALUE){
 				agent.setEncoding(queueManager.getEncoding());
 			}
-
-			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorContextConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), BigDecimal.ONE, "AVG.AVG.IND");
-
-			logger.debug("Intialized PCFMessageAgent for queue manager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
-
-			Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
-
-			/*TODO Why can't the different metrics collection happen parallely? Right now it is happening sequentially. Can this be done concurrently?*/
-			if (qMgrMetricsToReport != null) {
-				MetricsCollector qMgrMetricsCollector = new QueueManagerMetricsCollector(qMgrMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper);
-				qMgrMetricsCollector.process();
-			} else {
-				logger.warn("No queue manager metrics to report");
-			}
-
-			Map<String, WMQMetricOverride> channelMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_CHANNEL);
-			if (channelMetricsToReport != null) {
-				MetricsCollector channelMetricsCollector = new ChannelMetricsCollector(channelMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper);
-				channelMetricsCollector.process();
-			} else {
-				logger.warn("No channel metrics to report");
-			}
-
-			Map<String, WMQMetricOverride> queueMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE);
-			if (queueMetricsToReport != null) {
-				MetricsCollector queueMetricsCollector = new QueueMetricsCollector(queueMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper);
-				queueMetricsCollector.process();
-			} else {
-				logger.warn("No queue metrics to report");
-			}
-
-			Map<String, WMQMetricOverride> listenerMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_LISTENER);
-			if (queueMetricsToReport != null) {
-				MetricsCollector listenerMetricsCollector = new ListenerMetricsCollector(listenerMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper);
-				listenerMetricsCollector.process();
-			} else {
-				logger.warn("No listener metrics to report");
-			}
-
-			Map<String, WMQMetricOverride> topicMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_TOPIC);
-			if (topicMetricsToReport != null) {
-				MetricsCollector topicsMetricsCollector = new TopicMetricsCollector(topicMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper);
-				topicsMetricsCollector.process();
-			} else {
-				logger.warn("No topic metrics to report");
-			}
-
+			logger.debug("Intialized PCFMessageAgent for queueManager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 		} catch (MQException mqe) {
-			logger.error(mqe.getMessage(),mqe);
-			throw new TaskExecutionException(mqe.getMessage());
-		} catch(Exception e){
-			logger.error("Some unknown exception occured",e);
-			throw new TaskExecutionException(e);
+			logger.error(mqe.getMessage(), mqe);
 		}
-		finally {
-			cleanUp(ibmQueueManager, agent);
+		return agent;
+	}
+
+	private void extractAndReportMetrics(PCFMessageAgent agent) throws TaskExecutionException {
+		Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
+
+		Phaser phaser = new Phaser();
+
+		Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
+
+		if (qMgrMetricsToReport != null) {
+			MetricsCollector qMgrMetricsCollector = new QueueManagerMetricsCollector(qMgrMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper, phaser);
+			monitorContextConfig.getContext().getExecutorService().submit("QueueManagerMetricsCollector", qMgrMetricsCollector);
+		} else {
+			logger.warn("No queue manager metrics to report");
 		}
+
+		Map<String, WMQMetricOverride> channelMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_CHANNEL);
+		if (channelMetricsToReport != null) {
+			MetricsCollector channelMetricsCollector = new ChannelMetricsCollector(channelMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper, phaser);
+			monitorContextConfig.getContext().getExecutorService().submit("ChannelMetricsCollector", channelMetricsCollector);
+		} else {
+			logger.warn("No channel metrics to report");
+		}
+
+		Map<String, WMQMetricOverride> queueMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE);
+		if (queueMetricsToReport != null) {
+			MetricsCollector queueMetricsCollector = new QueueMetricsCollector(queueMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper, phaser);
+			monitorContextConfig.getContext().getExecutorService().submit("QueueMetricsCollector", queueMetricsCollector);
+		} else {
+			logger.warn("No queue metrics to report");
+		}
+
+		Map<String, WMQMetricOverride> listenerMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_LISTENER);
+		if (queueMetricsToReport != null) {
+			MetricsCollector listenerMetricsCollector = new ListenerMetricsCollector(listenerMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper, phaser);
+			monitorContextConfig.getContext().getExecutorService().submit("ListenerMetricsCollector", listenerMetricsCollector);
+		} else {
+			logger.warn("No listener metrics to report");
+		}
+
+		Map<String, WMQMetricOverride> topicMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_TOPIC);
+		if (topicMetricsToReport != null) {
+			MetricsCollector topicsMetricsCollector = new TopicMetricsCollector(topicMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper, phaser);
+			monitorContextConfig.getContext().getExecutorService().submit("TopicMetricsCollector", topicsMetricsCollector);
+		} else {
+			logger.warn("No topic metrics to report");
+		}
+
+		phaser.arriveAndAwaitAdvance();
 	}
 
 	/**
@@ -176,9 +186,9 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			try {
 				String qMgrName = agent.getQManagerName();
 				agent.disconnect();
-				logger.debug("PCFMessageAgent disconnected for queue manager {} in thread {}", qMgrName, Thread.currentThread().getName());
+				logger.debug("PCFMessageAgent disconnected for queueManager {} in thread {}", qMgrName, Thread.currentThread().getName());
 			} catch (Exception e) {
-				logger.error("Error occoured  while disconnting PCFMessageAgent for queue manager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
+				logger.error("Error occoured  while disconnting PCFMessageAgent for queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
 			}
 		}
 
@@ -189,7 +199,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 				ibmQueueManager.disconnect();
 				//logger.debug("Connection diconnected for queue manager {} in thread {}", ibmQueueManager.getName(), Thread.currentThread().getName());
 			} catch (Exception e) {
-				logger.error("Error occoured while disconnting queue manager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
+				logger.error("Error occoured while disconnting queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
 			}
 		}
 	}

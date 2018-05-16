@@ -18,13 +18,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-/**
- * This class is responsible for executing AManagedMonitor task. 
- * It reads websphere MQ config.yaml file and populates monitorConfiguration related beans
- * and subsequently creates and runs thread for each Queue Manager.
- * 
- *
- */
 public class WMQMonitor extends ABaseMonitor {
 
 	public static final Logger logger = LoggerFactory.getLogger(WMQMonitor.class);
@@ -38,18 +31,13 @@ public class WMQMonitor extends ABaseMonitor {
 	}
 
 	protected void doRun(TasksExecutionServiceProvider tasksExecutionServiceProvider) {
-		try {
-			List<Map> queueManagers = (List<Map>) this.getContextConfiguration().getConfigYml().get("queueManagers");
-			ObjectMapper mapper = new ObjectMapper();
-			AssertUtils.assertNotNull(queueManagers, "The 'queueManagers' section in config.yml is not initialised");
-			for (Map queueManager : queueManagers) {
-				QueueManager qManager = mapper.convertValue(queueManager, QueueManager.class);
-				WMQMonitorTask wmqTask = new WMQMonitorTask(tasksExecutionServiceProvider, this.getContextConfiguration(), qManager);
-				tasksExecutionServiceProvider.submit((String) queueManager.get("name"), wmqTask);
-			}
-			logger.info("WebsphereMQ monitoring task completed successfully.");
-		} catch (Exception e) {
-			logger.error("WebsphereMQ Metrics Collection Failed: ", e);
+		List<Map> queueManagers = (List<Map>) this.getContextConfiguration().getConfigYml().get("queueManagers");
+		AssertUtils.assertNotNull(queueManagers, "The 'queueManagers' section in config.yml is not initialised");
+		ObjectMapper mapper = new ObjectMapper();
+		for (Map queueManager : queueManagers) {
+			QueueManager qManager = mapper.convertValue(queueManager, QueueManager.class);
+			WMQMonitorTask wmqTask = new WMQMonitorTask(tasksExecutionServiceProvider, this.getContextConfiguration(), qManager);
+			tasksExecutionServiceProvider.submit((String) queueManager.get("name"), wmqTask);
 		}
 	}
 
@@ -58,5 +46,4 @@ public class WMQMonitor extends ABaseMonitor {
 		AssertUtils.assertNotNull(queueManagers, "The 'queueManagers' section in config.yml is not initialised");
 		return queueManagers.size();
 	}
-
 }

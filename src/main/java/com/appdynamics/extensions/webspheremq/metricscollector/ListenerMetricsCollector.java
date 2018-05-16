@@ -7,6 +7,7 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -22,20 +23,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.Phaser;
 
 
-public class ListenerMetricsCollector extends MetricsCollector {
+public class ListenerMetricsCollector extends MetricsCollector implements AMonitorTaskRunnable {
 
     public static final Logger logger = LoggerFactory.getLogger(ListenerMetricsCollector.class);
     private final String artifact = "Listeners";
+    private Phaser phaser;
 
-
-    public ListenerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper) {
+    public ListenerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, Phaser phaser) {
         this.metricsToReport = metricsToReport;
         this.monitorContextConfig = monitorContextConfig;
         this.agent = agent;
         this.metricWriteHelper = metricWriteHelper;
         this.queueManager = queueManager;
+        this.phaser = phaser;
+    }
+
+
+    @Override
+    public void run() {
+        try {
+            logger.debug("Registering phaser: ListenerMetricsCollector for {} ", queueManager.getName());
+            phaser.register();
+            this.process();
+        } catch (TaskExecutionException e) {
+            logger.error("Error in ListenerMetricsCollector ", e);
+        } finally {
+            phaser.arriveAndDeregister();
+        }
     }
 
     protected void publishMetrics() throws TaskExecutionException {
@@ -102,4 +119,8 @@ public class ListenerMetricsCollector extends MetricsCollector {
         return this.metricsToReport;
     }
 
+    @Override
+    public void onTaskComplete() {
+        logger.info("ListenerMetricsCollector task completed for queueManager" + queueManager.getName());
+    }
 }
