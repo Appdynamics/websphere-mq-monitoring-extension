@@ -157,6 +157,7 @@ public class ChannelMetricsCollector extends MetricsCollector implements AMonito
 	}
 
 
+	//TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
 	@Override
 	public void onTaskComplete() {
 		logger.info("ChannelMetricsCollector task completed for queueManager" + queueManager.getName());

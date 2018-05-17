@@ -110,6 +110,7 @@ public class QueueManagerMetricsCollector extends MetricsCollector implements AM
 		return metricsToReport;
 	}
 
+	//TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
 	public void onTaskComplete() {
 		logger.info("QueueManagerMetricsCollector task completed for queueManager" + queueManager.getName());
 	}

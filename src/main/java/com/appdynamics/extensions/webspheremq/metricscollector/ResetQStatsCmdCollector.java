@@ -79,6 +79,7 @@ class ResetQStatsCmdCollector extends QueueMetricsCollector implements AMonitorT
     }
 
 
+    //TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
     public void onTaskComplete() {
         logger.info("ResetQStatsCmdCollector task for command MQCMD_RESET_Q_STATS completed for queueManager" + queueManager.getName());
     }

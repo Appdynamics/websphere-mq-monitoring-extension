@@ -172,6 +172,7 @@ public class QueueMetricsCollector extends MetricsCollector implements AMonitorT
 
 	}
 
+	//TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
 	@Override
 	public void onTaskComplete() {
 		logger.info("QueueMetricsCollector task completed for queueManager" + queueManager.getName());

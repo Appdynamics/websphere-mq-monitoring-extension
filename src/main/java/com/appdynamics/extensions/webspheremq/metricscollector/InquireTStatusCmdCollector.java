@@ -72,6 +72,7 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements AMonit
     }
 
 
+    //TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
     public void onTaskComplete() {
         logger.info("WebSphereMQ task for command MQCMD_INQUIRE_TOPIC_STATUS completed for queueManager" + queueManager.getName());
     }

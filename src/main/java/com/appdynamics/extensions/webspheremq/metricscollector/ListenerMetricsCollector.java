@@ -119,6 +119,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements AMonit
         return this.metricsToReport;
     }
 
+    //TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
     @Override
     public void onTaskComplete() {
         logger.info("ListenerMetricsCollector task completed for queueManager" + queueManager.getName());

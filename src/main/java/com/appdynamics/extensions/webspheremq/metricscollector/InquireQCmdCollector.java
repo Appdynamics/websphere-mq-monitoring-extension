@@ -80,7 +80,7 @@ class InquireQCmdCollector extends QueueMetricsCollector implements AMonitorTask
         logger.debug("Time taken to publish metrics for all queues is {} milliseconds for command {}", exitTime,COMMAND);
     }
 
-
+    //TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
     public void onTaskComplete() {
         logger.info("WebSphereMQ task for command MQCMD_INQUIRE_Q completed for queueManager" + queueManager.getName());
     }
