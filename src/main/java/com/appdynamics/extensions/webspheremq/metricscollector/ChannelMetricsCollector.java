@@ -7,7 +7,6 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -35,7 +34,7 @@ import java.util.concurrent.Phaser;
  * @version 2.0
  *
  */
-public class ChannelMetricsCollector extends MetricsCollector implements AMonitorTaskRunnable {
+public class ChannelMetricsCollector extends MetricsCollector implements Runnable {
 
 	public static final Logger logger = LoggerFactory.getLogger(ChannelMetricsCollector.class);
 	private final String artifact = "Channels";
@@ -57,12 +56,11 @@ public class ChannelMetricsCollector extends MetricsCollector implements AMonito
 	@Override
 	public void run() {
 		try {
-			logger.debug("Registering phaser: ChannelMetricsCollector for {} ", queueManager.getName());
-			phaser.register();
 			this.process();
 		} catch (TaskExecutionException e) {
 			logger.error("Error in ChannelMetricsCollector ", e);
 		} finally {
+			logger.debug("Deregistering ChannelMetricsCollector phaser for {} ", queueManager.getName());
 			phaser.arriveAndDeregister();
 		}
 	}
@@ -154,12 +152,5 @@ public class ChannelMetricsCollector extends MetricsCollector implements AMonito
 
 	public Map<String, WMQMetricOverride> getMetricsToReport() {
 		return this.metricsToReport;
-	}
-
-
-	//TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
-	@Override
-	public void onTaskComplete() {
-		logger.info("ChannelMetricsCollector task completed for queueManager" + queueManager.getName());
 	}
 }

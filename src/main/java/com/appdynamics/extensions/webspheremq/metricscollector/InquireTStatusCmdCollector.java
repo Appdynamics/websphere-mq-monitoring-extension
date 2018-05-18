@@ -7,7 +7,6 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
@@ -20,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.Set;
 
-class InquireTStatusCmdCollector extends TopicMetricsCollector implements AMonitorTaskRunnable{
+class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnable{
 
     public static final Logger logger = LoggerFactory.getLogger(InquireTStatusCmdCollector.class);
 
@@ -69,11 +68,5 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements AMonit
         }
         long exitTime = System.currentTimeMillis() - entryTime;
         logger.debug("Time taken to publish metrics for all queues is {} milliseconds for command {}", exitTime,COMMAND);
-    }
-
-
-    //TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
-    public void onTaskComplete() {
-        logger.info("WebSphereMQ task for command MQCMD_INQUIRE_TOPIC_STATUS completed for queueManager" + queueManager.getName());
     }
 }

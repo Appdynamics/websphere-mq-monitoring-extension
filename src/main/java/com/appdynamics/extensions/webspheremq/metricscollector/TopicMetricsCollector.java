@@ -7,7 +7,6 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -30,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
-public class TopicMetricsCollector extends MetricsCollector implements AMonitorTaskRunnable {
+public class TopicMetricsCollector extends MetricsCollector implements Runnable {
     public static final Logger logger = LoggerFactory.getLogger(TopicMetricsCollector.class);
     private final String artifact = "Topics";
     protected Phaser phaser;
@@ -47,12 +46,11 @@ public class TopicMetricsCollector extends MetricsCollector implements AMonitorT
     @Override
     public void run() {
         try {
-            logger.debug("Registering phaser: TopicMetricsCollector for {} ", queueManager.getName());
-            phaser.register();
             this.process();
         } catch (TaskExecutionException e) {
             logger.error("Error in TopicMetricsCollector ", e);
         } finally {
+            logger.debug("Deregistering TopicMetricsCollector phaser for {} ", queueManager.getName());
             phaser.arriveAndDeregister();
         }
     }
@@ -148,11 +146,5 @@ public class TopicMetricsCollector extends MetricsCollector implements AMonitorT
 
     public Map<String, WMQMetricOverride> getMetricsToReport() {
         return this.metricsToReport;
-    }
-
-    //TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
-    @Override
-    public void onTaskComplete() {
-        logger.info("TopicMetricsCollector task completed for queueManager" + queueManager.getName());
     }
 }

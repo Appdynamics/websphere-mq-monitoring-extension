@@ -7,7 +7,6 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -30,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
-public class QueueMetricsCollector extends MetricsCollector implements AMonitorTaskRunnable {
+public class QueueMetricsCollector extends MetricsCollector implements Runnable {
 
 	public static final Logger logger = LoggerFactory.getLogger(QueueMetricsCollector.class);
 	private final String artifact = "Queues";
@@ -48,12 +47,11 @@ public class QueueMetricsCollector extends MetricsCollector implements AMonitorT
 	@Override
 	public void run() {
 		try {
-			logger.debug("Registering phaser: QueueMetricsCollector for {} ", queueManager.getName());
-			phaser.register();
 			this.process();
 		} catch (TaskExecutionException e) {
 			logger.error("Error in QueueMetricsCollector ", e);
 		} finally {
+			logger.debug("Deregistering QueueMetricsCollector phaser for {} ", queueManager.getName());
 			phaser.arriveAndDeregister();
 		}
 	}
@@ -152,7 +150,7 @@ public class QueueMetricsCollector extends MetricsCollector implements AMonitorT
 								int count=0;
 								for(int val : metricVals){
 									count++;
-									Metric metric = createMetric(metrickey, val, wmqOverride, queueManager.getName(), getAtrifact(), queueName, metrickey,"_" + Integer.toString(count));
+									Metric metric = createMetric(metrickey+ "_" + Integer.toString(count), val, wmqOverride, queueManager.getName(), getAtrifact(), queueName, metrickey+ "_" + Integer.toString(count));
 									metrics.add(metric);
 								}
 							}
@@ -170,11 +168,5 @@ public class QueueMetricsCollector extends MetricsCollector implements AMonitorT
 			}
 		}
 
-	}
-
-	//TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
-	@Override
-	public void onTaskComplete() {
-		logger.info("QueueMetricsCollector task completed for queueManager" + queueManager.getName());
 	}
 }

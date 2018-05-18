@@ -109,6 +109,9 @@ mqMetrics:
         - Status:
             alias: "Status"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "AVERAGE"
+            clusterRollUpType: "INDIVIDUAL"
       
   # This Object will extract queue metrics
   - metricsType: "queueMetrics"
@@ -138,11 +141,16 @@ mqMetrics:
             alias: "OldestMsgAge"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
             ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "CURRENT"
+            clusterRollUpType: "INDIVIDUAL"
 
         - OnQTime:
-            alias: "OnQTime"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
             ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "CURRENT"
+            clusterRollUpType: "INDIVIDUAL"
 
         - UncommittedMsgs:
             alias: "UncommittedMsgs"
@@ -176,6 +184,9 @@ mqMetrics:
         - Status:
             alias: "Status"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"  #http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "AVERAGE"
+            clusterRollUpType: "INDIVIDUAL"
           
         - ByteSent:
             alias: "Byte Sent"
@@ -200,6 +211,9 @@ mqMetrics:
         - Status:
             alias: "Status"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_LISTENER_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "AVERAGE"
+            clusterRollUpType: "INDIVIDUAL"
 
   # This Object will extract topic metrics
   - metricsType: "topicMetrics"

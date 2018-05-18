@@ -7,7 +7,6 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -31,7 +30,7 @@ import java.util.concurrent.Phaser;
  * @version 2.0
  *
  */
-public abstract class MetricsCollector implements AMonitorTaskRunnable {
+public abstract class MetricsCollector implements Runnable {
 
 	protected Map<String, WMQMetricOverride> metricsToReport;
 	protected MonitorContextConfiguration monitorContextConfig;

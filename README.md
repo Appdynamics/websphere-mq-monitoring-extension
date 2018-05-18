@@ -32,8 +32,8 @@ In newer versions of the MQ, IBM has removed **connector.jar** & **dhbcore.jar**
 These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server but may be found in an alternate location depending upon your environment. In case **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars. To download IBM MQ Client jars, see [here](https://www-01.ibm.com/software/integration/wmq/clients/)
 
 ## Installation
-1. To build from source, clone this repository and run `mvn clean install` from websphere-mq-monitoring-extension directory. This will produce a WMQMonitor-<version>.zip in target directory. Alternatively download the latest release archive from [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/releases).
-2. Unzip contents of WMQMonitor-<version>.zip file and copy to <code><machine-agent-dir>/monitors</code> directory. Do not place the extension in the "extensions" directory of your Machine Agent installation directory.
+1. To build from source, clone this repository and run `mvn clean install` from websphere-mq-monitoring-extension directory. This will produce a WMQMonitor-\<version\>.zip in target directory. Alternatively download the latest release archive from [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/releases).
+2. Unzip contents of WMQMonitor-\<version\>.zip file and copy to <code><machine-agent-dir>/monitors</code> directory. Do not place the extension in the "extensions" directory of your Machine Agent installation directory.
 3. There are two transport modes in which this extension can be run
    * **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
    * **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://www-01.ibm.com/software/integration/wmq/clients/) for this mode to get the necessary jars as mentioned previously. 
@@ -52,9 +52,9 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
    ```
     metricPrefix: "Server|Component:100|Custom Metrics|WebsphereMQ|"
    ```  
-2. Each queueManager requires 5 threads to fetch its metrics concurrently and 1 main thread to run the extension. So if for example, there are 2 queueManagers configured, please set the numberOfThreads to be 11 (2*5+1)
+2. Each queueManager requires 9 threads to fetch its metrics concurrently and 1 main thread to run the extension. So if for example, there are 2 queueManagers configured, please set the numberOfThreads to be 19 (2*9+1)
    ```
-    numberOfThreads: 11
+    numberOfThreads: 20
    ```
 3. Configure the queueManages with appropriate fields and filters. Below sample consists of 2 queueManagers. 
    ```
@@ -185,11 +185,17 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
                 alias: "OldestMsgAge"
                 ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
                 ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+                aggregationType: "OBSERVATION"
+                timeRollUpType: "CURRENT"
+                clusterRollUpType: "INDIVIDUAL"
     
             - OnQTime:
                 alias: "OnQTime"
                 ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
                 ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+                aggregationType: "OBSERVATION"
+                timeRollUpType: "CURRENT"
+                clusterRollUpType: "INDIVIDUAL"
     
             - UncommittedMsgs:
                 alias: "UncommittedMsgs"
@@ -460,7 +466,7 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
    
    If you are seeing `Failed to load the WebSphere MQ native JNI library: 'mqjbnd'`, please add the following jvm argument when starting the MA. 
    
-   -Djava.library.path=<path to lib64 directory> For eg. on Unix it could -Djava.library.path=/opt/mqm/java/lib64 
+   -Djava.library.path=\<path to lib64 directory\> For eg. on Unix it could -Djava.library.path=/opt/mqm/java/lib64 
    
    Sometimes you also have run the setmqenv script before using the above jvm argument to start the machine agent. 
    
@@ -488,13 +494,13 @@ If after going through the Troubleshooting Document you have not been able to ge
 Please provide the following in order for us to assist you better.  
 
 1. Stop the running machine agent .
-2. Delete all existing logs under <MachineAgent>/logs .
-3. Please enable debug logging by editing the file <MachineAgent>/conf/logging/log4j.xml. Change the level value of the following <logger> elements to debug. 
-     <logger name="com.singularity">
-     <logger name="com.appdynamics">
-4. Start the machine agent and please let it run for 10 mins. Then zip and upload all the logs in the directory <MachineAgent>/logs/*.
-5. Attach the zipped <MachineAgent>/conf/* directory here.
- 6. Attach the zipped <MachineAgent>/monitors/ExtensionFolderYouAreHavingIssuesWith directory here .
+2. Delete all existing logs under \<MachineAgent\>/logs .
+3. Please enable debug logging by editing the file \<MachineAgent\>/conf/logging/log4j.xml. Change the level value of the following \<logger\> elements to debug.      
+   * \<logger name="com.singularity"\>
+   * \<logger name="com.appdynamics"\>
+4. Start the machine agent and please let it run for 10 mins. Then zip and upload all the logs in the directory \<MachineAgent\>/logs/*.
+5. Attach the zipped \<MachineAgent\>/conf/* directory here.
+ 6. Attach the zipped \<MachineAgent\>/monitors/ExtensionFolderYouAreHavingIssuesWith directory here .
 
 For any support related questions, you can also contact help@appdynamics.com.
 
@@ -504,10 +510,10 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 ## Version
 |          Name            |  Version                |
 |--------------------------|-------------------------|
-|Extension Version         |7.0                      |
-|Controller Compatibility  |4.0 +                    |
+|Extension Version         |7.0.0                    |
+|Controller Compatibility  |4.2 +                    |
 |Product Tested On         |IBM MQ 7.x, 8.x, 9.x and Windows, Unix, AIX|
-|Last Update               |25th April, 2018         |
+|Last Update               |17th May, 2018           |
 
 List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/v7.0/CHANGELOG.md)
 

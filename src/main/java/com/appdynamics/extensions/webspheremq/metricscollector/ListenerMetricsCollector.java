@@ -7,7 +7,6 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
@@ -26,7 +25,7 @@ import java.util.*;
 import java.util.concurrent.Phaser;
 
 
-public class ListenerMetricsCollector extends MetricsCollector implements AMonitorTaskRunnable {
+public class ListenerMetricsCollector extends MetricsCollector implements Runnable {
 
     public static final Logger logger = LoggerFactory.getLogger(ListenerMetricsCollector.class);
     private final String artifact = "Listeners";
@@ -45,12 +44,11 @@ public class ListenerMetricsCollector extends MetricsCollector implements AMonit
     @Override
     public void run() {
         try {
-            logger.debug("Registering phaser: ListenerMetricsCollector for {} ", queueManager.getName());
-            phaser.register();
             this.process();
         } catch (TaskExecutionException e) {
             logger.error("Error in ListenerMetricsCollector ", e);
         } finally {
+            logger.debug("Deregistering ListenerMetricsCollector phaser for {} ", queueManager.getName());
             phaser.arriveAndDeregister();
         }
     }
@@ -83,7 +81,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements AMonit
                 }
                 for (int i = 0; i < response.length; i++) {
                     String listenerName = response[i].getStringParameterValue(CMQCFC.MQCACH_LISTENER_NAME).trim();
-                    Set<ExcludeFilters> excludeFilters = this.queueManager.getChannelFilters().getExclude();
+                    Set<ExcludeFilters> excludeFilters = this.queueManager.getListenerFilters().getExclude();
                     if(!isExcluded(listenerName,excludeFilters)) { //check for exclude filters
                         logger.debug("Pulling out metrics for listener name {}",listenerName);
                         Iterator<String> itr = getMetricsToReport().keySet().iterator();
@@ -117,11 +115,5 @@ public class ListenerMetricsCollector extends MetricsCollector implements AMonit
 
     public Map<String, WMQMetricOverride> getMetricsToReport() {
         return this.metricsToReport;
-    }
-
-    //TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
-    @Override
-    public void onTaskComplete() {
-        logger.info("ListenerMetricsCollector task completed for queueManager" + queueManager.getName());
     }
 }

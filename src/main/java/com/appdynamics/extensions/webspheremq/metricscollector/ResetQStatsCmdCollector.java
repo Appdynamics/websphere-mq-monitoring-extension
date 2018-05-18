@@ -8,7 +8,6 @@
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
 
-import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
@@ -22,7 +21,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
-class ResetQStatsCmdCollector extends QueueMetricsCollector implements AMonitorTaskRunnable{
+class ResetQStatsCmdCollector extends QueueMetricsCollector implements Runnable{
 
     public static final Logger logger = LoggerFactory.getLogger(ResetQStatsCmdCollector.class);
 
@@ -76,11 +75,5 @@ class ResetQStatsCmdCollector extends QueueMetricsCollector implements AMonitorT
         }
         long exitTime = System.currentTimeMillis() - entryTime;
         logger.debug("Time taken to publish metrics for all queues is {} milliseconds for command {}", exitTime,COMMAND);
-    }
-
-
-    //TODO This will not be called. AMonitorTaskRunnable should be used only for WMQMonitorTask.
-    public void onTaskComplete() {
-        logger.info("ResetQStatsCmdCollector task for command MQCMD_RESET_Q_STATS completed for queueManager" + queueManager.getName());
     }
 }

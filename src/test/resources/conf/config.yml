@@ -97,9 +97,9 @@ queueManagers:
         include: ["#"]
         exclude:
              #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
-           - type: "STARTSWITH"
+           - type: "EQUALS"
              #The name of the queue or queue name pattern as per queue filter, comma separated values
-             values: ["SYSTEM","$SYS"]
+             values: ["system","$SYS"]
 
 mqMetrics:
   # This Object will extract queue manager metrics
