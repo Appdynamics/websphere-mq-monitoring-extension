@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.Phaser;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * MetricsCollector class is abstract and serves as superclass for all types of metric collection class.<br>
@@ -37,7 +37,7 @@ public abstract class MetricsCollector implements Runnable {
 	protected PCFMessageAgent agent;
 	protected MetricWriteHelper metricWriteHelper;
 	protected QueueManager queueManager;
-	protected Phaser phaser;
+	protected CountDownLatch countDownLatch;
 
 	public static final Logger logger = LoggerFactory.getLogger(MetricsCollector.class);
 

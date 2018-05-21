@@ -32,15 +32,14 @@ import java.util.concurrent.*;
 public class TopicMetricsCollector extends MetricsCollector implements Runnable {
     public static final Logger logger = LoggerFactory.getLogger(TopicMetricsCollector.class);
     private final String artifact = "Topics";
-    protected Phaser phaser;
 
-    public TopicMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, Phaser phaser) {
+    public TopicMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
         this.metricsToReport = metricsToReport;
         this.monitorContextConfig = monitorContextConfig;
         this.agent = agent;
         this.metricWriteHelper = metricWriteHelper;
         this.queueManager = queueManager;
-        this.phaser = phaser;
+        this.countDownLatch = countDownLatch;
     }
 
     @Override
@@ -50,8 +49,7 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
         } catch (TaskExecutionException e) {
             logger.error("Error in TopicMetricsCollector ", e);
         } finally {
-            logger.debug("Deregistering TopicMetricsCollector phaser for {} ", queueManager.getName());
-            phaser.arriveAndDeregister();
+            countDownLatch.countDown();
         }
     }
 

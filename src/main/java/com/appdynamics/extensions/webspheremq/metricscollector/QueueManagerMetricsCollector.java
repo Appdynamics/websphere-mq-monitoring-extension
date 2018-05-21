@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Phaser;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * This class is responsible for queue metric collection.
@@ -36,15 +36,14 @@ public class QueueManagerMetricsCollector extends MetricsCollector implements Ru
 
 	public static final Logger logger = LoggerFactory.getLogger(QueueManagerMetricsCollector.class);
 	private final String artifact = "Queue Manager";
-	private Phaser phaser;
 
-	public QueueManagerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, Phaser phaser) {
+	public QueueManagerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
 		this.metricsToReport = metricsToReport;
 		this.monitorContextConfig = monitorContextConfig;
 		this.agent = agent;
 		this.metricWriteHelper = metricWriteHelper;
 		this.queueManager = queueManager;
-		this.phaser = phaser;
+		this.countDownLatch = countDownLatch;
 	}
 
 	public String getAtrifact() {
@@ -57,8 +56,7 @@ public class QueueManagerMetricsCollector extends MetricsCollector implements Ru
 		} catch (TaskExecutionException e) {
 			logger.error("Error in QueueManagerMetricsCollector ", e);
 		} finally {
-			logger.debug("Deregistering QueueManagerMetricsCollector phaser for {} ", queueManager.getName());
-			phaser.arriveAndDeregister();
+			countDownLatch.countDown();
 		}
 	}
 

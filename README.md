@@ -512,8 +512,8 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 |--------------------------|-------------------------|
 |Extension Version         |7.0.0                    |
 |Controller Compatibility  |4.2 +                    |
-|Product Tested On         |IBM MQ 7.x, 8.x, 9.x and Windows, Unix, AIX|
-|Last Update               |17th May, 2018           |
+|IBM MQ Version tested On  |7.x, 8.x, 9.x and Windows, Unix, AIX|
+|Last Update               |21st May, 2018           |
 
 List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/v7.0/CHANGELOG.md)
 

@@ -22,22 +22,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.Phaser;
+import java.util.concurrent.CountDownLatch;
 
 
 public class ListenerMetricsCollector extends MetricsCollector implements Runnable {
 
     public static final Logger logger = LoggerFactory.getLogger(ListenerMetricsCollector.class);
     private final String artifact = "Listeners";
-    private Phaser phaser;
 
-    public ListenerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, Phaser phaser) {
+    public ListenerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
         this.metricsToReport = metricsToReport;
         this.monitorContextConfig = monitorContextConfig;
         this.agent = agent;
         this.metricWriteHelper = metricWriteHelper;
         this.queueManager = queueManager;
-        this.phaser = phaser;
+        this.countDownLatch = countDownLatch;
     }
 
 
@@ -48,8 +47,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
         } catch (TaskExecutionException e) {
             logger.error("Error in ListenerMetricsCollector ", e);
         } finally {
-            logger.debug("Deregistering ListenerMetricsCollector phaser for {} ", queueManager.getName());
-            phaser.arriveAndDeregister();
+            countDownLatch.countDown();
         }
     }
 

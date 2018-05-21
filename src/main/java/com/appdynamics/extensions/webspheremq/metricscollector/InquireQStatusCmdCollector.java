@@ -27,7 +27,7 @@ class InquireQStatusCmdCollector extends QueueMetricsCollector implements Runnab
     protected static final String COMMAND = "MQCMD_INQUIRE_Q_STATUS";
 
     public InquireQStatusCmdCollector(QueueMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.phaser);
+        super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.countDownLatch);
     }
 
     public void run() {

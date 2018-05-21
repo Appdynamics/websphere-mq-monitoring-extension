@@ -37,7 +37,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Phaser;
+import java.util.concurrent.CountDownLatch;
 
 import static org.mockito.Mockito.*;
 
@@ -57,7 +57,7 @@ public class QueueMetricsCollectorTest {
     private MetricWriteHelper metricWriteHelper;
 
     @Mock
-    private Phaser phaser;
+    private CountDownLatch phaser;
 
     private MonitorContextConfiguration monitorContextConfig;
     private Map<String, WMQMetricOverride> queueMetricsToReport;
