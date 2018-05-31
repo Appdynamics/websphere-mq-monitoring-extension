@@ -1,0 +1,235 @@
+### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
+numberOfThreads: 20
+
+#This will create it in specific Tier aka Component. Replace <COMPONENT_ID>. Please make sure to have a trailing |.
+#To find out the COMPONENT_ID, please see the screen shot here https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
+metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
+
+#This is the timeout on queue metrics and channel metrics threads.Default value is 20 seconds.
+#No need to change the default unless you know what you are doing.
+#queueMetricsCollectionTimeoutInSeconds: 20
+#channelMetricsCollectionTimeoutInSeconds: 20
+
+#Uncomment only if encryption of passwords is wanted.
+#encryptionKey: ""
+
+queueManagers:
+  - host: "localhost"
+    port: 1414
+
+    #Actual name of the queue manager
+    name: "QM1"
+
+    #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
+    #For bindings type, connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
+    #For client type, connection change it to "Client".
+    transportType: "Bindings"
+
+    #Channel name of the queue manager, channel should be server-conn type.
+    #This field is not required in case of transportType: Bindings
+    #channelName: "SYSTEM.ADMIN.SVRCONN"
+
+    #user with admin level access.
+    #comment out the username and password in case of transportType: Bindings.
+    #username: ""
+    #password: ""
+
+    #Uncomment only if encryption of passwords is wanted.
+    #encryptedPassword: ""
+
+    #PCF requests are always sent to SYSTEM.ADMIN.COMMAND.QUEUE. The PCF responses to these requests are sent to the default reply-to queue called
+    #SYSTEM.DEFAULT.MODEL.QUEUE. However, you can override this behavior and send it to a temporary dynamic queue by changing the modelQueueName and replyQueuePrefix fields.
+    #For more details around this https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q083240_.htm & https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q020010_.htm
+    #modelQueueName: ""
+    #replyQueuePrefix: ""
+
+
+    #Sets the CCSID used in the message descriptor of request and response messages. The default value is MQC.MQCCSI_Q_MGR.
+    #To set this, please use the integer value.
+    #ccsid:
+
+    #Sets the encoding used in the message descriptor of request and response messages. The default value is MQC.MQENC_NATIVE.
+    #To set this, please use the integer value.
+    #encoding:
+
+    # IBM Cipher Suite e.g. "SSL_RSA_WITH_AES_128_CBC_SHA256"..
+    # For translation to IBM Cipher  http://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.dev.doc/q113210_.htm
+    #cipherSuite: ""
+
+
+    queueFilters:
+        #Can provide complete queue name or generic names. A generic name is a character string followed by an asterisk (*),
+        #for example ABC*, and it selects all objects having names that start with the selected character string.
+        #An asterisk on its own matches all possible names.
+        include: ["*"]
+        exclude:
+             #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+           - type: "STARTSWITH"
+             #The name of the queue or queue name pattern as per queue filter, comma separated values
+             values: ["SYSTEM","AMQ"]
+
+
+    channelFilters:
+        #Can provide complete channel name or generic names. A generic name is a character string followed by an asterisk (*),
+        #for example ABC*, and it selects all objects having names that start with the selected character string.
+        #An asterisk on its own matches all possible names.
+        include: ["*"]
+        exclude:
+           #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+           - type: "STARTSWITH"
+           #The name of the queue or queue name pattern as per queue filter, comma separated values
+             values: ["SYSTEM"]
+
+    listenerFilters:
+        #Can provide complete channel name or generic names. A generic name is a character string followed by an asterisk (*),
+        #for example ABC*, and it selects all objects having names that start with the selected character string.
+        #An asterisk on its own matches all possible names.
+        include: ["*"]
+        exclude:
+           #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+           - type: "STARTSWITH"
+           #The name of the queue or queue name pattern as per queue filter, comma separated values
+             values: ["SYSTEM"]
+
+    topicFilters:
+        # For topics, IBM MQ uses the topic wildcard characters ('#' and '+') and does not treat a trailing asterisk as a wildcard
+        # https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.pla.doc/q005020_.htm
+        include: ["#"]
+        exclude:
+             #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
+           - type: "STARTSWITH"
+             #The name of the queue or queue name pattern as per queue filter, comma separated values
+             values: ["SYSTEM","$SYS"]
+
+mqMetrics:
+  # This Object will extract queue manager metrics
+  - metricsType: "queueMgrMetrics"
+    metrics:
+      include:
+        - Status:
+            alias: "Status"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "AVERAGE"
+            clusterRollUpType: "INDIVIDUAL"
+      
+  # This Object will extract queue metrics
+  - metricsType: "queueMetrics"
+    metrics:
+      include:
+        - MaxQueueDepth:
+            alias: "Max Queue Depth"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+          
+        - CurrentQueueDepth:
+            alias: "Current Queue Depth"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+          
+        - OpenInputCount:
+            alias: "Open Input Count"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+          
+        - OpenOutputCount:
+            alias: "Open Output Count"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+
+        - OldestMsgAge:
+            alias: "OldestMsgAge"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
+            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "CURRENT"
+            clusterRollUpType: "INDIVIDUAL"
+
+        - OnQTime:
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
+            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "CURRENT"
+            clusterRollUpType: "INDIVIDUAL"
+
+        - UncommittedMsgs:
+            alias: "UncommittedMsgs"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_UNCOMMITTED_MSGS"
+            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+
+        - HighQDepth:
+            alias: "HighQDepth"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
+            ibmCommand: "MQCMD_RESET_Q_STATS"
+
+        - MsgDeqCount:
+            alias: "MsgDeqCount"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_DEQ_COUNT"
+            ibmCommand: "MQCMD_RESET_Q_STATS"
+
+        - MsgEnqCount:
+            alias: "MsgEnqCount"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_ENQ_COUNT"
+            ibmCommand: "MQCMD_RESET_Q_STATS"
+
+      
+  # This Object will extract channel metrics
+  - metricsType: "channelMetrics"
+    metrics:
+      include:
+        - Messages:
+            alias: "Messages"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
+          
+        - Status:
+            alias: "Status"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"  #http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "AVERAGE"
+            clusterRollUpType: "INDIVIDUAL"
+          
+        - ByteSent:
+            alias: "Byte Sent"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
+          
+        - ByteReceived:
+            alias: "Byte Received"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
+          
+        - BuffersSent:
+            alias: "Buffers Sent"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
+          
+        - BuffersReceived:
+            alias: "Buffers Received"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+
+
+  - metricsType: "listenerMetrics"
+    metrics:
+      include:
+        - Status:
+            alias: "Status"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_LISTENER_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "AVERAGE"
+            clusterRollUpType: "INDIVIDUAL"
+
+  # This Object will extract topic metrics
+  - metricsType: "topicMetrics"
+    metrics:
+      include:
+        - PublishCount:
+            alias: "Publish Count"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_PUB_COUNT"
+            ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
+        - SubscriptionCount:
+            alias: "Subscription Count"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_SUB_COUNT"
+            ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
+
+#Run it as a scheduled task instead of running every minute.
+#If you want to run this every minute, comment this out
+#taskSchedule:
+#  numberOfThreads: 1
+#  taskDelaySeconds: 300

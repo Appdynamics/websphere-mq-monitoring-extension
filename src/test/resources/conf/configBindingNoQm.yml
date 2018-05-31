@@ -1,10 +1,8 @@
 ### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
 numberOfThreads: 10
 
-#This will create it in specific Tier aka Component. Replace <COMPONENT_ID>. Please make sure to have a trailing |.
-#To find out the COMPONENT_ID, please see the screen shot here https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
-metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
-
+#This will create it in specific Tier. Replace <TIER_NAME>. Please make sure to have a trailing |
+metricPrefix: "Server|Component:<TIER_NAME>|Custom Metrics|WebsphereMQ|"
 
 #This is the timeout on queue metrics threads.Default value is 20 seconds.
 queueMetricsCollectionTimeoutInSeconds: 20
@@ -14,8 +12,8 @@ queueMetricsCollectionTimeoutInSeconds: 20
 
 
 queueManagers:
-  - host: ""
-    
+  - host: "localhost"
+    port: 1414
     #Actual name of the queue manager
     name: ""
     #Channel name of the queue manager
@@ -23,7 +21,7 @@ queueManagers:
     #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
     #For bindings type connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
     #for client type connection change it to "Client".
-    transportType: "Client"
+    transportType: "Bindings"
     #user with admin level access, no need to provide credentials in case of bindings transport type, it is only applicable for client type
     username:
     password:
@@ -48,9 +46,9 @@ queueManagers:
             #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
             - type: "STARTSWITH"
             #The name of the queue or queue name pattern as per queue filter, comma separated values
-              values: ["SYSTEM","AMQ"]
-    
-mqMertics:
+              values: ["SYSTEM"]
+
+mqMetrics:
   # This Object will extract queue manager metrics
   - metricsType: "queueMgrMetrics"
     metrics:

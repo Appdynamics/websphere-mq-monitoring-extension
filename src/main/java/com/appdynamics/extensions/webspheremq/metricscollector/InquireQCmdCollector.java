@@ -1,6 +1,13 @@
+/*
+ * Copyright 2018. AppDynamics LLC and its affiliates.
+ * All Rights Reserved.
+ * This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ * The copyright notice above does not evidence any actual or intended publication of such source code.
+ */
+
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.webspheremq.config.MetricOverride;
+import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.pcf.PCFException;
@@ -19,8 +26,8 @@ class InquireQCmdCollector extends QueueMetricsCollector implements Runnable {
 
     protected static final String COMMAND = "MQCMD_INQUIRE_Q";
 
-    public InquireQCmdCollector(QueueMetricsCollector collector, Map<String, ? extends MetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager,collector.metricPrefix);
+    public InquireQCmdCollector(QueueMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
+        super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager, collector.metricWriteHelper, collector.countDownLatch);
     }
 
     public void run() {
@@ -71,6 +78,4 @@ class InquireQCmdCollector extends QueueMetricsCollector implements Runnable {
         long exitTime = System.currentTimeMillis() - entryTime;
         logger.debug("Time taken to publish metrics for all queues is {} milliseconds for command {}", exitTime,COMMAND);
     }
-
-
 }

@@ -7,7 +7,6 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
@@ -17,17 +16,16 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
-class ResetQStatsCmdCollector extends QueueMetricsCollector implements Runnable{
+class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnable{
 
-    public static final Logger logger = LoggerFactory.getLogger(ResetQStatsCmdCollector.class);
+    public static final Logger logger = LoggerFactory.getLogger(InquireTStatusCmdCollector.class);
 
-    protected static final String COMMAND = "MQCMD_RESET_Q_STATS";
+    protected static final String COMMAND = "MQCMD_INQUIRE_TOPIC_STATUS";
 
-    public ResetQStatsCmdCollector(QueueMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
+    public InquireTStatusCmdCollector(TopicMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
         super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.countDownLatch);
     }
 
@@ -41,28 +39,23 @@ class ResetQStatsCmdCollector extends QueueMetricsCollector implements Runnable{
     }
 
     protected void publishMetrics() throws TaskExecutionException {
-		/*
-		 * attrs = { CMQC.MQCA_Q_NAME, MQIA_HIGH_Q_DEPTH,MQIA_MSG_DEQ_COUNT, MQIA_MSG_ENQ_COUNT };
-		 */
         long entryTime = System.currentTimeMillis();
 
         if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
-            logger.debug("Queue metrics to report from the config is null or empty, nothing to publish for command {}",COMMAND);
+            logger.debug("Topic metrics to report from the config is null or empty, nothing to publish for command {}",COMMAND);
             return;
         }
+        Set<String> topicGenericNames = this.queueManager.getTopicFilters().getInclude();
+        for(String topicGenericName : topicGenericNames){
+            // Request: https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.ref.adm.doc/q088140_.htm
+            // list of all metrics extracted through MQCMD_INQUIRE_TOPIC_STATUS is mentioned here https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.ref.adm.doc/q088150_.htm
+            PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_TOPIC_STATUS);
+            request.addParameter(CMQC.MQCA_TOPIC_STRING, topicGenericName);
 
-        int[] attrs = getIntAttributesArray(CMQC.MQCA_Q_NAME);
-        logger.debug("Attributes being sent along PCF agent request to query queue metrics: {} for command {}", Arrays.toString(attrs),COMMAND);
-
-        Set<String> queueGenericNames = this.queueManager.getQueueFilters().getInclude();
-        for(String queueGenericName : queueGenericNames){
-            // list of all metrics extracted through MQCMD_RESET_Q_STATS is mentioned here https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.ref.adm.doc/q088310_.htm
-            PCFMessage request = new PCFMessage(CMQCFC.MQCMD_RESET_Q_STATS);
-            request.addParameter(CMQC.MQCA_Q_NAME, queueGenericName);
             try {
-                processPCFRequestAndPublishQMetrics(queueGenericName, request,COMMAND);
+                processPCFRequestAndPublishQMetrics(topicGenericName, request,COMMAND);
             } catch (PCFException pcfe) {
-                logger.error("PCFException caught while collecting metric for Queue: {} for command {}",queueGenericName,COMMAND, pcfe);
+                logger.error("PCFException caught while collecting metric for Queue: {} for command {}",topicGenericName,COMMAND, pcfe);
                 PCFMessage[] msgs = (PCFMessage[]) pcfe.exceptionSource;
                 for (int i = 0; i < msgs.length; i++) {
                     logger.error(msgs[i].toString());

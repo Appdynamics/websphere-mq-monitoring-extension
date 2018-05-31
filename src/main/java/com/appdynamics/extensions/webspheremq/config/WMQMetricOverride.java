@@ -1,18 +1,24 @@
+/*
+ * Copyright 2018. AppDynamics LLC and its affiliates.
+ * All Rights Reserved.
+ * This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ * The copyright notice above does not evidence any actual or intended publication of such source code.
+ */
+
 package com.appdynamics.extensions.webspheremq.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WMQMetricOverride extends MetricOverride {
+import java.util.Map;
+
+public class WMQMetricOverride {
 
 	String ibmConstant;
 	String ibmCommand;
 	int constantValue = -1;
+	Map<String, ?> metricProperties;
 	public static final Logger logger = LoggerFactory.getLogger(WMQMetricOverride.class);
-
-	public WMQMetricOverride() {
-		super();
-	}
 
 	public String getIbmConstant() {
 		return ibmConstant;
@@ -24,6 +30,14 @@ public class WMQMetricOverride extends MetricOverride {
 
 	public String getIbmCommand() {
 		return ibmCommand;
+	}
+
+	public Map<String, ?> getMetricProperties() {
+		return metricProperties;
+	}
+
+	public void setMetricProperties(Map<String, ?> metricProperties) {
+		this.metricProperties = metricProperties;
 	}
 
 	public void setIbmCommand(String ibmCommand) {
@@ -56,18 +70,10 @@ public class WMQMetricOverride extends MetricOverride {
 	@Override
 	public String toString() {
 		StringBuilder stringRep = new StringBuilder();
-
 		stringRep.append("[");
-		stringRep.append("Metric Key=" + getMetricKey() + ",");
-		stringRep.append("Alias=" + getAlias() + ",");
 		stringRep.append("IbmConstant=" + getIbmConstant() + ",");
 		stringRep.append("IbmCommand=" + getIbmCommand() + ",");
 		stringRep.append("ConstantVal=" + getConstantValue() + ",");
-		stringRep.append("Aggregator=" + getAggregator() + ",");
-		stringRep.append("TimeRollup=" + getTimeRollup() + ",");
-		stringRep.append("ClusterRollup=" + getClusterRollup() + ",");
-		stringRep.append("Multiplier=" + getMultiplier() + ",");
-		stringRep.append("Disabled=" + isDisabled());
 		stringRep.append("]");
 
 		return stringRep.toString();

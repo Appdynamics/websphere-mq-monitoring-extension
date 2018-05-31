@@ -1,20 +1,25 @@
+/*
+ * Copyright 2018. AppDynamics LLC and its affiliates.
+ * All Rights Reserved.
+ * This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ * The copyright notice above does not evidence any actual or intended publication of such source code.
+ */
+
 package com.appdynamics.extensions.webspheremq;
 
-import com.appdynamics.TaskInputArgs;
-import com.appdynamics.extensions.StringUtils;
+
+import com.appdynamics.extensions.TaskInputArgs;
 import com.appdynamics.extensions.crypto.CryptoUtil;
+import com.appdynamics.extensions.util.StringUtils;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.ibm.mq.MQC;
+import com.ibm.mq.constants.CMQC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Hashtable;
-import java.util.Map;
-
-import static com.appdynamics.TaskInputArgs.PASSWORD_ENCRYPTED;
 
 /**
  * Takes care of websphere mq connection, authentication, SSL, Cipher spec, certificate based authorization.<br>
@@ -37,26 +42,26 @@ public class WMQContext {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Hashtable getMQEnvironment() {
 		Hashtable env = new Hashtable();
-		addEnvProperty(env, MQC.HOST_NAME_PROPERTY, queueManager.getHost());
-		addEnvProperty(env, MQC.PORT_PROPERTY, queueManager.getPort());
-		addEnvProperty(env, MQC.CHANNEL_PROPERTY, queueManager.getChannelName());
-		addEnvProperty(env, MQC.USER_ID_PROPERTY, queueManager.getUsername());
-		addEnvProperty(env, MQC.PASSWORD_PROPERTY, getPassword());
-		addEnvProperty(env, MQC.SSL_CERT_STORE_PROPERTY, queueManager.getSslKeyRepository());
-		addEnvProperty(env, MQC.SSL_CIPHER_SUITE_PROPERTY, queueManager.getCipherSuite());
+		addEnvProperty(env, CMQC.HOST_NAME_PROPERTY, queueManager.getHost());
+		addEnvProperty(env, CMQC.PORT_PROPERTY, queueManager.getPort());
+		addEnvProperty(env, CMQC.CHANNEL_PROPERTY, queueManager.getChannelName());
+		addEnvProperty(env, CMQC.USER_ID_PROPERTY, queueManager.getUsername());
+		addEnvProperty(env, CMQC.PASSWORD_PROPERTY, getPassword());
+		addEnvProperty(env, CMQC.SSL_CERT_STORE_PROPERTY, queueManager.getSslKeyRepository());
+		addEnvProperty(env, CMQC.SSL_CIPHER_SUITE_PROPERTY, queueManager.getCipherSuite());
 		//TODO: investigate on CIPHER_SPEC property No Available in MQ 7.5 Jar
 
 		if (Constants.TRANSPORT_TYPE_CLIENT.equalsIgnoreCase(queueManager.getTransportType())) {
-			addEnvProperty(env, MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES_CLIENT);
+			addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES_CLIENT);
 		}
 		else if (Constants.TRANSPORT_TYPE_BINGINGS.equalsIgnoreCase(queueManager.getTransportType())) {
-			addEnvProperty(env, MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES_BINDINGS);
+			addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES_BINDINGS);
 		}
 		else {
-			addEnvProperty(env, MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES);
+			addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES);
 		}
 
-		logger.debug("Transport property is " + env.get(MQC.TRANSPORT_PROPERTY));
+		logger.debug("Transport property is " + env.get(CMQC.TRANSPORT_PROPERTY));
 		return env;
 	}
 
@@ -65,7 +70,7 @@ public class WMQContext {
 		if (null != propVal) {
 			if(propVal instanceof String){
 				String propString = (String)propVal;
-				if(propString.isEmpty()){
+				if(Strings.isNullOrEmpty(propString)){
 					return;
 				}
 			}
@@ -116,7 +121,7 @@ public class WMQContext {
 		String encryptedPassword = queueManager.getEncryptedPassword();
 		if (!Strings.isNullOrEmpty(encryptionKey) && !Strings.isNullOrEmpty(encryptedPassword)) {
 			java.util.Map<String, String> cryptoMap = Maps.newHashMap();
-			cryptoMap.put(PASSWORD_ENCRYPTED, encryptedPassword);
+			cryptoMap.put(TaskInputArgs.ENCRYPTED_PASSWORD, encryptedPassword);
 			cryptoMap.put(TaskInputArgs.ENCRYPTION_KEY, encryptionKey);
 			return CryptoUtil.getPassword(cryptoMap);
 		}

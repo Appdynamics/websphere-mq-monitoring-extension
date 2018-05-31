@@ -1,6 +1,13 @@
+/*
+ * Copyright 2018. AppDynamics LLC and its affiliates.
+ * All Rights Reserved.
+ * This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ * The copyright notice above does not evidence any actual or intended publication of such source code.
+ */
+
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.webspheremq.config.MetricOverride;
+import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.pcf.PCFException;
@@ -13,14 +20,14 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
-class InquireQStatusCmdCollector extends QueueMetricsCollector implements Runnable{
+class InquireQStatusCmdCollector extends QueueMetricsCollector implements Runnable {
 
     public static final Logger logger = LoggerFactory.getLogger(InquireQStatusCmdCollector.class);
 
     protected static final String COMMAND = "MQCMD_INQUIRE_Q_STATUS";
 
-    public InquireQStatusCmdCollector(QueueMetricsCollector collector, Map<String, ? extends MetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorConfig,collector.agent,collector.queueManager,collector.metricPrefix);
+    public InquireQStatusCmdCollector(QueueMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
+        super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.countDownLatch);
     }
 
     public void run() {
@@ -69,6 +76,4 @@ class InquireQStatusCmdCollector extends QueueMetricsCollector implements Runnab
         long exitTime = System.currentTimeMillis() - entryTime;
         logger.debug("Time taken to publish metrics for all queues is {} milliseconds for command {}", exitTime,COMMAND);
     }
-
-
 }

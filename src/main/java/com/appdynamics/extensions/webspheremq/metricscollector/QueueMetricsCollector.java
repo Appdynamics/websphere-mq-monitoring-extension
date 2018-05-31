@@ -1,14 +1,20 @@
+/*
+ * Copyright 2018. AppDynamics LLC and its affiliates.
+ * All Rights Reserved.
+ * This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ * The copyright notice above does not evidence any actual or intended publication of such source code.
+ */
+
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.conf.MonitorConfiguration;
-import com.appdynamics.extensions.util.MetricWriteHelper;
+import com.appdynamics.extensions.MetricWriteHelper;
+import com.appdynamics.extensions.conf.MonitorContextConfiguration;
+import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
-import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.pcf.*;
@@ -23,40 +29,52 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
-public class QueueMetricsCollector extends MetricsCollector {
+public class QueueMetricsCollector extends MetricsCollector implements Runnable {
 
 	public static final Logger logger = LoggerFactory.getLogger(QueueMetricsCollector.class);
 	private final String artifact = "Queues";
 
-	public QueueMetricsCollector(Map<String, ? extends MetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
+	public QueueMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
 		this.metricsToReport = metricsToReport;
-		this.monitorConfig = monitorConfig;
+		this.monitorContextConfig = monitorContextConfig;
 		this.agent = agent;
-		this.metricPrefix = metricPrefix;
+		this.metricWriteHelper = metricWriteHelper;
 		this.queueManager = queueManager;
+		this.countDownLatch = countDownLatch;
+	}
+
+	@Override
+	public void run() {
+		try {
+			this.process();
+		} catch (TaskExecutionException e) {
+			logger.error("Error in QueueMetricsCollector ", e);
+		} finally {
+			countDownLatch.countDown();
+		}
 	}
 
 	@Override
 	protected void publishMetrics() throws TaskExecutionException {
 		logger.info("Collecting queue metrics...");
 		List<Future> futures = Lists.newArrayList();
-		Map<String, ? extends MetricOverride>  metricsForInquireQCmd = getMetricsToReport(InquireQCmdCollector.COMMAND);
+		Map<String, WMQMetricOverride>  metricsForInquireQCmd = getMetricsToReport(InquireQCmdCollector.COMMAND);
 		if(!metricsForInquireQCmd.isEmpty()){
-			futures.add(monitorConfig.getExecutorService().submit(new InquireQCmdCollector(this,metricsForInquireQCmd)));
+			futures.add(monitorContextConfig.getContext().getExecutorService().submit("InquireQCmdCollector", new InquireQCmdCollector(this,metricsForInquireQCmd)));
 		}
-		Map<String, ? extends MetricOverride>  metricsForInquireQStatusCmd = getMetricsToReport(InquireQStatusCmdCollector.COMMAND);
+		Map<String, WMQMetricOverride>  metricsForInquireQStatusCmd = getMetricsToReport(InquireQStatusCmdCollector.COMMAND);
 		if(!metricsForInquireQStatusCmd.isEmpty()){
-			futures.add(monitorConfig.getExecutorService().submit(new InquireQStatusCmdCollector(this,metricsForInquireQStatusCmd)));
+			futures.add(monitorContextConfig.getContext().getExecutorService().submit("InquireQStatusCmdCollector", new InquireQStatusCmdCollector(this,metricsForInquireQStatusCmd)));
 		}
-		Map<String, ? extends MetricOverride>  metricsForResetQStatsCmd = getMetricsToReport(ResetQStatsCmdCollector.COMMAND);
+		Map<String, WMQMetricOverride>  metricsForResetQStatsCmd = getMetricsToReport(ResetQStatsCmdCollector.COMMAND);
 		if(!metricsForResetQStatsCmd.isEmpty()){
-			futures.add(monitorConfig.getExecutorService().submit(new ResetQStatsCmdCollector(this,metricsForResetQStatsCmd)));
+			futures.add(monitorContextConfig.getContext().getExecutorService().submit("ResetQStatsCmdCollector", new ResetQStatsCmdCollector(this,metricsForResetQStatsCmd)));
 		}
 		for(Future f: futures){
 			try {
 				long timeout = 20;
-				if(monitorConfig.getConfigYml().get("queueMetricsCollectionTimeoutInSeconds") != null){
-					timeout = (Integer)monitorConfig.getConfigYml().get("queueMetricsCollectionTimeoutInSeconds");
+				if(monitorContextConfig.getConfigYml().get("queueMetricsCollectionTimeoutInSeconds") != null){
+					timeout = (Integer)monitorContextConfig.getConfigYml().get("queueMetricsCollectionTimeoutInSeconds");
 				}
 				f.get(timeout, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
@@ -69,7 +87,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 		}
 	}
 
-	private Map<String, ? extends MetricOverride> getMetricsToReport(String command) {
+	private Map<String, WMQMetricOverride> getMetricsToReport(String command) {
 		Map<String, WMQMetricOverride> commandMetrics = Maps.newHashMap();
 		if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
 			logger.debug("There are no metrics configured for {}",command);
@@ -78,7 +96,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 		Iterator<String> itr = getMetricsToReport().keySet().iterator();
 		while (itr.hasNext()) {
 			String metrickey = itr.next();
-			WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
+			WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
 			if(wmqOverride.getIbmCommand().equalsIgnoreCase(command)){
 				commandMetrics.put(metrickey,wmqOverride);
 			}
@@ -92,7 +110,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 	}
 
 	@Override
-	public Map<String, ? extends MetricOverride> getMetricsToReport() {
+	public Map<String, WMQMetricOverride> getMetricsToReport() {
 		return this.metricsToReport;
 	}
 
@@ -113,14 +131,16 @@ public class QueueMetricsCollector extends MetricsCollector {
 			if(!isExcluded(queueName,excludeFilters)) { //check for exclude filters
 				logger.debug("Pulling out metrics for queue name {} for command {}",queueName,command);
 				Iterator<String> itr = getMetricsToReport().keySet().iterator();
+				List<Metric> metrics = Lists.newArrayList();
 				while (itr.hasNext()) {
 					String metrickey = itr.next();
-					WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
+					WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
 					try{
 						PCFParameter pcfParam = response[i].getParameter(wmqOverride.getConstantValue());
 						if(pcfParam instanceof MQCFIN){
 							int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-							publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias());
+							Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), queueName, metrickey);
+							metrics.add(metric);
 						}
 						else if(pcfParam instanceof MQCFIL){
 							int[] metricVals = response[i].getIntListParameterValue(wmqOverride.getConstantValue());
@@ -128,11 +148,10 @@ public class QueueMetricsCollector extends MetricsCollector {
 								int count=0;
 								for(int val : metricVals){
 									count++;
-									publishMetric(wmqOverride, val, queueManager.getName(), getAtrifact(), queueName, wmqOverride.getAlias(),"_" + Integer.toString(count));
+									Metric metric = createMetric(metrickey+ "_" + Integer.toString(count), val, wmqOverride, queueManager.getName(), getAtrifact(), queueName, metrickey+ "_" + Integer.toString(count));
+									metrics.add(metric);
 								}
 							}
-
-
 						}
 					}
 					catch (PCFException pcfe) {
@@ -140,6 +159,7 @@ public class QueueMetricsCollector extends MetricsCollector {
 					}
 
 				}
+				publishMetrics(metrics);
 			}
 			else{
 				logger.debug("Queue name {} is excluded.",queueName);

@@ -1,39 +1,54 @@
+/*
+ * Copyright 2018. AppDynamics LLC and its affiliates.
+ * All Rights Reserved.
+ * This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ * The copyright notice above does not evidence any actual or intended publication of such source code.
+ */
+
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
-import com.appdynamics.extensions.conf.MonitorConfiguration;
+import com.appdynamics.extensions.MetricWriteHelper;
+import com.appdynamics.extensions.conf.MonitorContextConfiguration;
+import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
-import com.appdynamics.extensions.webspheremq.config.MetricOverride;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
-import com.appdynamics.extensions.webspheremq.metricscollector.MetricsCollector;
-import com.ibm.mq.constants.CMQC;
+import com.google.common.collect.Lists;
 import com.ibm.mq.constants.CMQCFC;
-import com.ibm.mq.constants.MQConstants;
-import com.ibm.mq.pcf.PCFException;
 import com.ibm.mq.pcf.PCFMessage;
 import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 
-public class ListenerMetricsCollector extends MetricsCollector {
+public class ListenerMetricsCollector extends MetricsCollector implements Runnable {
 
     public static final Logger logger = LoggerFactory.getLogger(ListenerMetricsCollector.class);
     private final String artifact = "Listeners";
 
-
-    public ListenerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorConfiguration monitorConfig, PCFMessageAgent agent, QueueManager queueManager, String metricPrefix) {
+    public ListenerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
         this.metricsToReport = metricsToReport;
-        this.monitorConfig = monitorConfig;
+        this.monitorContextConfig = monitorContextConfig;
         this.agent = agent;
-        this.metricPrefix = metricPrefix;
+        this.metricWriteHelper = metricWriteHelper;
         this.queueManager = queueManager;
+        this.countDownLatch = countDownLatch;
+    }
+
+
+    @Override
+    public void run() {
+        try {
+            this.process();
+        } catch (TaskExecutionException e) {
+            logger.error("Error in ListenerMetricsCollector ", e);
+        } finally {
+            countDownLatch.countDown();
+        }
     }
 
     protected void publishMetrics() throws TaskExecutionException {
@@ -64,16 +79,19 @@ public class ListenerMetricsCollector extends MetricsCollector {
                 }
                 for (int i = 0; i < response.length; i++) {
                     String listenerName = response[i].getStringParameterValue(CMQCFC.MQCACH_LISTENER_NAME).trim();
-                    Set<ExcludeFilters> excludeFilters = this.queueManager.getChannelFilters().getExclude();
+                    Set<ExcludeFilters> excludeFilters = this.queueManager.getListenerFilters().getExclude();
                     if(!isExcluded(listenerName,excludeFilters)) { //check for exclude filters
                         logger.debug("Pulling out metrics for listener name {}",listenerName);
                         Iterator<String> itr = getMetricsToReport().keySet().iterator();
+                        List<Metric> metrics = Lists.newArrayList();
                         while (itr.hasNext()) {
                             String metrickey = itr.next();
-                            WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
+                            WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
                             int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-                            publishMetric(wmqOverride, metricVal, queueManager.getName(), getAtrifact(), listenerName, wmqOverride.getAlias());
+                            Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), listenerName, metrickey);
+                            metrics.add(metric);
                         }
+                        publishMetrics(metrics);
                     }
                     else{
                         logger.debug("Listener name {} is excluded.",listenerName);
@@ -93,8 +111,7 @@ public class ListenerMetricsCollector extends MetricsCollector {
         return artifact;
     }
 
-    public Map<String, ? extends MetricOverride> getMetricsToReport() {
+    public Map<String, WMQMetricOverride> getMetricsToReport() {
         return this.metricsToReport;
     }
-
 }
