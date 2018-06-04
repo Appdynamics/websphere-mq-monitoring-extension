@@ -39,8 +39,6 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
         this.countDownLatch = countDownLatch;
     }
 
-
-    @Override
     public void run() {
         try {
             this.process();

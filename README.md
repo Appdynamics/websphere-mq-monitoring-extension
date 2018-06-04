@@ -3,7 +3,7 @@
 ## Use case
 Websphere MQ, formerly known as MQ (message queue) series, is an IBM standard for program-to-program messaging across multiple platforms. 
 
-The WebSphere MQ monitoring extension can monitor multiple queues managers and their resources, namely queues, topics, channels and listeners.
+The WebSphere MQ monitoring extension can monitor multiple queues managers and their resources, namely queues, topics, channels and listeners The metrics are extracted out using the [PCF command messages](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q020010_.htm).
 
 The metrics for queue manager, queue, topic, channel and listener can be configured.
 
@@ -269,7 +269,7 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
    ```
 
 ### Extension Working - Internals
-This extension extracts metrics through [PCF framework](https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q019990_.htm). A complete list of PCF commands are listed [here] (https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q086870_.htm)
+This extension extracts metrics through [PCF framework](https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q019990_.htm). A complete list of PCF commands are listed [here](https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q086870_.htm)
 Each queue manager has an administration queue with a standard queue name and the extension sends PCF command messages to that queue. On Windows and Unix platforms, the PCF commands are sent is always sent to the SYSTEM.ADMIN.COMMAND.QUEUE queue. 
 More details about that is mentioned [here](https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q020010_.htm)
 
@@ -515,7 +515,7 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 |IBM MQ Version tested On  |7.x, 8.x, 9.x and Windows, Unix, AIX|
 |Last Update               |21st May, 2018           |
 
-List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/v7.0/CHANGELOG.md)
+List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md)
 
 
 

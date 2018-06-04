@@ -43,7 +43,6 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 		this.countDownLatch = countDownLatch;
 	}
 
-	@Override
 	public void run() {
 		try {
 			this.process();
@@ -137,21 +136,25 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 					WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
 					try{
 						PCFParameter pcfParam = response[i].getParameter(wmqOverride.getConstantValue());
-						if(pcfParam instanceof MQCFIN){
-							int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-							Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), queueName, metrickey);
-							metrics.add(metric);
-						}
-						else if(pcfParam instanceof MQCFIL){
-							int[] metricVals = response[i].getIntListParameterValue(wmqOverride.getConstantValue());
-							if(metricVals != null){
-								int count=0;
-								for(int val : metricVals){
-									count++;
-									Metric metric = createMetric(metrickey+ "_" + Integer.toString(count), val, wmqOverride, queueManager.getName(), getAtrifact(), queueName, metrickey+ "_" + Integer.toString(count));
-									metrics.add(metric);
+						if (pcfParam != null) {
+							if(pcfParam instanceof MQCFIN){
+								int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
+								Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), queueName, metrickey);
+								metrics.add(metric);
+							}
+							else if(pcfParam instanceof MQCFIL){
+								int[] metricVals = response[i].getIntListParameterValue(wmqOverride.getConstantValue());
+								if(metricVals != null){
+									int count=0;
+									for(int val : metricVals){
+										count++;
+										Metric metric = createMetric(metrickey+ "_" + Integer.toString(count), val, wmqOverride, queueManager.getName(), getAtrifact(), queueName, metrickey+ "_" + Integer.toString(count));
+										metrics.add(metric);
+									}
 								}
 							}
+						} else {
+							logger.warn("PCF parameter is null in response for Queue: {} for metric: {} in command {}", queueName, wmqOverride.getIbmCommand(),command);
 						}
 					}
 					catch (PCFException pcfe) {
@@ -165,6 +168,5 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 				logger.debug("Queue name {} is excluded.",queueName);
 			}
 		}
-
 	}
 }
