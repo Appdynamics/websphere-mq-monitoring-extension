@@ -1,4 +1,6 @@
 ### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
+# Each queueManager requires 9 threads to fetch its metrics concurrently and 1 main thread to run the extension.
+# So for ex, if there are 2 queueManagers configured, please set the numberOfThreads to be 19 (2*9+1)
 numberOfThreads: 20
 
 #This will create it in specific Tier aka Component. Replace <COMPONENT_ID>. Please make sure to have a trailing |.
@@ -7,8 +9,9 @@ metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
 
 #This is the timeout on queue metrics and channel metrics threads.Default value is 20 seconds.
 #No need to change the default unless you know what you are doing.
-#queueMetricsCollectionTimeoutInSeconds: 20
-#channelMetricsCollectionTimeoutInSeconds: 20
+#queueMetricsCollectionTimeoutInSeconds: 40
+#channelMetricsCollectionTimeoutInSeconds: 40
+#topicMetricsCollectionTimeoutInSeconds: 40
 
 #Uncomment only if encryption of passwords is wanted.
 #encryptionKey: ""
@@ -112,6 +115,9 @@ mqMetrics:
             aggregationType: "OBSERVATION"
             timeRollUpType: "AVERAGE"
             clusterRollUpType: "INDIVIDUAL"
+        - ConnectionCount:
+            alias: "ConnectionCount"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_CONNECTION_COUNT"
       
   # This Object will extract queue metrics
   - metricsType: "queueMetrics"
@@ -157,20 +163,20 @@ mqMetrics:
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_UNCOMMITTED_MSGS"
             ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
 
-        - HighQDepth:
-            alias: "HighQDepth"
-            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
-            ibmCommand: "MQCMD_RESET_Q_STATS"
+#        - HighQDepth:
+#            alias: "HighQDepth"
+#            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
+#            ibmCommand: "MQCMD_RESET_Q_STATS"
 
-        - MsgDeqCount:
-            alias: "MsgDeqCount"
-            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_DEQ_COUNT"
-            ibmCommand: "MQCMD_RESET_Q_STATS"
+#        - MsgDeqCount:
+#            alias: "MsgDeqCount"
+#            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_DEQ_COUNT"
+#            ibmCommand: "MQCMD_RESET_Q_STATS"
 
-        - MsgEnqCount:
-            alias: "MsgEnqCount"
-            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_ENQ_COUNT"
-            ibmCommand: "MQCMD_RESET_Q_STATS"
+#        - MsgEnqCount:
+#            alias: "MsgEnqCount"
+#            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_ENQ_COUNT"
+#            ibmCommand: "MQCMD_RESET_Q_STATS"
 
       
   # This Object will extract channel metrics

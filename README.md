@@ -14,11 +14,16 @@ In order to use this extension, you do need a [Standalone JAVA Machine Agent](ht
 
 If this extension is configured for **CLIENT** transport type
 1. Please make sure the MQ's host and port is accessible. 
-2. Credentials of user with correct access rights would be needed in config.yml [(more on that later)](https://github.com/Appdynamics/websphere-mq-monitoring-extension#access-permissions).
+2. Credentials of user with correct access rights would be needed in config.yml [(Access Permissions section)](https://github.com/Appdynamics/websphere-mq-monitoring-extension#access-permissions).
 3. If the hosting OS for IBM MQ is Windows, Windows user credentials will be needed.  
 
 ### Dependencies  
-The monitor has a dependency on the following seven JAR files from the IBM MQ distribution:
+The extension has a dependency on the following jar's depending on IBM MQ version:
+v8.0.0 and above
+```
+com.ibm.mq.allclient.jar
+```
+For other versions
 ``` 
 com.ibm.mq.commonservices.jar
 com.ibm.mq.jar
@@ -28,18 +33,22 @@ com.ibm.mq.headers.jar
 connector.jar
 com.ibm.mq.pcf.jar
 ```
-In newer versions of the MQ, IBM has removed **connector.jar** & **dhbcore.jar** and merged its contents in **com.ibm.mq.allclient.jar**.
-These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server but may be found in an alternate location depending upon your environment. In case **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars. To download IBM MQ Client jars, see [here](https://www-01.ibm.com/software/integration/wmq/clients/)
+
+These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server but may be found in an alternate location depending upon your environment. In case of **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars. To download IBM MQ Client jars, see [here](https://developer.ibm.com/messaging/mq-downloads/)
 
 ## Installation
 1. To build from source, clone this repository and run `mvn clean install` from websphere-mq-monitoring-extension directory. This will produce a WMQMonitor-\<version\>.zip in target directory. Alternatively download the latest release archive from [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/releases).
 2. Unzip contents of WMQMonitor-\<version\>.zip file and copy to <code><machine-agent-dir>/monitors</code> directory. Do not place the extension in the "extensions" directory of your Machine Agent installation directory.
 3. There are two transport modes in which this extension can be run
    * **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
-   * **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://www-01.ibm.com/software/integration/wmq/clients/) for this mode to get the necessary jars as mentioned previously. 
+   * **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://developer.ibm.com/messaging/mq-downloads/) for this mode to get the necessary jars as mentioned previously. 
 4. Edit the classpath element in WMQMonitor/monitor.xml with the absolute path to the required jar files.
    ```
-    <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.commonservices.jar;/opt/mqm/java/lib/com.ibm.mq.jar;/opt/mqm/java/lib/com.ibm.mq.jmqi.jar;/opt/mqm/java/lib/com.ibm.mq.headers.jar;/opt/mqm/java/lib/com.ibm.mq.pcf.jar;/opt/mqm/java/lib/com.ibm.mq.allclient.jar</classpath>
+    <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.allclient.jar</classpath>
+   ```
+   OR
+   ```
+       <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.jar;/opt/mqm/java/lib/com.ibm.mq.jmqi.jar;/opt/mqm/java/lib/com.ibm.mq.commonservices.jar;/opt/mqm/java/lib/com.ibm.mq.headers.jar;/opt/mqm/java/lib/com.ibm.mq.pcf.jar;/opt/mqm/java/lib/connector.jar;/opt/mqm/java/lib/dhbcore.jar</classpath>
    ```
 5. If you plan to use **Client** transport type, create a channel of type server connection in each of the queue manager you wish to query. 
 6. Edit the config.yml file.  An example config.yml file follows these installation instructions.
@@ -75,7 +84,9 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
 
         #This is the timeout on queue metrics threads.Default value is 20 seconds. No need to change the default
         #Unless you know what you are doing.
-        queueMetricsCollectionTimeoutInSeconds: 20
+        #queueMetricsCollectionTimeoutInSeconds: 20
+        #channelMetricsCollectionTimeoutInSeconds: 20
+        #topicsMetricsCollectionTimeoutInSeconds: 20
         
         queueFilters:
             #An asterisk on its own matches all possible names.
@@ -156,6 +167,9 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
             - Status:
                 alias: "Status"
                 ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
+            - ConnectionCount:
+                alias: "ConnectionCount"
+                ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_CONNECTION_COUNT"
           
       # This Object will extract queue metrics
       - metricsType: "queueMetrics"
@@ -277,7 +291,8 @@ By default, the PCF responses are sent to the SYSTEM.DEFAULT.MODEL.QUEUE. Using 
 More details mentioned [here](https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q083240_.htm)
 
 ### Access Permissions
-If you are in **Bindings** mode, please make sure to start the MA process under a user which has permissions to inquire,get,put (since PCF responses cause dynamic queues to be created) on the broker. Similarly, for **Client** mode provide the credentials which have enough access permissions.
+If you are in **Bindings** mode, please make sure to start the MA process under a user which has the following permissions on the broker. Similarly, for **Client** mode, please provide the user credentials in config.yml which have permissions listed below.
+The user connecting to the queueManager should have the inquire, get, put (since PCF responses cause dynamic queues to be created) permissions. For metrics that execute MQCMD_RESET_Q_STATS command, chg permission is needed.
 
 ### SSL Support
 Configure the IBM SSL Cipher Suite in the config.yaml. 
@@ -317,6 +332,7 @@ The metrics will be reported under the tree ```Application Infrastructure Perfor
 ### QueueMetrics
 
 #### [QueueMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087810_.htm)
+This metrics below are only for the local queues, as these metrics are irrelevant for [other queues](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.explorer.doc/e_queues.htm).
 <table><tbody>
 <tr>
 <th align="left"> Metric Name </th>
@@ -383,7 +399,7 @@ The metrics will be reported under the tree ```Application Infrastructure Perfor
 </tbody>
 </table>
 
-### [ChannelMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087850_.htm)
+### [ChannelMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087560_.htm)
 
 <table><tbody>
 <tr>
@@ -479,7 +495,7 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
    Another way to get around this issue is to avoid using the Bindings mode. Connect using CLIENT transport type from a remote box. Make sure to provide Windows admin username and password in the config.yaml.
 
 5. Error `Completion Code '2', Reason '2035'`
-   This could happen for various reasons but for most of the cases, for **Client** mode the user specified in config.yaml is not authorized to access the queue manager. Also sometimes even if userid and password are correct, channel auth (CHLAUTH) for that queue manager blocks traffics from other ips, you need to contact admin to provide you access to the queue manager.
+   This could happen for various reasons but for most of the cases, for **Client** mode the user specified in config.yml is not authorized to access the queue manager. Also sometimes even if userid and password are correct, channel auth (CHLAUTH) for that queue manager blocks traffics from other ips, you need to contact admin to provide you access to the queue manager.
    For Bindings mode, please make sure that the MA is owned by a mqm user. Please check [this doc](https://www-01.ibm.com/support/docview.wss?uid=swg21636093) 
   
 6. MQJE001: Completion Code '2', Reason '2195'
@@ -510,10 +526,10 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 ## Version
 |          Name            |  Version                |
 |--------------------------|-------------------------|
-|Extension Version         |7.0.0                    |
+|Extension Version         |7.0.1                    |
 |Controller Compatibility  |4.2 +                    |
 |IBM MQ Version tested On  |7.x, 8.x, 9.x and Windows, Unix, AIX|
-|Last Update               |21st May, 2018           |
+|Last Update               |26th September, 2018           |
 
 List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md)
 

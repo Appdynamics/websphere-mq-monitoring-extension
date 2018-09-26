@@ -78,7 +78,7 @@ queueManagers:
            #type value: STARTSWITH, EQUALS, ENDSWITH, CONTAINS
            - type: "STARTSWITH"
            #The name of the queue or queue name pattern as per queue filter, comma separated values
-             values: ["SYSTEM"]
+             values: ["SYSTEM", "TEST"]
 
     listenerFilters:
         #Can provide complete channel name or generic names. A generic name is a character string followed by an asterisk (*),
@@ -109,6 +109,9 @@ mqMetrics:
         - Status:
             alias: "Status"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
+        - ConnectionCount:
+            alias: "ConnectionCount"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_CONNECTION_COUNT"
 
   # This Object will extract queue metrics
   - metricsType: "queueMetrics"

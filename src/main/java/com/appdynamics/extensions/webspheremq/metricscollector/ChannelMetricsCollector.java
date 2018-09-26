@@ -76,7 +76,7 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 
 		Set<String> channelGenericNames = this.queueManager.getChannelFilters().getInclude();
 
-		Integer activeChannelsCount = null;
+		List<String> activeChannels = Lists.newArrayList();
 		for(String channelGenericName : channelGenericNames){
 			PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS);
 			request.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, channelGenericName);
@@ -107,7 +107,7 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 							metrics.add(metric);
 							if ("Status".equals(metrickey)) {
 								if (metricVal == 3) {
-									activeChannelsCount = (activeChannelsCount == null) ? new Integer(0).intValue() + 1 : activeChannelsCount++;
+									activeChannels.add(channelName);
 								}
 							}
 						}
@@ -132,10 +132,10 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 				logger.error("Unexpected Error occoured while collecting metrics for channel " + channelGenericName, e);
 			}
 		}
-		if (activeChannelsCount != null) {
-			Metric activeChannelsCountMetric = createMetric("ActiveChannelsCount", activeChannelsCount, null, queueManager.getName(), getAtrifact(), "ActiveChannelsCount");
-			publishMetrics(Lists.newArrayList(Arrays.asList(activeChannelsCountMetric)));
-		}
+
+		logger.info("Active Channels in queueManager {} are {}", queueManager.getName(), activeChannels);
+		Metric activeChannelsCountMetric = createMetric("ActiveChannelsCount", activeChannels.size(), null, queueManager.getName(), getAtrifact(), "ActiveChannelsCount");
+		publishMetrics(Arrays.asList(activeChannelsCountMetric));
 
 		long exitTime = System.currentTimeMillis() - entryTime;
 		logger.debug("Time taken to publish metrics for all channels is {} milliseconds", exitTime);
@@ -145,7 +145,6 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 	public String getAtrifact() {
 		return artifact;
 	}
-
 
 	public Map<String, WMQMetricOverride> getMetricsToReport() {
 		return this.metricsToReport;

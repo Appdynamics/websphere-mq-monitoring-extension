@@ -63,7 +63,7 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
         for(Future f: futures){
             try {
                 long timeout = 20;
-                if(monitorContextConfig.getConfigYml().get("topicsMetricsCollectionTimeoutInSeconds") != null){
+                if(monitorContextConfig.getConfigYml().get("topicMetricsCollectionTimeoutInSeconds") != null){
                     timeout = (Integer)monitorContextConfig.getConfigYml().get("topicMetricsCollectionTimeoutInSeconds");
                 }
                 f.get(timeout, TimeUnit.SECONDS);
