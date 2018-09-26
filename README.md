@@ -19,11 +19,12 @@ If this extension is configured for **CLIENT** transport type
 
 ### Dependencies  
 The extension has a dependency on the following jar's depending on IBM MQ version:
-v8.0.0 and above
+
+* v8.0.0 and above
 ```
 com.ibm.mq.allclient.jar
 ```
-For other versions
+* For other versions
 ``` 
 com.ibm.mq.commonservices.jar
 com.ibm.mq.jar
@@ -34,7 +35,9 @@ connector.jar
 com.ibm.mq.pcf.jar
 ```
 
-These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server but may be found in an alternate location depending upon your environment. In case of **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars. To download IBM MQ Client jars, see [here](https://developer.ibm.com/messaging/mq-downloads/)
+These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server but may be found in an alternate location depending upon your environment. 
+
+In case of **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars. To download IBM MQ Client jars, see [here](https://developer.ibm.com/messaging/mq-downloads/)
 
 ## Installation
 1. To build from source, clone this repository and run `mvn clean install` from websphere-mq-monitoring-extension directory. This will produce a WMQMonitor-\<version\>.zip in target directory. Alternatively download the latest release archive from [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/releases).
@@ -292,6 +295,7 @@ More details mentioned [here](https://www.ibm.com/support/knowledgecenter/SSFKSJ
 
 ### Access Permissions
 If you are in **Bindings** mode, please make sure to start the MA process under a user which has the following permissions on the broker. Similarly, for **Client** mode, please provide the user credentials in config.yml which have permissions listed below.
+
 The user connecting to the queueManager should have the inquire, get, put (since PCF responses cause dynamic queues to be created) permissions. For metrics that execute MQCMD_RESET_Q_STATS command, chg permission is needed.
 
 ### SSL Support
@@ -516,7 +520,7 @@ Please provide the following in order for us to assist you better.  
    * \<logger name="com.appdynamics"\>
 4. Start the machine agent and please let it run for 10 mins. Then zip and upload all the logs in the directory \<MachineAgent\>/logs/*.
 5. Attach the zipped \<MachineAgent\>/conf/* directory here.
- 6. Attach the zipped \<MachineAgent\>/monitors/ExtensionFolderYouAreHavingIssuesWith directory here .
+6. Attach the zipped \<MachineAgent\>/monitors/ExtensionFolderYouAreHavingIssuesWith directory here.
 
 For any support related questions, you can also contact help@appdynamics.com.
 
