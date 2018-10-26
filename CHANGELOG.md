@@ -1,3 +1,9 @@
+### Version 7.0.1
+Bug Fixes
+* Active Channel Count
+* CountDownLatch count fix for collectors
+* Doc update for jar dependencies
+
 ### Version 7.0.0
 * Porting to appd-exts-commons 2.1.0
 * Support for Topic Metrics

@@ -75,7 +75,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			cleanUp(ibmQueueManager, agent);
 			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorContextConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), heartBeatMetricValue, "AVG.AVG.IND");
 			long endTime = System.currentTimeMillis() - startTime;
-			logger.debug("WMQMonitor thread for queueManager " + queueManager.getName() + " ended. Time taken = " + endTime);
+			logger.debug("WMQMonitor thread for queueManager " + queueManager.getName() + " ended. Time taken = " + endTime + " ms");
 		}
 	}
 
@@ -126,10 +126,10 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		return agent;
 	}
 
-	private void extractAndReportMetrics(PCFMessageAgent agent) throws TaskExecutionException {
+	private void extractAndReportMetrics(PCFMessageAgent agent) {
 		Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
 
-        CountDownLatch countDownLatch = new CountDownLatch(5);
+		CountDownLatch countDownLatch = new CountDownLatch(metricsMap.size());
 
 		Map<String, WMQMetricOverride> qMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
 		if (qMgrMetricsToReport != null) {
@@ -171,11 +171,11 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			logger.warn("No topic metrics to report");
 		}
 
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            logger.error("Error while the thread {} is waiting ", Thread.currentThread().getName(), e);
-        }
+		try {
+			countDownLatch.await();
+		} catch (InterruptedException e) {
+			logger.error("Error while the thread {} is waiting ", Thread.currentThread().getName(), e);
+		}
 
     }
 

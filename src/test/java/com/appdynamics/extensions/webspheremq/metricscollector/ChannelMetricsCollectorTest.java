@@ -92,10 +92,10 @@ public class ChannelMetricsCollectorTest {
                         Assert.assertFalse(metric.getMetricValue().equals("10"));
                     }
                     if (metric.getMetricPath().equals("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QM1|Channels|DEV.APP.SVRCONN|Status")) {
-                        Assert.assertTrue(metric.getMetricValue().equals("4"));
+                        Assert.assertTrue(metric.getMetricValue().equals("3"));
                     }
                     if (metric.getMetricPath().equals("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QM1|Channels|ActiveChannelsCount")) {
-                        Assert.assertTrue(metric.getMetricValue().equals("1"));
+                        Assert.assertTrue(metric.getMetricValue().equals("2"));
                     }
                 }
             }
@@ -150,10 +150,23 @@ public class ChannelMetricsCollectorTest {
         response2.addParameter(CMQCFC.MQCACH_CONNECTION_NAME, "172.17.0.2 ");
         response2.addParameter(CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE, 1011);
         response2.addParameter(CMQCFC.MQIACH_MSGS, 17);
-        response2.addParameter(CMQCFC.MQIACH_CHANNEL_STATUS, 4);
+        response2.addParameter(CMQCFC.MQIACH_CHANNEL_STATUS, 3);
         response2.addParameter(CMQCFC.MQIACH_CHANNEL_SUBSTATE, 300);
 
-        PCFMessage [] messages = {response1, response2};
+        PCFMessage response3 = new PCFMessage(2, CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS, 2, true);
+        response3.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, "TEST.APP.SVRCONN");
+        response3.addParameter(CMQCFC.MQIACH_CHANNEL_TYPE, 7);
+        response3.addParameter(CMQCFC.MQIACH_BUFFERS_RECEIVED, 20);
+        response3.addParameter(CMQCFC.MQIACH_BUFFERS_SENT, 19);
+        response3.addParameter(CMQCFC.MQIACH_BYTES_RECEIVED, 5772);
+        response3.addParameter(CMQCFC.MQIACH_BYTES_SENT, 6984);
+        response3.addParameter(CMQCFC.MQCACH_CONNECTION_NAME, "172.17.0.2 ");
+        response3.addParameter(CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE, 1011);
+        response3.addParameter(CMQCFC.MQIACH_MSGS, 17);
+        response3.addParameter(CMQCFC.MQIACH_CHANNEL_STATUS, 3);
+        response3.addParameter(CMQCFC.MQIACH_CHANNEL_SUBSTATE, 300);
+
+        PCFMessage [] messages = {response1, response2, response3};
         return messages;
     }
 
