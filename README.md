@@ -29,10 +29,10 @@ com.ibm.mq.allclient.jar
 com.ibm.mq.commonservices.jar
 com.ibm.mq.jar
 com.ibm.mq.jmqi.jar
-dhbcore.jar
 com.ibm.mq.headers.jar
-connector.jar
 com.ibm.mq.pcf.jar
+dhbcore.jar
+connector.jar
 ```
 
 These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server but may be found in an alternate location depending upon your environment. 
@@ -45,13 +45,13 @@ In case of **CLIENT** transport type, IBM MQ Client must be installed to get the
 3. There are two transport modes in which this extension can be run
    * **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
    * **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://developer.ibm.com/messaging/mq-downloads/) for this mode to get the necessary jars as mentioned previously. 
-4. Edit the classpath element in WMQMonitor/monitor.xml with the absolute path to the required jar files.
+4. Edit the classpath element in WMQMonitor/monitor.xml with the path to the required jar files.
    ```
     <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.allclient.jar</classpath>
    ```
    OR
    ```
-       <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.jar;/opt/mqm/java/lib/com.ibm.mq.jmqi.jar;/opt/mqm/java/lib/com.ibm.mq.commonservices.jar;/opt/mqm/java/lib/com.ibm.mq.headers.jar;/opt/mqm/java/lib/com.ibm.mq.pcf.jar;/opt/mqm/java/lib/connector.jar;/opt/mqm/java/lib/dhbcore.jar</classpath>
+    <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.jar;/opt/mqm/java/lib/com.ibm.mq.jmqi.jar;/opt/mqm/java/lib/com.ibm.mq.commonservices.jar;/opt/mqm/java/lib/com.ibm.mq.headers.jar;/opt/mqm/java/lib/com.ibm.mq.pcf.jar;/opt/mqm/java/lib/connector.jar;/opt/mqm/java/lib/dhbcore.jar</classpath>
    ```
 5. If you plan to use **Client** transport type, create a channel of type server connection in each of the queue manager you wish to query. 
 6. Edit the config.yml file.  An example config.yml file follows these installation instructions.
@@ -383,6 +383,7 @@ This metrics below are only for the local queues, as these metrics are irrelevan
 </table>
 
 #### [ResetQueueStatistics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q088310_.htm)
+The following metrics are extracted using the MQCMD_RESET_Q_STATS command which would reset the stats on the QM for that queue.
 <table><tbody>
 <tr>
 <th align="left"> Metric Name </th>
@@ -478,15 +479,12 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
 
 ## Troubleshooting
 1. Please follow the steps listed in this [troubleshooting-document](https://community.appdynamics.com/t5/Knowledge-Base/How-to-troubleshoot-missing-custom-metrics-or-extensions-metrics/ta-p/28695) in order to troubleshoot your issue. These are a set of common issues that customers might have faced during the installation of the extension. If these don't solve your issue, please follow the last step on the troubleshooting-document to contact the support team.
-2. MQ Version incompatibilities :  In case of any jar incompatibility issue, the rule of thumb is to **Use the jars from MQ version 7.5**. We have seen some jar incompatibility issues on IBM version 7.0.x ,version 7.1.x and version 8.x when the extension is configured in **Client** mode. However, after replacing the jars with MQ version 7.5's jars, everything worked fine. 
-3. `The config cannot be null` error.
-   This usually happenes when on a windows machine in monitor.xml you give config.yaml file path with linux file path separator `/`. Use Windows file path separator `\` e.g. `monitors\MQMonitor\config.yaml` .
-4. Error `Completion Code '2', Reason '2495'`
+2. Error `Completion Code '2', Reason '2495'`
    Normally this error occurs if the environment variables are not set up correctly for this extension to work MQ in Bindings Mode.
    
    If you are seeing `Failed to load the WebSphere MQ native JNI library: 'mqjbnd'`, please add the following jvm argument when starting the MA. 
    
-   -Djava.library.path=\<path to lib64 directory\> For eg. on Unix it could -Djava.library.path=/opt/mqm/java/lib64 
+   -Djava.library.path=\<path to libmqjbnd.so\> For eg. on Unix it could -Djava.library.path=/opt/mqm/java/lib64 for 64-bit or -Djava.library.path=/opt/mqm/java/lib for 32-bit OS
    
    Sometimes you also have run the setmqenv script before using the above jvm argument to start the machine agent. 
    
@@ -498,14 +496,14 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
    
    Another way to get around this issue is to avoid using the Bindings mode. Connect using CLIENT transport type from a remote box. Make sure to provide Windows admin username and password in the config.yaml.
 
-5. Error `Completion Code '2', Reason '2035'`
+3. Error `Completion Code '2', Reason '2035'`
    This could happen for various reasons but for most of the cases, for **Client** mode the user specified in config.yml is not authorized to access the queue manager. Also sometimes even if userid and password are correct, channel auth (CHLAUTH) for that queue manager blocks traffics from other ips, you need to contact admin to provide you access to the queue manager.
    For Bindings mode, please make sure that the MA is owned by a mqm user. Please check [this doc](https://www-01.ibm.com/support/docview.wss?uid=swg21636093) 
   
-6. MQJE001: Completion Code '2', Reason '2195'
-   This could happen in **Client** mode. Please make sure that the IBM MQ dependency jars are correctly referenced in classpath of monitor.xml, copying jars to a different directory is not recommended by IBM. Another way this could be fixed is to use 7.5.2 version of the jars. 
+4. MQJE001: Completion Code '2', Reason '2195'
+   This could happen in **Client** mode. Please make sure that the IBM MQ dependency jars are correctly referenced in classpath of monitor.xml 
 
-7. MQJE001: Completion Code '2', Reason '2400'
+5. MQJE001: Completion Code '2', Reason '2400'
    This could happen if unsupported cipherSuite is provided or JRE not having/enabled unlimited jurisdiction policy files. Please check SSL Support section.
 
 ## Support Tickets
@@ -533,7 +531,7 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 |Extension Version         |7.0.1                    |
 |Controller Compatibility  |4.2 +                    |
 |IBM MQ Version tested On  |7.x, 8.x, 9.x and Windows, Unix, AIX|
-|Last Update               |26th September, 2018           |
+|Last Update               |12th November, 2018           |
 
 List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md)
 
