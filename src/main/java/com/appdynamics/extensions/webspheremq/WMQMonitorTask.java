@@ -107,17 +107,23 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 				agent.setModelQueueName(queueManager.getModelQueueName());
 				agent.setReplyQueuePrefix(queueManager.getReplyQueuePrefix());
 				logger.debug("Connecting to queueManager to set the modelQueueName and replyQueuePrefix.");
-				agent.connect(ibmQueueManager);
-			}
-			else{
-				agent = new PCFMessageAgent(ibmQueueManager);
 			}
 			if(queueManager.getCcsid() != Integer.MIN_VALUE){
+				if (agent == null) {
+					agent = new PCFMessageAgent();
+				}
 				agent.setCharacterSet(queueManager.getCcsid());
 			}
-
 			if(queueManager.getEncoding() != Integer.MIN_VALUE){
+				if (agent == null) {
+					agent = new PCFMessageAgent();
+				}
 				agent.setEncoding(queueManager.getEncoding());
+			}
+			if (agent != null) {
+				agent.connect(ibmQueueManager);
+			} else {
+				agent = new PCFMessageAgent(ibmQueueManager);
 			}
 			logger.debug("Intialized PCFMessageAgent for queueManager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 		} catch (MQException mqe) {
