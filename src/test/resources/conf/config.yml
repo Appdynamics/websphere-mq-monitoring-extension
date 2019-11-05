@@ -29,7 +29,7 @@ queueManagers:
     #This field is not required in case of transportType: Bindings
     channelName: "DEV.ADMIN.SVRCONN"
 
-    #user with admin level access.
+    #for user access level, please check "Access Permissions" section on the extensions page
     #comment out the username and password in case of transportType: Bindings.
     username: ""
     password: ""
@@ -223,3 +223,13 @@ mqMetrics:
 taskSchedule:
   numberOfThreads: 1
   taskDelaySeconds: 1800
+
+
+sslConnection:
+  trustStorePath: ""
+  trustStorePassword: ""
+  trustStoreEncryptedPassword: ""
+
+  keyStorePath: ""
+  keyStorePassword: ""
+  keyStoreEncryptedPassword: ""
