@@ -102,7 +102,7 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
                         PCFParameter pcfParam = response[i].getParameter(wmqOverride.getConstantValue());
                         if(pcfParam instanceof MQCFIN){
                             int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-                            Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), topicString, metrickey);
+                            Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), topicString, metrickey);
                             metrics.add(metric);
                         }
                     }

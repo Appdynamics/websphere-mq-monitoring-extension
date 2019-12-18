@@ -14,7 +14,8 @@ metricPrefix: "Server|Component:Tier1|Custom Metrics|WebsphereMQ|"
 #encryptionKey: ""
 
 queueManagers:
-  - host: "localhost"
+  - displayName: "QueueManager1"
+    host: "localhost"
     port: 1414
 
     #Actual name of the queue manager

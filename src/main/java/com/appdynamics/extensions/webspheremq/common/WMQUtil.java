@@ -7,7 +7,9 @@
 
 package com.appdynamics.extensions.webspheremq.common;
 
+import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,5 +60,13 @@ public class WMQUtil {
             logger.debug("Override Definition: " + override.toString());
         }
         return overrideMap;
+    }
+
+    public static String getQueueManagerNameFromConfig(QueueManager queueManager) {
+        if (!Strings.isNullOrEmpty(queueManager.getDisplayName())) {
+            return queueManager.getDisplayName();
+        } else {
+            return queueManager.getName();
+        }
     }
 }

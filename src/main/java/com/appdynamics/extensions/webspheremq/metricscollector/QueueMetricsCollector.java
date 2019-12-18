@@ -139,7 +139,7 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 						if (pcfParam != null) {
 							if(pcfParam instanceof MQCFIN){
 								int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-								Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), queueName, metrickey);
+								Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), queueName, metrickey);
 								metrics.add(metric);
 							}
 							else if(pcfParam instanceof MQCFIL){
@@ -148,7 +148,7 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 									int count=0;
 									for(int val : metricVals){
 										count++;
-										Metric metric = createMetric(metrickey+ "_" + Integer.toString(count), val, wmqOverride, queueManager.getName(), getAtrifact(), queueName, metrickey+ "_" + Integer.toString(count));
+										Metric metric = createMetric(queueManager, metrickey+ "_" + Integer.toString(count), val, wmqOverride, getAtrifact(), queueName, metrickey+ "_" + Integer.toString(count));
 										metrics.add(metric);
 									}
 								}

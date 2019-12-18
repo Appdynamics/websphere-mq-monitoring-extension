@@ -17,7 +17,9 @@ metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
 #encryptionKey: ""
 
 queueManagers:
-  - host: "localhost"
+  - displayName: ""
+    # displayName (optional). This will be your QM name that will show up in AppD metric path.
+    host: "localhost"
     port: 1414
 
     #Actual name of the queue manager
@@ -151,17 +153,17 @@ mqMetrics:
             timeRollUpType: "CURRENT"
             clusterRollUpType: "INDIVIDUAL"
 
-        - OnQTime:
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
-            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
-            aggregationType: "OBSERVATION"
-            timeRollUpType: "CURRENT"
-            clusterRollUpType: "INDIVIDUAL"
-
         - UncommittedMsgs:
             alias: "UncommittedMsgs"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_UNCOMMITTED_MSGS"
             ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+
+#        - OnQTime:
+#            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
+#            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+#            aggregationType: "OBSERVATION"
+#            timeRollUpType: "CURRENT"
+#            clusterRollUpType: "INDIVIDUAL"
 
 #        - HighQDepth:
 #            alias: "HighQDepth"

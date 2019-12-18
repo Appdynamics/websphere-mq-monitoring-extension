@@ -86,7 +86,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
                             String metrickey = itr.next();
                             WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
                             int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-                            Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), listenerName, metrickey);
+                            Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), listenerName, metrickey);
                             metrics.add(metric);
                         }
                         publishMetrics(metrics);

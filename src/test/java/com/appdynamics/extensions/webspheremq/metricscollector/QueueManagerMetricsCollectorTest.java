@@ -16,6 +16,7 @@ import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.common.WMQUtil;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQC;
@@ -25,6 +26,7 @@ import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+import static org.hamcrest.CoreMatchers.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -92,7 +95,6 @@ public class QueueManagerMetricsCollectorTest {
                         Assert.assertTrue(metric.getMetricValue().equals("2"));
                         Assert.assertFalse(metric.getMetricValue().equals("10"));
                     }
-
                 }
             }
         }
@@ -146,6 +148,23 @@ public class QueueManagerMetricsCollectorTest {
 
         PCFMessage [] messages = {response1};
         return messages;
+    }
+
+    @Test
+    public void testDisplayName() throws MQException, IOException, TaskExecutionException {
+        when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireQMgrStatusCmd());
+        classUnderTest = new QueueManagerMetricsCollector(queueMgrMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
+        classUnderTest.publishMetrics();
+        verify(metricWriteHelper, times(1)).transformAndPrintMetrics(pathCaptor.capture());
+        List<String> metricPathsList = Lists.newArrayList();
+        for (List<Metric> metricList : pathCaptor.getAllValues()) {
+            for (Metric metric : metricList) {
+                metricPathsList.add(metric.getMetricPath());
+            }
+        }
+        Assert.assertEquals(queueManager.getDisplayName(), "QueueManager1");
+        Assert.assertThat(metricPathsList, hasItem("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QueueManager1|Status"));
+        Assert.assertThat(metricPathsList, not(hasItem("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QManager|Status")));
     }
 
 }

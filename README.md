@@ -71,7 +71,9 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
 3. Configure the queueManages with appropriate fields and filters. Below sample consists of 2 queueManagers. 
    ```
     queueManagers:
-      - host: "192.168.57.104"
+      - displayName: ""
+        # displayName (optional). This will be your QM name that will show up in AppD metric path. If empty, name (below) will show up.
+        host: "192.168.57.104"
         port: 1414
         #Actual name of the queue manager
         name: "TEST_QM_1"
@@ -302,13 +304,14 @@ The user connecting to the queueManager should have the inquire, get, put (since
 ### SSL Support
 1. Configure the IBM SSL Cipher Suite in the config.yml.
     Note that, to use some CipherSuites the unrestricted policy needs to be configured in JRE. Please visit [this link](http://www.ibm.com/support/knowledgecenter/SSYKE2_8.0.0/com.ibm.java.security.component.80.doc/security-component/sdkpolicyfiles.html
-    ) for more details. For Oracle JRE, please update with [JCE Unlimited Strength Jurisdiction Policy](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html)
+    ) for more details. For Oracle JRE, please update with [JCE Unlimited Strength Jurisdiction Policy](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html). The download includes a readme file with instructions on how to apply these files to JRE
 
 2. Please add the following JVM arguments to the MA start up command or script. 
 
     ```-Dcom.ibm.mq.cfg.useIBMCipherMappings=false```  (If you are using IBM Cipher Suites, set the flag to true. Please visit [this link](http://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.dev.doc/q113210_.htm) for more details.
     )
-3. To configure SSL, the MA's trust store and keystore needs to be setup with the JKS filepath. They can be passed either as Machine Agent JVM arguments or configured in config.yml (sslConnection)
+3. To configure SSL, the MA's trust store and keystore needs to be setup with the JKS filepath. They can be passed either as Machine Agent JVM arguments or configured in config.yml (sslConnection) <br />
+    
     a. Machine Agent JVM arguments as follows:
 
     ```-Djavax.net.ssl.trustStore=<PATH_TO_JKS_FILE>```<br />
@@ -541,10 +544,10 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 ## Version
 |          Name            |  Version                |
 |--------------------------|-------------------------|
-|Extension Version         |7.0.1                    |
+|Extension Version         |7.0.3                    |
 |Controller Compatibility  |4.2 +                    |
 |IBM MQ Version tested On  |7.x, 8.x, 9.x and Windows, Unix, AIX|
-|Last Update               |12th November, 2018           |
+|Last Update               |18th December, 2019           |
 
 List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md)
 
