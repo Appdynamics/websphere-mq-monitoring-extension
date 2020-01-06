@@ -8,9 +8,13 @@
 package com.appdynamics.extensions.webspheremq;
 
 import com.appdynamics.extensions.ABaseMonitor;
+import com.appdynamics.extensions.TaskInputArgs;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
+import com.appdynamics.extensions.crypto.CryptoUtil;
 import com.appdynamics.extensions.util.AssertUtils;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,5 +49,58 @@ public class WMQMonitor extends ABaseMonitor {
 		List queueManagers = ((List)this.getContextConfiguration().getConfigYml().get("queueManagers"));
 		AssertUtils.assertNotNull(queueManagers, "The 'queueManagers' section in config.yml is not initialised");
 		return queueManagers.size();
+	}
+
+	@Override
+	protected void initializeMoreStuff(Map<String, String> args) {
+		super.initializeMoreStuff(args);
+		Map<String, ?> configProperties = this.getContextConfiguration().getConfigYml();
+		Map<String, String> sslConnection = (Map<String, String>) configProperties.get("sslConnection");
+
+		if (sslConnection != null ) {
+			String encryptionKey = (String) configProperties.get("encryptionKey");
+			logger.debug("Encryption key from config.yml set for ssl connection is " + encryptionKey);
+
+			String trustStorePath = sslConnection.get("trustStorePath");
+			if (!Strings.isNullOrEmpty(trustStorePath)) {
+				System.setProperty("javax.net.ssl.trustStore",trustStorePath);
+				logger.debug("System property set for javax.net.ssl.trustStore is " + trustStorePath);
+				String trustStorePassword = getPassword(sslConnection.get("trustStorePassword"), sslConnection.get("trustStoreEncryptedPassword"), encryptionKey);
+				if (!Strings.isNullOrEmpty(trustStorePassword)) {
+					System.setProperty("javax.net.ssl.trustStorePassword", trustStorePassword);
+					logger.debug("System property set for javax.net.ssl.trustStorePassword is xxxxx");
+				}
+			} else {
+				logger.debug("trustStorePath is not set in config.yml, ignoring setting trustStorePath as system property");
+			}
+
+			String keyStorePath = sslConnection.get("keyStorePath");
+			if (!Strings.isNullOrEmpty(keyStorePath)) {
+				System.setProperty("javax.net.ssl.keyStore", keyStorePath);
+				logger.debug("System property set for javax.net.ssl.keyStore is " + keyStorePath);
+				String keyStorePassword = getPassword(sslConnection.get("keyStorePassword"), sslConnection.get("keyStoreEncryptedPassword"), encryptionKey);
+				if (!Strings.isNullOrEmpty(keyStorePassword)) {
+					System.setProperty("javax.net.ssl.keyStorePassword",keyStorePassword);
+					logger.debug("System property set for javax.net.ssl.keyStorePassword is xxxxx");
+				}
+			} else {
+				logger.debug("keyStorePath is not set in config.yml, ignoring setting keyStorePath as system property");
+			}
+		} else {
+			logger.debug("ssl truststore and keystore are not configured in config.yml, if SSL is enabled, pass them as jvm args");
+		}
+	}
+
+	private String getPassword(String password, String encryptedPassword, String encryptionKey) {
+		if (!Strings.isNullOrEmpty(password)) {
+			return password;
+		}
+		if (!Strings.isNullOrEmpty(encryptionKey) && !Strings.isNullOrEmpty(encryptedPassword)) {
+			Map<String, String> cryptoMap = Maps.newHashMap();
+			cryptoMap.put(TaskInputArgs.ENCRYPTED_PASSWORD, encryptedPassword);
+			cryptoMap.put(TaskInputArgs.ENCRYPTION_KEY, encryptionKey);
+			return CryptoUtil.getPassword(cryptoMap);
+		}
+		return null;
 	}
 }

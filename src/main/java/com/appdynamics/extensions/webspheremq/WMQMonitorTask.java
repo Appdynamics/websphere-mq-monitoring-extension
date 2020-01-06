@@ -55,27 +55,28 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 	}
 
 	public void run() {
-		logger.debug("WMQMonitor thread for queueManager " + queueManager.getName() + " started.");
+		String queueManagerTobeDisplayed = WMQUtil.getQueueManagerNameFromConfig(queueManager);
+		logger.debug("WMQMonitor thread for queueManager " + queueManagerTobeDisplayed + " started.");
 		long startTime = System.currentTimeMillis();
 		MQQueueManager ibmQueueManager = null;
 		PCFMessageAgent agent = null;
 		try {
 			ibmQueueManager = initMQQueueManager();
 			if (ibmQueueManager != null) {
-				logger.debug("MQQueueManager connection initiated for queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName());
+				logger.debug("MQQueueManager connection initiated for queueManager {} in thread {}", queueManagerTobeDisplayed, Thread.currentThread().getName());
 				heartBeatMetricValue = BigDecimal.ONE;
 				agent = initPCFMesageAgent(ibmQueueManager);
 				extractAndReportMetrics(agent);
 			} else {
-				logger.error("MQQueueManager connection could not be initiated for queueManager {} in thread {} ", queueManager.getName(), Thread.currentThread().getName());
+				logger.error("MQQueueManager connection could not be initiated for queueManager {} in thread {} ", queueManagerTobeDisplayed, Thread.currentThread().getName());
 			}
 		} catch (Exception e) {
 			logger.error("Error in run of " + Thread.currentThread().getName(), e);
 		} finally {
 			cleanUp(ibmQueueManager, agent);
-			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorContextConfig.getMetricPrefix(), queueManager.getName(), "HeartBeat"), heartBeatMetricValue, "AVG.AVG.IND");
+			metricWriteHelper.printMetric(StringUtils.concatMetricPath(monitorContextConfig.getMetricPrefix(), queueManagerTobeDisplayed, "HeartBeat"), heartBeatMetricValue, "AVG.AVG.IND");
 			long endTime = System.currentTimeMillis() - startTime;
-			logger.debug("WMQMonitor thread for queueManager " + queueManager.getName() + " ended. Time taken = " + endTime + " ms");
+			logger.debug("WMQMonitor thread for queueManager " + queueManagerTobeDisplayed + " ended. Time taken = " + endTime + " ms");
 		}
 	}
 
@@ -209,6 +210,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 	}
 
 	public void onTaskComplete() {
-		logger.info("WebSphereMQ monitor thread completed for queueManager:" + queueManager.getName());
+		logger.info("WebSphereMQ monitor thread completed for queueManager:" + WMQUtil.getQueueManagerNameFromConfig(queueManager));
 	}
+
 }

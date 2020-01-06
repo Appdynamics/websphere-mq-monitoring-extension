@@ -10,6 +10,7 @@ package com.appdynamics.extensions.webspheremq.metricscollector;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
+import com.appdynamics.extensions.webspheremq.common.WMQUtil;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
@@ -103,7 +104,7 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 							String metrickey = itr.next();
 							WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
 							int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-							Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), getAtrifact(), channelName, metrickey);
+							Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), channelName, metrickey);
 							metrics.add(metric);
 							if ("Status".equals(metrickey)) {
 								if (metricVal == 3) {
@@ -133,8 +134,8 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 			}
 		}
 
-		logger.info("Active Channels in queueManager {} are {}", queueManager.getName(), activeChannels);
-		Metric activeChannelsCountMetric = createMetric("ActiveChannelsCount", activeChannels.size(), null, queueManager.getName(), getAtrifact(), "ActiveChannelsCount");
+		logger.info("Active Channels in queueManager {} are {}", WMQUtil.getQueueManagerNameFromConfig(queueManager), activeChannels);
+		Metric activeChannelsCountMetric = createMetric(queueManager,"ActiveChannelsCount", activeChannels.size(), null, getAtrifact(), "ActiveChannelsCount");
 		publishMetrics(Arrays.asList(activeChannelsCountMetric));
 
 		long exitTime = System.currentTimeMillis() - entryTime;

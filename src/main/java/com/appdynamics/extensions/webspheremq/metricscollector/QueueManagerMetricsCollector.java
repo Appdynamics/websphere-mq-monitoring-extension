@@ -89,7 +89,7 @@ public class QueueManagerMetricsCollector extends MetricsCollector implements Ru
 				if (logger.isDebugEnabled()) {
 					logger.debug("Metric: " + metrickey + "=" + metricVal);
 				}
-				Metric metric = createMetric(metrickey, metricVal, wmqOverride, queueManager.getName(), metrickey);
+				Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, metrickey);
 				metrics.add(metric);
 			}
 			publishMetrics(metrics);

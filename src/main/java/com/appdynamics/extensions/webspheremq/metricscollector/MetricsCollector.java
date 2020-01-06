@@ -10,6 +10,7 @@ package com.appdynamics.extensions.webspheremq.metricscollector;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.metrics.Metric;
+import com.appdynamics.extensions.webspheremq.common.WMQUtil;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
@@ -57,8 +58,8 @@ public abstract class MetricsCollector implements Runnable {
 		publishMetrics();
 	}
 
-	protected String getMetricsName(String... pathelements) {
-		StringBuilder pathBuilder = new StringBuilder(monitorContextConfig.getMetricPrefix()).append("|");
+	protected String getMetricsName(String qmNameToBeDisplayed, String... pathelements) {
+		StringBuilder pathBuilder = new StringBuilder(monitorContextConfig.getMetricPrefix()).append("|").append(qmNameToBeDisplayed).append("|");
 		for (int i = 0; i < pathelements.length; i++) {
 			pathBuilder.append(pathelements[i]);
 			if (i != pathelements.length - 1) {
@@ -68,8 +69,8 @@ public abstract class MetricsCollector implements Runnable {
 		return pathBuilder.toString();
 	}
 
-	protected Metric createMetric(String metricName, int metricValue, WMQMetricOverride wmqOverride, String... pathelements) {
-		String metricPath = getMetricsName(pathelements);
+	protected Metric createMetric(QueueManager queueManager, String metricName, int metricValue, WMQMetricOverride wmqOverride, String... pathelements) {
+		String metricPath = getMetricsName(WMQUtil.getQueueManagerNameFromConfig(queueManager), pathelements);
 		Metric metric;
 		if (wmqOverride != null && wmqOverride.getMetricProperties() != null) {
 			metric = new Metric(metricName, String.valueOf(metricValue), metricPath, wmqOverride.getMetricProperties());

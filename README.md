@@ -71,7 +71,9 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
 3. Configure the queueManages with appropriate fields and filters. Below sample consists of 2 queueManagers. 
    ```
     queueManagers:
-      - host: "192.168.57.104"
+      - displayName: ""
+        # displayName (optional). This will be your QM name that will show up in AppD metric path. If empty, name (below) will show up.
+        host: "192.168.57.104"
         port: 1414
         #Actual name of the queue manager
         name: "TEST_QM_1"
@@ -81,7 +83,7 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
         #For bindings type connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
         #for client type connection change it to "Client".
         transportType: "Client"
-        #user with admin level access, no need to provide credentials in case of bindings transport type, it is only applicable for client type
+        ##for user access level, please check "Access Permissions" section on the extensions page, no need to provide credentials in case of bindings transport type, it is only applicable for client type
         username: "hello"
         password: "hello"
 
@@ -137,7 +139,7 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
         #For bindings type connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
         #for client type connection change it to "Client".
         transportType: "Client"
-        #user with admin level access, no need to provide credentials in case of bindings transport type, it is only applicable for client type
+        ##for user access level, please check "Access Permissions" section on the extensions page, no need to provide credentials in case of bindings transport type, it is only applicable for client type
         username: "hello"
         password: "hello"
         #This is the timeout on queue metrics threads.Default value is 20 seconds. No need to change the default
@@ -284,6 +286,7 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
                 ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_SUB_COUNT"
                 ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
    ```
+5. To run the extension at a frequency > 1 minute, please configure the taskSchedule section. Refer to the [Task Schedule](https://community.appdynamics.com/t5/Knowledge-Base/Task-Schedule-for-Extensions/ta-p/35414) doc for details.
 
 ### Extension Working - Internals
 This extension extracts metrics through [PCF framework](https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q019990_.htm). A complete list of PCF commands are listed [here](https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q086870_.htm)
@@ -299,22 +302,35 @@ If you are in **Bindings** mode, please make sure to start the MA process under 
 The user connecting to the queueManager should have the inquire, get, put (since PCF responses cause dynamic queues to be created) permissions. For metrics that execute MQCMD_RESET_Q_STATS command, chg permission is needed.
 
 ### SSL Support
-Configure the IBM SSL Cipher Suite in the config.yaml. 
+1. Configure the IBM SSL Cipher Suite in the config.yml.
+    Note that, to use some CipherSuites the unrestricted policy needs to be configured in JRE. Please visit [this link](http://www.ibm.com/support/knowledgecenter/SSYKE2_8.0.0/com.ibm.java.security.component.80.doc/security-component/sdkpolicyfiles.html
+    ) for more details. For Oracle JRE, please update with [JCE Unlimited Strength Jurisdiction Policy](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html). The download includes a readme file with instructions on how to apply these files to JRE
 
-Note that, to use some CipherSuites the unrestricted policy needs to be configured in JRE. Please visit [this link](http://www.ibm.com/support/knowledgecenter/SSYKE2_8.0.0/com.ibm.java.security.component.80.doc/security-component/sdkpolicyfiles.html
-) for more details. For Oracle JRE, please update with [JCE Unlimited Strength Jurisdiction Policy](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html)
+2. Please add the following JVM arguments to the MA start up command or script. 
 
-To configure SSL, the MA's trust store and keystore needs to be setup with the JKS filepath. 
+    ```-Dcom.ibm.mq.cfg.useIBMCipherMappings=false```  (If you are using IBM Cipher Suites, set the flag to true. Please visit [this link](http://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.dev.doc/q113210_.htm) for more details.
+    )
+3. To configure SSL, the MA's trust store and keystore needs to be setup with the JKS filepath. They can be passed either as Machine Agent JVM arguments or configured in config.yml (sslConnection) <br />
+    
+    a. Machine Agent JVM arguments as follows:
 
-Please add the following JVM arguments to the MA start up command or script. 
-
-```-Dcom.ibm.mq.cfg.useIBMCipherMappings=false```  (If you are using IBM Cipher Suites, set the flag to true. Please visit [this link](http://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.dev.doc/q113210_.htm) for more details.
-)
-
-```-Djavax.net.ssl.trustStore=<PATH_TO_JKS_FILE>```
-```-Djavax.net.ssl.trustStorePassword=<PASS>```
-```-Djavax.net.ssl.keyStore=<PATH_TO_JKS_FILE>```
-```-Djavax.net.ssl.keyStorePassword=<PASS>```
+    ```-Djavax.net.ssl.trustStore=<PATH_TO_JKS_FILE>```<br />
+    ```-Djavax.net.ssl.trustStorePassword=<PASS>```<br />
+    ```-Djavax.net.ssl.keyStore=<PATH_TO_JKS_FILE>```<br />
+    ```-Djavax.net.ssl.keyStorePassword=<PASS>```<br />
+    
+    b. sslConnection in config.yml, configure the trustStorePassword or trustStoreEncryptedPassword based on Credentials Encryption. Same holds for keyStore configuration as well. 
+    
+    ```
+    sslConnection:
+      trustStorePath: ""
+      trustStorePassword: ""
+      trustStoreEncryptedPassword: ""
+    
+      keyStorePath: ""
+      keyStorePassword: ""
+      keyStoreEncryptedPassword: ""
+    ```
 
 ## Metrics
 The metrics will be reported under the tree ```Application Infrastructure Performance|$TIER|Custom Metrics|WebsphereMQ```
@@ -494,7 +510,7 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
    
    This might occour due to various reasons ranging from incorrect installation to applying [ibm fix packs](http://www-01.ibm.com/support/docview.wss?uid=swg21410038) but most of the time it happens when you are trying to connect in `Bindings` mode and machine agent is not on the same machine on which WMQ server is running. If you want to connect to WMQ server from a remote machine then connect using `Client` mode.
    
-   Another way to get around this issue is to avoid using the Bindings mode. Connect using CLIENT transport type from a remote box. Make sure to provide Windows admin username and password in the config.yaml.
+   Another way to get around this issue is to avoid using the Bindings mode. Connect using CLIENT transport type from a remote box.
 
 3. Error `Completion Code '2', Reason '2035'`
    This could happen for various reasons but for most of the cases, for **Client** mode the user specified in config.yml is not authorized to access the queue manager. Also sometimes even if userid and password are correct, channel auth (CHLAUTH) for that queue manager blocks traffics from other ips, you need to contact admin to provide you access to the queue manager.
@@ -518,7 +534,7 @@ Please provide the following in order for us to assist you better.  
    * \<logger name="com.appdynamics"\>
 4. Start the machine agent and please let it run for 10 mins. Then zip and upload all the logs in the directory \<MachineAgent\>/logs/*.
 5. Attach the zipped \<MachineAgent\>/conf/* directory here.
-6. Attach the zipped \<MachineAgent\>/monitors/ExtensionFolderYouAreHavingIssuesWith directory here.
+6. Attach the zipped \<MachineAgent\>/monitors/WMQMonitor directory here.
 
 For any support related questions, you can also contact help@appdynamics.com.
 
@@ -528,10 +544,10 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 ## Version
 |          Name            |  Version                |
 |--------------------------|-------------------------|
-|Extension Version         |7.0.1                    |
+|Extension Version         |7.0.3                    |
 |Controller Compatibility  |4.2 +                    |
 |IBM MQ Version tested On  |7.x, 8.x, 9.x and Windows, Unix, AIX|
-|Last Update               |12th November, 2018           |
+|Last Update               |18th December, 2019           |
 
 List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md)
 
