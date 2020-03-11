@@ -1,3 +1,7 @@
+### Version 7.0.3
+* Support for Queue Manager displayName
+* encryption support for ssl truststore and keystore passwords
+
 ### Version 7.0.1
 Bug Fixes
 * Active Channel Count
