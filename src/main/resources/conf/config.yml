@@ -145,13 +145,13 @@ mqMetrics:
             ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
             ibmCommand: "MQCMD_INQUIRE_Q"
 
-        - OldestMsgAge:
-            alias: "OldestMsgAge"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
-            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
-            aggregationType: "OBSERVATION"
-            timeRollUpType: "CURRENT"
-            clusterRollUpType: "INDIVIDUAL"
+#        - OldestMsgAge:
+#            alias: "OldestMsgAge"
+#            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
+#            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+#            aggregationType: "OBSERVATION"
+#            timeRollUpType: "CURRENT"
+#            clusterRollUpType: "INDIVIDUAL"
 
         - UncommittedMsgs:
             alias: "UncommittedMsgs"
@@ -251,3 +251,24 @@ sslConnection:
   keyStorePath: ""
   keyStorePassword: ""
   keyStoreEncryptedPassword: ""
+
+
+# If any of the following fields are not set, the values of the specific fields are set from the system properties of the corresponding fields as specified in the comments.
+# If the system properties are not set for the field, then the data is retrieved from machine agent configFile. Please refer to ControllerInfoFactory for more details.
+controllerInfo:
+  controllerHost: "controller"
+  controllerPort: 8080
+  account: "customer1"
+  username: "user"
+  password: "welcome"
+  encryptedPassword: ""
+  encryptionKey: ""
+  controllerSslEnabled: false
+  enableOrchestration: false
+  uniqueHostId: ""
+  accountAccessKey: ""
+  machinePath: ""
+  simEnabled: true
+  applicationName: ""
+  tierName: ""
+  nodeName: ""

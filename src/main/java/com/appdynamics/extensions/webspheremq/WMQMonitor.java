@@ -8,23 +8,23 @@
 package com.appdynamics.extensions.webspheremq;
 
 import com.appdynamics.extensions.ABaseMonitor;
-import com.appdynamics.extensions.TaskInputArgs;
+import com.appdynamics.extensions.Constants;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
-import com.appdynamics.extensions.crypto.CryptoUtil;
+import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
 import com.appdynamics.extensions.util.AssertUtils;
+import com.appdynamics.extensions.util.CryptoUtils;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
 public class WMQMonitor extends ABaseMonitor {
 
-	public static final Logger logger = LoggerFactory.getLogger(WMQMonitor.class);
+	public static final Logger logger = ExtensionsLoggerFactory.getLogger(WMQMonitor.class);
 
 	protected String getDefaultMetricPrefix() {
 		return "Custom Metrics|WMQMonitor|";
@@ -45,10 +45,11 @@ public class WMQMonitor extends ABaseMonitor {
 		}
 	}
 
-	protected int getTaskCount() {
-		List queueManagers = ((List)this.getContextConfiguration().getConfigYml().get("queueManagers"));
+	@Override
+	protected List<Map<String, ?>> getServers() {
+		List<Map<String, ?>> queueManagers = (List<Map<String, ?>>) getContextConfiguration().getConfigYml().get("queueManagers");
 		AssertUtils.assertNotNull(queueManagers, "The 'queueManagers' section in config.yml is not initialised");
-		return queueManagers.size();
+		return queueManagers;
 	}
 
 	@Override
@@ -97,9 +98,9 @@ public class WMQMonitor extends ABaseMonitor {
 		}
 		if (!Strings.isNullOrEmpty(encryptionKey) && !Strings.isNullOrEmpty(encryptedPassword)) {
 			Map<String, String> cryptoMap = Maps.newHashMap();
-			cryptoMap.put(TaskInputArgs.ENCRYPTED_PASSWORD, encryptedPassword);
-			cryptoMap.put(TaskInputArgs.ENCRYPTION_KEY, encryptionKey);
-			return CryptoUtil.getPassword(cryptoMap);
+			cryptoMap.put(Constants.ENCRYPTED_PASSWORD, encryptedPassword);
+			cryptoMap.put(Constants.ENCRYPTION_KEY, encryptionKey);
+			return CryptoUtils.getPassword(cryptoMap);
 		}
 		return null;
 	}

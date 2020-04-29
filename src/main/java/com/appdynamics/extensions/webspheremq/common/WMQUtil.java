@@ -7,18 +7,18 @@
 
 package com.appdynamics.extensions.webspheremq.common;
 
+import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
 public class WMQUtil {
-    public static final Logger logger = LoggerFactory.getLogger(WMQUtil.class);
+    public static final Logger logger = ExtensionsLoggerFactory.getLogger(WMQUtil.class);
     /**
      * Returns master data structure,This map will contain only those metrics which are to be reported to controller.<br>
      * It contains metric type as key and a map of metric and WMQMetricOverride as value,<br>

@@ -7,6 +7,7 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
@@ -14,7 +15,6 @@ import com.ibm.mq.pcf.PCFException;
 import com.ibm.mq.pcf.PCFMessage;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -22,7 +22,7 @@ import java.util.Set;
 
 class InquireQStatusCmdCollector extends QueueMetricsCollector implements Runnable {
 
-    public static final Logger logger = LoggerFactory.getLogger(InquireQStatusCmdCollector.class);
+    public static final Logger logger = ExtensionsLoggerFactory.getLogger(InquireQStatusCmdCollector.class);
 
     protected static final String COMMAND = "MQCMD_INQUIRE_Q_STATUS";
 
