@@ -1,3 +1,6 @@
+### Version 7.0.4
+* Moved to appd-exts-commons v2.2.2
+
 ### Version 7.0.3
 * Support for Queue Manager displayName
 * encryption support for ssl truststore and keystore passwords

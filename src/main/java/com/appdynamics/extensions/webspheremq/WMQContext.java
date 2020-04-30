@@ -8,8 +8,8 @@
 package com.appdynamics.extensions.webspheremq;
 
 
-import com.appdynamics.extensions.TaskInputArgs;
-import com.appdynamics.extensions.crypto.CryptoUtil;
+import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
+import com.appdynamics.extensions.util.CryptoUtils;
 import com.appdynamics.extensions.util.StringUtils;
 import com.appdynamics.extensions.webspheremq.common.Constants;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
@@ -17,7 +17,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.ibm.mq.constants.CMQC;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Hashtable;
 
@@ -31,7 +30,7 @@ import java.util.Hashtable;
  */
 public class WMQContext {
 
-	public static final Logger logger = LoggerFactory.getLogger(WMQContext.class);
+	public static final Logger logger = ExtensionsLoggerFactory.getLogger(WMQContext.class);
 	private QueueManager queueManager;
 
 	public WMQContext(QueueManager queueManager) {
@@ -121,9 +120,9 @@ public class WMQContext {
 		String encryptedPassword = queueManager.getEncryptedPassword();
 		if (!Strings.isNullOrEmpty(encryptionKey) && !Strings.isNullOrEmpty(encryptedPassword)) {
 			java.util.Map<String, String> cryptoMap = Maps.newHashMap();
-			cryptoMap.put(TaskInputArgs.ENCRYPTED_PASSWORD, encryptedPassword);
-			cryptoMap.put(TaskInputArgs.ENCRYPTION_KEY, encryptionKey);
-			return CryptoUtil.getPassword(cryptoMap);
+			cryptoMap.put(com.appdynamics.extensions.Constants.ENCRYPTED_PASSWORD, encryptedPassword);
+			cryptoMap.put(com.appdynamics.extensions.Constants.ENCRYPTION_KEY, encryptionKey);
+			return CryptoUtils.getPassword(cryptoMap);
 		}
 		return null;
 	}
