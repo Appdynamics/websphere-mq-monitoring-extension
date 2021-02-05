@@ -157,7 +157,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		}
 
 		Map<String, WMQMetricOverride> listenerMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_LISTENER);
-		if (queueMetricsToReport != null) {
+		if (listenerMetricsToReport != null) {
 			MetricsCollector listenerMetricsCollector = new ListenerMetricsCollector(listenerMetricsToReport, this.monitorContextConfig, agent, queueManager, metricWriteHelper, countDownLatch);
 			monitorContextConfig.getContext().getExecutorService().execute("ListenerMetricsCollector", listenerMetricsCollector);
 		} else {
