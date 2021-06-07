@@ -1,3 +1,7 @@
+### Version 7.0.5
+* Moved to appd-exts-commons v2.2.4
+* Fixed issue for listener metric collection
+
 ### Version 7.0.4
 * Moved to appd-exts-commons v2.2.2
 

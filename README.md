@@ -544,10 +544,11 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 ## Version
 |          Name            |  Version                |
 |--------------------------|-------------------------|
-|Extension Version         |7.0.4                    |
-|Controller & MA Compatibility  |4.5 +                    |
+|Extension Version         |7.0.5                    |
+|Controller Compatibility  |4.5 +                    |
+|MA Compatibility  |4.5.13 +                    |
 |IBM MQ Version tested On  |7.x, 8.x, 9.x and Windows, Unix, AIX|
-|Last Update               |30th April, 2020           |
+|Last Update               |07 June, 2021           |
 
 List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md)
 
