@@ -10,7 +10,7 @@ The metrics for queue manager, queue, topic, channel and listener can be configu
 The MQ Monitor currently supports IBM Websphere MQ version 7.x, 8.x and 9.x.
  
 ## Prerequisites
-In order to use this extension, you do need a [Standalone JAVA Machine Agent](https://docs.appdynamics.com/display/PRO44/Standalone+Machine+Agents) or [SIM Agent](https://docs.appdynamics.com/display/PRO44/Server+Visibility).  For more details on downloading these products, please  visit https://download.appdynamics.com/.
+Before the extension is installed, the prerequisites mentioned [here](https://community.appdynamics.com/t5/Knowledge-Base/Monitoring-Extensions-Prerequisites-Guide/ta-p/35213) need to be met. Please do not proceed with the extension installation if the specified prerequisites are not met.
 
 If this extension is configured for **CLIENT** transport type
 1. Please make sure the MQ's host and port is accessible. 
@@ -40,8 +40,8 @@ These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server 
 In case of **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars. To download IBM MQ Client jars, see [here](https://developer.ibm.com/messaging/mq-downloads/)
 
 ## Installation
-1. To build from source, clone this repository and run `mvn clean install` from websphere-mq-monitoring-extension directory. This will produce a WMQMonitor-\<version\>.zip in target directory. Alternatively download the latest release archive from [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/releases).
-2. Unzip contents of WMQMonitor-\<version\>.zip file and copy to <code><machine-agent-dir>/monitors</code> directory. Do not place the extension in the "extensions" directory of your Machine Agent installation directory.
+1. To build from source, clone this repository and run `mvn clean install` from websphere-mq-monitoring-extension directory. This will produce a WMQMonitor-\<version\>.zip in target directory.
+2. Unzip contents of WMQMonitor-\<version\>.zip file and copy to <code><machine-agent-dir>/monitors</code> directory. <br/>Please place the extension in the <b>"monitors"</b> directory of your Machine Agent installation directory. Do not place the extension in the <b>"extensions"</b> directory of your Machine Agent installation directory.
 3. There are two transport modes in which this extension can be run
    * **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
    * **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://developer.ibm.com/messaging/mq-downloads/) for this mode to get the necessary jars as mentioned previously. 
@@ -58,7 +58,7 @@ In case of **CLIENT** transport type, IBM MQ Client must be installed to get the
 7. Restart the Machine Agent.
 
 ## Configuration
-**Note** : Please make sure to not use tab (\t) while editing yaml files. You may want to validate the yaml file using a [yaml validator](http://yamllint.com/)
+**Note** : Please make sure to not use tab (\t) while editing yaml files. You may want to validate the yaml file using a [yaml validator](https://jsonformatter.org/yaml-validator)
 Configure the monitor by editing the config.yml file in <code><machine-agent-dir>/monitors/WMQMonitor/</code>.
 1. Configure the metricPrefix with the `<TIER_ID` under which this extension metrics need to be reported. For example
    ```
@@ -529,14 +529,9 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 |          Name            |  Version                |
 |--------------------------|-------------------------|
 |Extension Version         |7.0.5                    |
-|Controller Compatibility  |4.5 +                    |
-|MA Compatibility  |4.5.13 +                    |
 |IBM MQ Version tested On  |7.x, 8.x, 9.x and Windows, Unix, AIX|
-|Last Update               |07 June, 2021           |
-
-List of Changes to this extension can be found [here](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md)
-
-
-
-
+|Last Update               |07/06/2021           |
+|List of Changes|[Change Log](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md)|
+	
+**Note**: While extensions are maintained and supported by customers under the open-source licensing model, they interact with agents and Controllers that are subject to [AppDynamics’ maintenance and support policy](https://docs.appdynamics.com/latest/en/product-and-release-announcements/maintenance-support-for-software-versions). Some extensions have been tested with AppDynamics 4.5.13+ artifacts, but you are strongly recommended against using versions that are no longer supported.
 		
