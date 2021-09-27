@@ -10,7 +10,9 @@ The metrics for queue manager, queue, topic, channel and listener can be configu
 The MQ Monitor currently supports IBM Websphere MQ version 7.x, 8.x and 9.x.
  
 ## Prerequisites
-Before the extension is installed, the prerequisites mentioned [here](https://community.appdynamics.com/t5/Knowledge-Base/Monitoring-Extensions-Prerequisites-Guide/ta-p/35213) need to be met. Please do not proceed with the extension installation if the specified prerequisites are not met.
+1. Before the extension is installed, the prerequisites mentioned [here](https://community.appdynamics.com/t5/Knowledge-Base/Monitoring-Extensions-Prerequisites-Guide/ta-p/35213) need to be met. Please do not proceed with the extension installation if the specified prerequisites are not met.
+
+2. Download and install [Apache Maven](https://maven.apache.org/) which is configured with `Java 8` to build the extension artifact from source. You can check the java version used in maven using command `mvn -v` or `mvn --version`. If your maven is using some other java version then please download java 8 for your platform and set JAVA_HOME parameter before starting maven.
 
 If this extension is configured for **CLIENT** transport type
 1. Please make sure the MQ's host and port is accessible. 
@@ -40,12 +42,28 @@ These jar files are typically found in ```/opt/mqm/java/lib``` on a UNIX server 
 In case of **CLIENT** transport type, IBM MQ Client must be installed to get the MQ jars. To download IBM MQ Client jars, see [here](https://developer.ibm.com/messaging/mq-downloads/)
 
 ## Installation
-1. To build from source, clone this repository and run `mvn clean install` from websphere-mq-monitoring-extension directory. This will produce a WMQMonitor-\<version\>.zip in target directory.
-2. Unzip contents of WMQMonitor-\<version\>.zip file and copy to <code><machine-agent-dir>/monitors</code> directory. <br/>Please place the extension in the <b>"monitors"</b> directory of your Machine Agent installation directory. Do not place the extension in the <b>"extensions"</b> directory of your Machine Agent installation directory.
-3. There are two transport modes in which this extension can be run
+1. To build from source, clone this repository using `git clone <repoUrl>` command.
+2. Create a `lib` folder in "websphere-mq-monitoring-extension" and copy the following jars in the `websphere-mq-monitoring-extension/lib` folder. (These jars are shipped with your Websphere MQ product itself)
+* For MQ v8.0.0 and above
+```
+com.ibm.mq.allclient.jar
+```
+* For other versions, please comment the "com.ibm.mq.allclient" dependency in pom.xml and uncomment the following dependencies. Then add these dependencies in `websphere-mq-monitoring-extension/lib` folder
+``` 
+com.ibm.mq.commonservices.jar
+com.ibm.mq.jar
+com.ibm.mq.jmqi.jar
+com.ibm.mq.headers.jar
+com.ibm.mq.pcf.jar
+dhbcore.jar
+connector.jar
+```
+3. Run `mvn clean install` from websphere-mq-monitoring-extension directory. This will produce a WMQMonitor-\<version\>.zip in target directory.
+4. Unzip contents of WMQMonitor-\<version\>.zip file and copy to "<MachineAgentHome_Dir>/monitors" directory. <br/>Please place the extension in the Please place the extension in the <b>"monitors"</b> directory of your Machine Agent installation directory. Do not place the extension in the <b>"extensions"</b> directory of your Machine Agent installation directory.
+5. There are two transport modes in which this extension can be run
    * **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
    * **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://developer.ibm.com/messaging/mq-downloads/) for this mode to get the necessary jars as mentioned previously. 
-4. Edit the classpath element in WMQMonitor/monitor.xml with the path to the required jar files.
+6. Edit the classpath element in WMQMonitor/monitor.xml with the path to the required jar files.
    ```
     <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.allclient.jar</classpath>
    ```
@@ -53,9 +71,9 @@ In case of **CLIENT** transport type, IBM MQ Client must be installed to get the
    ```
     <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.jar;/opt/mqm/java/lib/com.ibm.mq.jmqi.jar;/opt/mqm/java/lib/com.ibm.mq.commonservices.jar;/opt/mqm/java/lib/com.ibm.mq.headers.jar;/opt/mqm/java/lib/com.ibm.mq.pcf.jar;/opt/mqm/java/lib/connector.jar;/opt/mqm/java/lib/dhbcore.jar</classpath>
    ```
-5. If you plan to use **Client** transport type, create a channel of type server connection in each of the queue manager you wish to query. 
-6. Edit the config.yml file.  An example config.yml file follows these installation instructions.
-7. Restart the Machine Agent.
+7. If you plan to use **Client** transport type, create a channel of type server connection in each of the queue manager you wish to query. 
+8. Edit the config.yml file.  An example config.yml file follows these installation instructions.
+9. Restart the Machine Agent.
 
 ## Configuration
 **Note** : Please make sure to not use tab (\t) while editing yaml files. You may want to validate the yaml file using a [yaml validator](https://jsonformatter.org/yaml-validator)
@@ -64,6 +82,8 @@ Configure the monitor by editing the config.yml file in <code><machine-agent-dir
    ```
     metricPrefix: "Server|Component:100|Custom Metrics|WebsphereMQ|"
    ```  
+More details around metric prefix can be found [here](https://community.appdynamics.com/t5/Knowledge-Base/How-do-I-troubleshoot-missing-custom-metrics-or-extensions/ta-p/28695).
+
 2. Each queueManager requires 9 threads to fetch its metrics concurrently and 1 main thread to run the extension. So if for example, there are 2 queueManagers configured, please set the numberOfThreads to be 19 (2*9+1)
    ```
     numberOfThreads: 20
@@ -516,12 +536,21 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
    This could happen for various reasons but for most of the cases, for **Client** mode the user specified in config.yml is not authorized to access the queue manager. Also sometimes even if userid and password are correct, channel auth (CHLAUTH) for that queue manager blocks traffics from other ips, you need to contact admin to provide you access to the queue manager.
    For Bindings mode, please make sure that the MA is owned by a mqm user. Please check [this doc](https://www-01.ibm.com/support/docview.wss?uid=swg21636093) 
   
-4. MQJE001: Completion Code '2', Reason '2195'
+4. `MQJE001: Completion Code '2', Reason '2195'`
    This could happen in **Client** mode. Please make sure that the IBM MQ dependency jars are correctly referenced in classpath of monitor.xml 
 
-5. MQJE001: Completion Code '2', Reason '2400'
+5. `MQJE001: Completion Code '2', Reason '2400'`
    This could happen if unsupported cipherSuite is provided or JRE not having/enabled unlimited jurisdiction policy files. Please check SSL Support section.
-   
+
+6. If you are seeing "NoClassDefFoundError" or "ClassNotFound" error for any of the MQ dependency even after providing correct path in monitor.xml, then you can also try copying all the required jars in WMQMonitor (MAHome/monitors/WMQMonitor) folder and provide classpath in monitor.xml like below
+   ```
+    <classpath>websphere-mq-monitoring-extension.jar;com.ibm.mq.allclient.jar</classpath>
+   ```
+   OR
+   ```
+    <classpath>websphere-mq-monitoring-extension.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.headers.jar;com.ibm.mq.pcf.jar;connector.jar;dhbcore.jar</classpath>
+   ```
+	
 ## Contributing
 Always feel free to fork and contribute any changes directly via [GitHub](https://github.com/Appdynamics/websphere-mq-monitoring-extension).
 
