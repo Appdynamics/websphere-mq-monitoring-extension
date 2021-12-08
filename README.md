@@ -542,7 +542,10 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
 5. `MQJE001: Completion Code '2', Reason '2400'`
    This could happen if unsupported cipherSuite is provided or JRE not having/enabled unlimited jurisdiction policy files. Please check SSL Support section.
 
-6. If you are seeing "NoClassDefFoundError" or "ClassNotFound" error for any of the MQ dependency even after providing correct path in monitor.xml, then you can also try copying all the required jars in WMQMonitor (MAHome/monitors/WMQMonitor) folder and provide classpath in monitor.xml like below
+6. `MQJE001: Completion Code '2', Reason '2058'`
+   2058 is returned when connecting to a queue manager using the wrong queue manager name.	
+	
+7. If you are seeing "NoClassDefFoundError" or "ClassNotFound" error for any of the MQ dependency even after providing correct path in monitor.xml, then you can also try copying all the required jars in WMQMonitor (MAHome/monitors/WMQMonitor) folder and provide classpath in monitor.xml like below
    ```
     <classpath>websphere-mq-monitoring-extension.jar;com.ibm.mq.allclient.jar</classpath>
    ```
