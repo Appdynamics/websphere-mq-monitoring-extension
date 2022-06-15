@@ -453,7 +453,7 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 </tr>
 <tr>
 <td class='confluenceTd'> Status </td>
-<td class='confluenceTd'> 1 - binding, 2 - starting, 3 - running, 4 - paused, 5 - stopping, 6 - retrying, 7 - stopped, 8 - requesting, 9 - switching, 10 - initializing </td>
+<td class='confluenceTd'> 1 - binding, 2 - starting, 3 - running, 4 - stopping, 5 - retrying, 6 - stopped, 7 - requesting, 8 - paused, 13 - initializing, 14 - switching </td>
 </tr>
 <tr>
 <td class='confluenceTd'> ByteSent </td>
