@@ -18,10 +18,8 @@ import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.google.common.collect.Lists;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
-import com.ibm.mq.constants.MQConstants;
-import com.ibm.mq.pcf.PCFException;
-import com.ibm.mq.pcf.PCFMessage;
-import com.ibm.mq.pcf.PCFMessageAgent;
+import com.ibm.mq.headers.pcf.PCFMessage;
+import com.ibm.mq.headers.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 
@@ -117,17 +115,6 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 					else{
 						logger.debug("Channel name {} is excluded.",channelName);
 					}
-				}
-			}
-			catch (PCFException pcfe) {
-				String errorMsg = "";
-				if (pcfe.getReason() == MQConstants.MQRCCF_CHL_STATUS_NOT_FOUND) {
-					errorMsg = "Channel- " + channelGenericName + " :";
-					errorMsg += "Could not collect channel information as channel is stopped or inactive: Reason '3065'\n";
-					errorMsg += "If the channel type is MQCHT_RECEIVER, MQCHT_SVRCONN or MQCHT_CLUSRCVR, then the only action is to enable the channel, not start it.";
-					logger.error(errorMsg,pcfe);
-				} else if (pcfe.getReason() == MQConstants.MQRC_SELECTOR_ERROR) {
-					logger.error("Invalid metrics passed while collecting channel metrics, check config.yaml: Reason '2067'",pcfe);
 				}
 			} catch (Exception e) {
 				logger.error("Unexpected Error occoured while collecting metrics for channel " + channelGenericName, e);

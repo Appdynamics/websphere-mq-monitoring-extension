@@ -12,7 +12,7 @@ import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.pcf.PCFException;
-import com.ibm.mq.pcf.PCFMessage;
+import com.ibm.mq.headers.pcf.PCFMessage;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 

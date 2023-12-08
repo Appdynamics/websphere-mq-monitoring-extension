@@ -18,7 +18,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQC;
-import com.ibm.mq.pcf.*;
+import com.ibm.mq.headers.MQDataException;
+import com.ibm.mq.headers.pcf.*;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 
@@ -114,10 +115,14 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 	}
 
 	protected void processPCFRequestAndPublishQMetrics(String queueGenericName, PCFMessage request, String command) throws MQException, IOException {
-		PCFMessage[] response;
+		PCFMessage[] response = null;
 		logger.debug("sending PCF agent request to query metrics for generic queue {} for command {}",queueGenericName,command);
 		long startTime = System.currentTimeMillis();
-		response = agent.send(request);
+		try {
+			response = agent.send(request);
+		} catch (MQDataException e) {
+			logger.error("MQDataException caught while trying to send a request {}", request);
+		}
 		long endTime = System.currentTimeMillis() - startTime;
 		logger.debug("PCF agent queue metrics query response for generic queue {} for command {} received in {} milliseconds", queueGenericName, command,endTime);
 		if (response == null || response.length <= 0) {
@@ -125,7 +130,12 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 			return;
 		}
 		for (int i = 0; i < response.length; i++) {
-			String queueName = response[i].getStringParameterValue(CMQC.MQCA_Q_NAME).trim();
+			String queueName = null;
+			try {
+				queueName = response[i].getStringParameterValue(CMQC.MQCA_Q_NAME).trim();
+			} catch (PCFException e) {
+				logger.error("PCFException caught while trying to get parametervalue from {}", response[i]);
+			}
 			Set<ExcludeFilters> excludeFilters = this.queueManager.getQueueFilters().getExclude();
 			if(!isExcluded(queueName,excludeFilters)) { //check for exclude filters
 				logger.debug("Pulling out metrics for queue name {} for command {}",queueName,command);

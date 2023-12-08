@@ -21,7 +21,8 @@ import com.appdynamics.extensions.webspheremq.metricscollector.*;
 import com.google.common.base.Strings;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
-import com.ibm.mq.pcf.PCFMessageAgent;
+import com.ibm.mq.headers.MQDataException;
+import com.ibm.mq.headers.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 
@@ -121,8 +122,8 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 				agent.setEncoding(queueManager.getEncoding());
 			}
 			logger.debug("Intialized PCFMessageAgent for queueManager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
-		} catch (MQException mqe) {
-			logger.error(mqe.getMessage(), mqe);
+		} catch (MQDataException e) {
+			logger.error(e.getMessage(), e);
 		}
 		return agent;
 	}

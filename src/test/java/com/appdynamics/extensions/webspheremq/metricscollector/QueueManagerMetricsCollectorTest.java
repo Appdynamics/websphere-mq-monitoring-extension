@@ -18,11 +18,11 @@ import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
-import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
-import com.ibm.mq.pcf.PCFMessage;
-import com.ibm.mq.pcf.PCFMessageAgent;
+import com.ibm.mq.headers.MQDataException;
+import com.ibm.mq.headers.pcf.PCFMessage;
+import com.ibm.mq.headers.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.junit.Assert;
@@ -79,7 +79,7 @@ public class QueueManagerMetricsCollectorTest {
     }
 
     @Test
-    public void testProcessPCFRequestAndPublishQMetricsForInquireQStatusCmd() throws MQException, IOException, TaskExecutionException {
+    public void testProcessPCFRequestAndPublishQMetricsForInquireQStatusCmd() throws IOException, TaskExecutionException, MQDataException {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireQMgrStatusCmd());
         classUnderTest = new QueueManagerMetricsCollector(queueMgrMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
         classUnderTest.publishMetrics();
@@ -150,7 +150,7 @@ public class QueueManagerMetricsCollectorTest {
     }
 
     @Test
-    public void testDisplayName() throws MQException, IOException, TaskExecutionException {
+    public void testDisplayName() throws IOException, TaskExecutionException, MQDataException {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireQMgrStatusCmd());
         classUnderTest = new QueueManagerMetricsCollector(queueMgrMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
         classUnderTest.publishMetrics();

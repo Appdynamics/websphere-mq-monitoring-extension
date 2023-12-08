@@ -18,7 +18,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQC;
-import com.ibm.mq.pcf.*;
+import com.ibm.mq.headers.MQDataException;
+import com.ibm.mq.headers.pcf.*;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 
@@ -78,10 +79,14 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
     }
 
     protected void processPCFRequestAndPublishQMetrics(String topicGenericName, PCFMessage request, String command) throws MQException, IOException {
-        PCFMessage[] response;
+        PCFMessage[] response = null;
         logger.debug("sending PCF agent request to topic metrics for generic topic {} for command {}",topicGenericName,command);
         long startTime = System.currentTimeMillis();
-        response = agent.send(request);
+        try {
+            response = agent.send(request);
+        } catch (MQDataException e) {
+            logger.error("MQDataException caught while trying to send a request {}", request);
+        }
         long endTime = System.currentTimeMillis() - startTime;
         logger.debug("PCF agent topic metrics query response for generic topic {} for command {} received in {} milliseconds", topicGenericName, command,endTime);
         if (response == null || response.length <= 0) {
@@ -89,7 +94,12 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
             return;
         }
         for (int i = 0; i < response.length; i++) {
-            String topicString = response[i].getStringParameterValue(CMQC.MQCA_TOPIC_STRING).trim();
+            String topicString = null;
+            try {
+                topicString = response[i].getStringParameterValue(CMQC.MQCA_TOPIC_STRING).trim();
+            } catch (PCFException e) {
+                logger.error("PCFException caught while trying to get parametervalue from {}", response[i]);
+            }
             Set<ExcludeFilters> excludeFilters = this.queueManager.getTopicFilters().getExclude();
             if(!isExcluded(topicString,excludeFilters)) { //check for exclude filters
                 logger.debug("Pulling out metrics for topic name {} for command {}",topicString,command);
