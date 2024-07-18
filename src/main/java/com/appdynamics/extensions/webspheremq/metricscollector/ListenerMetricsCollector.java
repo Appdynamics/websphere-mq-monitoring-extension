@@ -11,6 +11,8 @@ import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
 import com.appdynamics.extensions.metrics.Metric;
+import com.appdynamics.extensions.webspheremq.common.Constants;
+import com.appdynamics.extensions.webspheremq.common.WMQUtil;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
@@ -18,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.pcf.PCFMessage;
 import com.ibm.mq.pcf.PCFMessageAgent;
+import com.ibm.mq.pcf.PCFParameter;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 
@@ -30,8 +33,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
     public static final Logger logger = ExtensionsLoggerFactory.getLogger(ListenerMetricsCollector.class);
     private final String artifact = "Listeners";
 
-    public ListenerMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
-        this.metricsToReport = metricsToReport;
+    public ListenerMetricsCollector(MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
         this.monitorContextConfig = monitorContextConfig;
         this.agent = agent;
         this.metricWriteHelper = metricWriteHelper;
@@ -52,12 +54,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
     protected void publishMetrics() throws TaskExecutionException {
         long entryTime = System.currentTimeMillis();
 
-        if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
-            logger.debug("Listener metrics to report from the config is null or empty, nothing to publish");
-            return;
-        }
-
-        int[] attrs = getIntAttributesArray(CMQCFC.MQCACH_LISTENER_NAME);
+        int[] attrs = new int[] { CMQCFC.MQIACF_ALL };
         logger.debug("Attributes being sent along PCF agent request to query channel metrics: " + Arrays.toString(attrs));
 
         Set<String> listenerGenericNames = this.queueManager.getListenerFilters().getInclude();
@@ -80,14 +77,28 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
                     Set<ExcludeFilters> excludeFilters = this.queueManager.getListenerFilters().getExclude();
                     if(!isExcluded(listenerName,excludeFilters)) { //check for exclude filters
                         logger.debug("Pulling out metrics for listener name {}",listenerName);
-                        Iterator<String> itr = getMetricsToReport().keySet().iterator();
+                        Enumeration<PCFParameter> pcfParameters = response[i].getParameters();
                         List<Metric> metrics = Lists.newArrayList();
-                        while (itr.hasNext()) {
-                            String metrickey = itr.next();
-                            WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
-                            int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-                            Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), listenerName, metrickey);
-                            metrics.add(metric);
+                        List<Map> mqMetrics = (List<Map>) this.monitorContextConfig.getConfigYml().get("mqMetrics");
+                        List<String> excludedMetrics = WMQUtil.getMetricsToExcludeFromConfigYml(mqMetrics, Constants.METRIC_TYPE_LISTENER);
+                        while (pcfParameters.hasMoreElements()) {
+                            PCFParameter pcfParam = pcfParameters.nextElement();
+                            String metrickey = pcfParam.getParameterName();
+                            if (!WMQUtil.isMetricExcluded(metrickey, excludedMetrics)) {
+                                try {
+                                    if (pcfParam != null) {
+                                        // create metric objects from PCF parameter
+                                        metrics.addAll(createMetrics(queueManager, listenerName, pcfParam));
+                                    } else {
+                                        logger.warn("PCF parameter is null in response for Listener: {} for metric: {}", listenerName, metrickey);
+                                    }
+                                } catch (Exception pcfe) {
+                                    logger.error("Exception caught while collecting metric for Listener: {} for metric: {}", listenerName, metrickey, pcfe);
+                                }
+                            }
+                            else {
+                                logger.debug("Listener metric key {} is excluded.",metrickey);
+                            }
                         }
                         publishMetrics(metrics);
                     }
@@ -97,7 +108,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
                 }
             }
             catch (Exception e) {
-                logger.error("Unexpected Error occoured while collecting metrics for listener " + listenerGenericName, e);
+                logger.error("Unexpected Error occurred while collecting metrics for listener " + listenerGenericName, e);
             }
         }
         long exitTime = System.currentTimeMillis() - entryTime;
@@ -107,9 +118,5 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
 
     public String getAtrifact() {
         return artifact;
-    }
-
-    public Map<String, WMQMetricOverride> getMetricsToReport() {
-        return this.metricsToReport;
     }
 }

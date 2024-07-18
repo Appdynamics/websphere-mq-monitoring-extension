@@ -63,7 +63,6 @@ public class QueueManagerMetricsCollectorTest {
     private MetricWriteHelper metricWriteHelper;
 
     private MonitorContextConfiguration monitorContextConfig;
-    private Map<String, WMQMetricOverride> queueMgrMetricsToReport;
     private QueueManager queueManager;
     ArgumentCaptor<List> pathCaptor = ArgumentCaptor.forClass(List.class);
 
@@ -74,14 +73,12 @@ public class QueueManagerMetricsCollectorTest {
         Map<String, ?> configMap = monitorContextConfig.getConfigYml();
         ObjectMapper mapper = new ObjectMapper();
         queueManager = mapper.convertValue(((List)configMap.get("queueManagers")).get(0), QueueManager.class);
-        Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
-        queueMgrMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE_MANAGER);
     }
 
     @Test
     public void testProcessPCFRequestAndPublishQMetricsForInquireQStatusCmd() throws MQException, IOException, TaskExecutionException {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireQMgrStatusCmd());
-        classUnderTest = new QueueManagerMetricsCollector(queueMgrMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
+        classUnderTest = new QueueManagerMetricsCollector(monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
         classUnderTest.publishMetrics();
         verify(metricWriteHelper, times(1)).transformAndPrintMetrics(pathCaptor.capture());
         List<String> metricPathsList = Lists.newArrayList();
@@ -152,7 +149,7 @@ public class QueueManagerMetricsCollectorTest {
     @Test
     public void testDisplayName() throws MQException, IOException, TaskExecutionException {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireQMgrStatusCmd());
-        classUnderTest = new QueueManagerMetricsCollector(queueMgrMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
+        classUnderTest = new QueueManagerMetricsCollector(monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
         classUnderTest.publishMetrics();
         verify(metricWriteHelper, times(1)).transformAndPrintMetrics(pathCaptor.capture());
         List<String> metricPathsList = Lists.newArrayList();
@@ -162,8 +159,8 @@ public class QueueManagerMetricsCollectorTest {
             }
         }
         Assert.assertEquals(queueManager.getDisplayName(), "QueueManager1");
-        Assert.assertThat(metricPathsList, hasItem("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QueueManager1|Status"));
-        Assert.assertThat(metricPathsList, not(hasItem("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QManager|Status")));
+        Assert.assertThat(metricPathsList, hasItem("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QueueManager1|MQIACF_Q_MGR_STATUS"));
+        Assert.assertThat(metricPathsList, not(hasItem("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QManager|MQIACF_Q_MGR_STATUS")));
     }
 
 }

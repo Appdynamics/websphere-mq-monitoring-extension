@@ -58,7 +58,6 @@ public class ListenerMetricsCollectorTest {
     private MetricWriteHelper metricWriteHelper;
 
     private MonitorContextConfiguration monitorContextConfig;
-    private Map<String, WMQMetricOverride> listenerMetricsToReport;
     private QueueManager queueManager;
     ArgumentCaptor<List> pathCaptor = ArgumentCaptor.forClass(List.class);
 
@@ -69,14 +68,12 @@ public class ListenerMetricsCollectorTest {
         Map<String, ?> configMap = monitorContextConfig.getConfigYml();
         ObjectMapper mapper = new ObjectMapper();
         queueManager = mapper.convertValue(((List)configMap.get("queueManagers")).get(0), QueueManager.class);
-        Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
-        listenerMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_LISTENER);
     }
 
     @Test
     public void testpublishMetrics() throws MQException, IOException, TaskExecutionException {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireListenerStatusCmd());
-        classUnderTest = new ListenerMetricsCollector(listenerMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
+        classUnderTest = new ListenerMetricsCollector(monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
         classUnderTest.publishMetrics();
         verify(metricWriteHelper, times(2)).transformAndPrintMetrics(pathCaptor.capture());
         List<String> metricPathsList = Lists.newArrayList();
