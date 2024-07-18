@@ -18,6 +18,7 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,8 +28,8 @@ class ResetQStatsCmdCollector extends QueueMetricsCollector implements Runnable{
 
     protected static final String COMMAND = "MQCMD_RESET_Q_STATS";
 
-    public ResetQStatsCmdCollector(QueueMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.countDownLatch);
+    public ResetQStatsCmdCollector(QueueMetricsCollector collector){
+        super(collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.countDownLatch);
     }
 
     public void run() {
@@ -46,12 +47,7 @@ class ResetQStatsCmdCollector extends QueueMetricsCollector implements Runnable{
 		 */
         long entryTime = System.currentTimeMillis();
 
-        if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
-            logger.debug("Queue metrics to report from the config is null or empty, nothing to publish for command {}",COMMAND);
-            return;
-        }
-
-        int[] attrs = getIntAttributesArray(CMQC.MQCA_Q_NAME);
+       int[] attrs = new int[] { CMQCFC.MQIACF_ALL };
         logger.debug("Attributes being sent along PCF agent request to query queue metrics: {} for command {}", Arrays.toString(attrs),COMMAND);
 
         Set<String> queueGenericNames = this.queueManager.getQueueFilters().getInclude();

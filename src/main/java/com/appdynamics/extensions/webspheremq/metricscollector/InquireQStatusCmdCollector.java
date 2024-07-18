@@ -17,6 +17,7 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,8 +27,8 @@ class InquireQStatusCmdCollector extends QueueMetricsCollector implements Runnab
 
     protected static final String COMMAND = "MQCMD_INQUIRE_Q_STATUS";
 
-    public InquireQStatusCmdCollector(QueueMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.countDownLatch);
+    public InquireQStatusCmdCollector(QueueMetricsCollector collector){
+        super(collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.countDownLatch);
     }
 
     public void run() {
@@ -45,12 +46,7 @@ class InquireQStatusCmdCollector extends QueueMetricsCollector implements Runnab
 		 */
         long entryTime = System.currentTimeMillis();
 
-        if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
-            logger.debug("Queue metrics to report from the config is null or empty, nothing to publish for command {}",COMMAND);
-            return;
-        }
-
-        int[] attrs = getIntAttributesArray(CMQC.MQCA_Q_NAME);
+        int[] attrs = new int[] { CMQCFC.MQIACF_ALL };
         logger.debug("Attributes being sent along PCF agent request to query queue metrics: {} for command {}",Arrays.toString(attrs),COMMAND);
 
         Set<String> queueGenericNames = this.queueManager.getQueueFilters().getInclude();
