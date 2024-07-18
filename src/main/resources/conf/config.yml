@@ -17,6 +17,7 @@ metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
 
 #Uncomment only if encryption of passwords is wanted.
 #encryptionKey: ""
+useIBMCipherMappings: "false"
 
 queueManagers:
   - displayName: ""

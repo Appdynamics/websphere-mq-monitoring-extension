@@ -61,7 +61,7 @@ public class WMQMonitor extends ABaseMonitor {
 		if (sslConnection != null ) {
 			String encryptionKey = (String) configProperties.get("encryptionKey");
 			logger.debug("Encryption key from config.yml set for ssl connection is " + encryptionKey);
-
+			System.setProperty("com.ibm.mq.cfg.useIBMCipherMappings",(String) configProperties.get("useIBMCipherMappings"));
 			String trustStorePath = sslConnection.get("trustStorePath");
 			if (!Strings.isNullOrEmpty(trustStorePath)) {
 				System.setProperty("javax.net.ssl.trustStore",trustStorePath);

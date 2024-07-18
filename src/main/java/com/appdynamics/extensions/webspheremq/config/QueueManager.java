@@ -27,6 +27,7 @@ public class QueueManager {
 	private String sslKeyRepository;
 	private int ccsid = Integer.MIN_VALUE;
 	private int encoding = Integer.MIN_VALUE;
+	private String useIBMCipherMappings;
 	private String cipherSuite;
 	private String cipherSpec;
 	private String encryptedPassword;
@@ -137,6 +138,14 @@ public class QueueManager {
 
 	public void setSslKeyRepository(String sslKeyRepository) {
 		this.sslKeyRepository = sslKeyRepository;
+	}
+
+	public String getUseIBMCipherMappings() {
+		return useIBMCipherMappings;
+	}
+
+	public void setUseIBMCipherMappings(String useIBMCipherMappings) {
+		this.useIBMCipherMappings = useIBMCipherMappings;
 	}
 
 	public String getCipherSuite() {
