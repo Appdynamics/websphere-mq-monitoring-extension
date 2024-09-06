@@ -1,3 +1,7 @@
+
+### Version 7.0.6
+* Updating appd-exts-commons to v2.2.13 to fix security vulnerabilities.
+
 ### Version 7.0.5
 * Moved to appd-exts-commons v2.2.4
 * Fixed issue for listener metric collection

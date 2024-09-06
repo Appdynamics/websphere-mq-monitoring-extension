@@ -12,7 +12,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.appdynamics.extensions</groupId>
     <artifactId>websphere-mq-monitoring-extension</artifactId>
-    <version>7.0.5</version>
+    <version>7.0.6</version>
     <packaging>jar</packaging>
     <name>websphere-mq-monitoring-extension</name>
     <url>http://maven.apache.org</url>
@@ -20,7 +20,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
         <lib.dir>${basedir}/lib</lib.dir>
-        <ibm.mq.lib.version>7.5.0.8</ibm.mq.lib.version>
+        <ibm.mq.lib.version>9.4.0.0</ibm.mq.lib.version>
         <target.dir>${project.build.directory}/WMQMonitor</target.dir>
     </properties>
     <dependencies>
@@ -82,7 +82,7 @@
         <dependency>
             <groupId>com.appdynamics</groupId>
             <artifactId>appd-exts-commons</artifactId>
-            <version>2.2.4</version>
+            <version>2.2.13</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -93,13 +93,13 @@
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
-            <version>1.7.0</version>
+            <version>1.7.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
-            <version>1.7.0</version>
+            <version>1.7.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

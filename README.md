@@ -555,12 +555,12 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
 Always feel free to fork and contribute any changes directly via [GitHub](https://github.com/Appdynamics/websphere-mq-monitoring-extension).
 
 ## Version
-|          Name            |  Version                |
-|--------------------------|-------------------------|
-|Extension Version         |7.0.5                    |
-|IBM MQ Version tested On  |7.x, 8.x, 9.x and Windows, Unix, AIX|
-|Last Update               |07/06/2021           |
-|List of Changes|[Change Log](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md)|
+|          Name            | Version                                                                                                 |
+|--------------------------|---------------------------------------------------------------------------------------------------------|
+|Extension Version         | 7.0.6                                                                                                   |
+|IBM MQ Version tested On  | 7.x, 8.x, 9.x and Windows, Unix, AIX                                                                    |
+|Last Update               | 09/06/2024                                                                                              |
+|List of Changes| [Change Log](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md) |
 	
 **Note**: While extensions are maintained and supported by customers under the open-source licensing model, they interact with agents and Controllers that are subject to [AppDynamics’ maintenance and support policy](https://docs.appdynamics.com/latest/en/product-and-release-announcements/maintenance-support-for-software-versions). Some extensions have been tested with AppDynamics 4.5.13+ artifacts, but you are strongly recommended against using versions that are no longer supported.
 		
