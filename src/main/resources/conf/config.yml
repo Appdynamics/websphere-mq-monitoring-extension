@@ -113,6 +113,16 @@ mqMetrics:
   - metricsType: "queueMgrMetrics"
     metrics:
       include:
+        ################### Added metrics
+        - QueueManagerName:
+            alias: "Queue Manager Name"
+            ibmConstant: "com.ibm.mq.constants.MQCA_Q_MGR_NAME"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - Platform:
+            alias: "Platform"
+            ibmConstant: "com.ibm.mq.constants.MQIA_PLATFORM"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        ###################
         - Status:
             alias: "Status"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
@@ -127,6 +137,48 @@ mqMetrics:
   - metricsType: "queueMetrics"
     metrics:
       include:
+        ################### Added metrics
+        - QueueName:
+            alias: "Queue Name"
+            ibmConstant: "com.ibm.mq.constants.MQCA_Q_NAME"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+        - OldestMsgAge:
+            alias: "Oldest Message Age"
+            ibmConstant: "com.ibm.mq.constants.MQIACF_OLDEST_MSG_AGE"
+            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+        - LastGetDate:
+            alias: "Last Get Date"
+            ibmConstant: "com.ibm.mq.constants.MQCACF_LAST_GET_DATE"
+            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+        - LastGetTime:
+            alias: "Last Get Time"
+            ibmConstant: "com.ibm.mq.constants.MQCACF_LAST_GET_TIME"
+            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+        - LastPutDate:
+            alias: "Last Put Date"
+            ibmConstant: "com.ibm.mq.constants.MQCACF_LAST_PUT_DATE"
+            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+        - LastPutTime:
+            alias: "Last Put Time"
+            ibmConstant: "com.ibm.mq.constants.MQCACF_LAST_PUT_TIME"
+            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+        - QueueMonitoring:
+            alias: "Queue Monitoring"
+            ibmConstant: "com.ibm.mq.constants.MQIA_MONITORING_Q"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+        - QueueDescription:
+            alias: "Queue Description"
+            ibmConstant: "com.ibm.mq.constants.MQCA_Q_DESC"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+        ################### This was commented
+        - OldestMsgAge:
+            alias: "OldestMsgAge"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
+            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            aggregationType: "OBSERVATION"
+            timeRollUpType: "CURRENT"
+            clusterRollUpType: "INDIVIDUAL"
+        ###################
         - MaxQueueDepth:
             alias: "Max Queue Depth"
             ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
@@ -146,14 +198,6 @@ mqMetrics:
             alias: "Open Output Count"
             ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
             ibmCommand: "MQCMD_INQUIRE_Q"
-
-#        - OldestMsgAge:
-#            alias: "OldestMsgAge"
-#            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
-#            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
-#            aggregationType: "OBSERVATION"
-#            timeRollUpType: "CURRENT"
-#            clusterRollUpType: "INDIVIDUAL"
 
         - UncommittedMsgs:
             alias: "UncommittedMsgs"
@@ -187,6 +231,80 @@ mqMetrics:
   - metricsType: "channelMetrics"
     metrics:
       include:
+        ################### Added metrics
+        - ChannelName:
+            alias: "Channel Name"
+            ibmConstant: "com.ibm.mq.constants.MQCACH_CHANNEL_NAME"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+        - ChannelType:
+            alias: "Channel Type"
+            ibmConstant: "com.ibm.mq.constants.MQIACH_CHANNEL_TYPE"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+        - CurrentSharingConversations:
+            alias: "Current Sharing Conversations"
+            ibmConstant: "com.ibm.mq.constants.MQIACH_SHARING_CONVERSATIONS"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+        - CurrentSharingConversations:
+            alias: "Current Sharing Conversations"
+            ibmConstant: "com.ibm.mq.constants.MQIACH_SHARING_CONVERSATIONS"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+        - HeartbeatInterval:
+            alias: "Heartbeat Interval"
+            ibmConstant: "com.ibm.mq.constants.MQIACH_HB_INTERVAL"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+        - KeepAliveInterval:
+            alias: "Keep Alive Interval"
+            ibmConstant: "com.ibm.mq.constants.MQIACH_KEEP_ALIVE_INTERVAL"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+        - KeepAliveInterval:
+            alias: "Keep Alive Interval"
+            ibmConstant: "com.ibm.mq.constants.MQIACH_KEEP_ALIVE_INTERVAL"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+        - LastMessageDate:
+            alias: "Last Message Date"
+            ibmConstant: "com.ibm.mq.constants.MQCACH_LAST_MSG_DATE"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+        - LastMessageTime:
+            alias: "Last Message Time"
+            ibmConstant: "com.ibm.mq.constants.MQCACH_LAST_MSG_TIME"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+        - LocalAddress:
+            alias: "Local Address"
+            ibmConstant: "com.ibm.mq.constants.MQCACH_LOCAL_ADDRESS"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+        - MCAUserID:
+            alias: "MCA User ID"
+            ibmConstant: "com.ibm.mq.constants.MQCACH_MCA_USER_ID"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+        - MCAStatus:
+            alias: "MCA Status"
+            ibmConstant: "com.ibm.mq.constants.MQIACH_MCA_STATUS"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+        - RemoteQmgrName:
+            alias: "Remote Queue Manager Name"
+            ibmConstant: "com.ibm.mq.constants.MQCA_REMOTE_Q_MGR_NAME"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+        - XmitQName:
+            alias: "Xmit Queue Name"
+            ibmConstant: "com.ibm.mq.constants.MQCACH_XMIT_Q_NAME"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+        - ConnectionName:
+            alias: "Connection Name"
+            ibmConstant: "com.ibm.mq.constants.MQCACH_CONNECTION_NAME"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+        - ShortRetriesLeft:
+            alias: "Short Retries Left"
+            ibmConstant: "com.ibm.mq.constants.MQIACH_SHORT_RETRIES_LEFT"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+        - LongRetriesLeft:
+            alias: "Long Retries Left"
+            ibmConstant: "com.ibm.mq.constants.MQIACH_LONG_RETRIES_LEFT"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+        - SSLShortPeerName:
+            alias: "SSL Short Peer Name"
+            ibmConstant: "com.ibm.mq.constants.MQCACH_SSL_SHORT_PEER_NAME"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+        ###################
         - Messages:
             alias: "Messages"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
