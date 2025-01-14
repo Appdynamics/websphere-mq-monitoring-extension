@@ -22,7 +22,12 @@ If this extension is configured for **CLIENT** transport type
 ### Dependencies  
 The extension has a dependency on the following jar's depending on IBM MQ version:
 
-* v8.0.0 and above
+* v9.2.4.0 and above
+```
+org.json.jar
+com.ibm.mq.allclient.jar
+```
+* v8.0.0 - v9.2.3.0
 ```
 com.ibm.mq.allclient.jar
 ```
@@ -44,11 +49,16 @@ In case of **CLIENT** transport type, IBM MQ Client must be installed to get the
 ## Installation
 1. To build from source, clone this repository using `git clone <repoUrl>` command.
 2. Create a `lib` folder in "websphere-mq-monitoring-extension" and copy the following jars in the `websphere-mq-monitoring-extension/lib` folder. (These jars are shipped with your Websphere MQ product itself)
-* For MQ v8.0.0 and above
+* v9.2.4.0 and above
+```
+org.json.jar
+com.ibm.mq.allclient.jar
+```
+* v8.0.0 - v9.2.3.0
 ```
 com.ibm.mq.allclient.jar
 ```
-* For other versions, please comment the "com.ibm.mq.allclient" dependency in pom.xml and uncomment the following dependencies. Then add these dependencies in `websphere-mq-monitoring-extension/lib` folder
+* For other versions
 ``` 
 com.ibm.mq.commonservices.jar
 com.ibm.mq.jar
@@ -64,6 +74,10 @@ connector.jar
    * **Binding** : Requires WMQ Extension to be deployed in machine agent on the same machine where WMQ server is installed.  
    * **Client** : In this mode, the WMQ extension is installed on a different host than the IBM MQ server. Please install the [IBM MQ Client](https://developer.ibm.com/messaging/mq-downloads/) for this mode to get the necessary jars as mentioned previously. 
 6. Edit the classpath element in WMQMonitor/monitor.xml with the path to the required jar files.
+      ```
+    <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.allclient.jar;/opt/mqm/java/lib/org.json.jar</classpath>
+   ```
+   OR
    ```
     <classpath>websphere-mq-monitoring-extension.jar;/opt/mqm/java/lib/com.ibm.mq.allclient.jar</classpath>
    ```
