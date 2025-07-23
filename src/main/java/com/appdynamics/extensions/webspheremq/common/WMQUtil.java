@@ -15,10 +15,7 @@ import com.appdynamics.extensions.webspheremq.metricscollector.MetricsCollector;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.ibm.mq.pcf.MQCFIL;
-import com.ibm.mq.pcf.MQCFIN;
-import com.ibm.mq.pcf.MQCFST;
-import com.ibm.mq.pcf.PCFParameter;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 

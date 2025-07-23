@@ -155,16 +155,16 @@ sslConnection:
 # If any of the following fields are not set, the values of the specific fields are set from the system properties of the corresponding fields as specified in the comments.
 # If the system properties are not set for the field, then the data is retrieved from machine agent configFile. Please refer to ControllerInfoFactory for more details.
 controllerInfo:
-  controllerHost: "24-6-0-saas-controller.e2e.appd-test.com"
-  controllerPort: 8090
-  account: "e2e-customer"
+  controllerHost: "localhost"
+  controllerPort: 8080
+  account: "customer1"
   username: "user1"
   password: "welcome"
   encryptedPassword: ""
   encryptionKey: ""
   controllerSslEnabled: false
   enableOrchestration: false
-  uniqueHostId: "pramadde-aws-ec6"
+  uniqueHostId: "new_metric_extension_update"
   accountAccessKey: "0e6678e0-2bc0-40ad-9e8b-fa6fe440635e"
   machinePath: ""
   simEnabled: true
