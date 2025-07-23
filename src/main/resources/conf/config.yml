@@ -5,9 +5,9 @@ numberOfThreads: 20
 
 #This will create it in specific Tier aka Component. Replace <COMPONENT_ID>. Please make sure to have a trailing |.
 #To find out the COMPONENT_ID, please see the screen shot here https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
-metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
+#metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
 #For SIM
-#metricPrefix: "Custom Metrics|WebsphereMQ|"
+metricPrefix: "Custom Metrics|WebsphereMQ|"
 
 #This is the timeout on queue metrics and channel metrics threads.Default value is 20 seconds.
 #No need to change the default unless you know what you are doing.
@@ -30,16 +30,16 @@ queueManagers:
     #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
     #For bindings type, connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
     #For client type, connection change it to "Client".
-    transportType: "Bindings"
+    transportType: "Client"
 
     #Channel name of the queue manager, channel should be server-conn type.
     #This field is not required in case of transportType: Bindings
-    #channelName: "SYSTEM.ADMIN.SVRCONN"
+    channelName: "DEV.ADMIN.SVRCONN"
 
     #for user access level, please check "Access Permissions" section on the extensions page
     #comment out the username and password in case of transportType: Bindings.
-    #username: ""
-    #password: ""
+    username: "admin"
+    password: "root"
 
     #Uncomment only if encryption of passwords is wanted.
     #encryptedPassword: ""
@@ -47,7 +47,7 @@ queueManagers:
     #PCF requests are always sent to SYSTEM.ADMIN.COMMAND.QUEUE. The PCF responses to these requests are sent to the default reply-to queue called
     #SYSTEM.DEFAULT.MODEL.QUEUE. However, you can override this behavior and send it to a temporary dynamic queue by changing the modelQueueName and replyQueuePrefix fields.
     #For more details around this https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q083240_.htm & https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q020010_.htm
-    #modelQueueName: ""
+    modelQueueName: "Q1"
     #replyQueuePrefix: ""
 
 
@@ -112,131 +112,28 @@ mqMetrics:
   # This Object will extract queue manager metrics
   - metricsType: "queueMgrMetrics"
     metrics:
-      include:
-        - Status:
-            alias: "Status"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"
-            aggregationType: "OBSERVATION"
-            timeRollUpType: "AVERAGE"
-            clusterRollUpType: "INDIVIDUAL"
-        - ConnectionCount:
-            alias: "ConnectionCount"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_CONNECTION_COUNT"
+      exclude: []
       
   # This Object will extract queue metrics
   - metricsType: "queueMetrics"
     metrics:
-      include:
-        - MaxQueueDepth:
-            alias: "Max Queue Depth"
-            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_Q_DEPTH"
-            ibmCommand: "MQCMD_INQUIRE_Q"
-          
-        - CurrentQueueDepth:
-            alias: "Current Queue Depth"
-            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CURRENT_Q_DEPTH"
-            ibmCommand: "MQCMD_INQUIRE_Q"
-          
-        - OpenInputCount:
-            alias: "Open Input Count"
-            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_INPUT_COUNT"
-            ibmCommand: "MQCMD_INQUIRE_Q"
-          
-        - OpenOutputCount:
-            alias: "Open Output Count"
-            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_OPEN_OUTPUT_COUNT"
-            ibmCommand: "MQCMD_INQUIRE_Q"
-
-#        - OldestMsgAge:
-#            alias: "OldestMsgAge"
-#            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
-#            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
-#            aggregationType: "OBSERVATION"
-#            timeRollUpType: "CURRENT"
-#            clusterRollUpType: "INDIVIDUAL"
-
-        - UncommittedMsgs:
-            alias: "UncommittedMsgs"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_UNCOMMITTED_MSGS"
-            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
-
-#        - OnQTime:
-#            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_Q_TIME_INDICATOR"
-#            ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
-#            aggregationType: "OBSERVATION"
-#            timeRollUpType: "CURRENT"
-#            clusterRollUpType: "INDIVIDUAL"
-
-#        - HighQDepth:
-#            alias: "HighQDepth"
-#            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_HIGH_Q_DEPTH"
-#            ibmCommand: "MQCMD_RESET_Q_STATS"
-
-#        - MsgDeqCount:
-#            alias: "MsgDeqCount"
-#            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_DEQ_COUNT"
-#            ibmCommand: "MQCMD_RESET_Q_STATS"
-
-#        - MsgEnqCount:
-#            alias: "MsgEnqCount"
-#            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MSG_ENQ_COUNT"
-#            ibmCommand: "MQCMD_RESET_Q_STATS"
+      exclude: []
 
       
   # This Object will extract channel metrics
   - metricsType: "channelMetrics"
     metrics:
-      include:
-        - Messages:
-            alias: "Messages"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
-          
-        - Status:
-            alias: "Status"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"  #http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
-            aggregationType: "OBSERVATION"
-            timeRollUpType: "AVERAGE"
-            clusterRollUpType: "INDIVIDUAL"
-          
-        - ByteSent:
-            alias: "Byte Sent"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
-          
-        - ByteReceived:
-            alias: "Byte Received"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
-          
-        - BuffersSent:
-            alias: "Buffers Sent"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
-          
-        - BuffersReceived:
-            alias: "Buffers Received"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+      exclude: []
 
 
   - metricsType: "listenerMetrics"
     metrics:
-      include:
-        - Status:
-            alias: "Status"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_LISTENER_STATUS"
-            aggregationType: "OBSERVATION"
-            timeRollUpType: "AVERAGE"
-            clusterRollUpType: "INDIVIDUAL"
+      exclude: []
 
   # This Object will extract topic metrics
   - metricsType: "topicMetrics"
     metrics:
-      include:
-        - PublishCount:
-            alias: "Publish Count"
-            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_PUB_COUNT"
-            ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
-        - SubscriptionCount:
-            alias: "Subscription Count"
-            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_SUB_COUNT"
-            ibmCommand: "MQCMD_INQUIRE_TOPIC_STATUS"
+      exclude: []
 
 #Run it as a scheduled task instead of running every minute.
 #If you want to run this every minute, comment this out
@@ -258,17 +155,17 @@ sslConnection:
 # If any of the following fields are not set, the values of the specific fields are set from the system properties of the corresponding fields as specified in the comments.
 # If the system properties are not set for the field, then the data is retrieved from machine agent configFile. Please refer to ControllerInfoFactory for more details.
 controllerInfo:
-  controllerHost: "controller"
+  controllerHost: "localhost"
   controllerPort: 8080
   account: "customer1"
-  username: "user"
+  username: "user1"
   password: "welcome"
   encryptedPassword: ""
   encryptionKey: ""
   controllerSslEnabled: false
   enableOrchestration: false
-  uniqueHostId: ""
-  accountAccessKey: ""
+  uniqueHostId: "new_metric_extension_update"
+  accountAccessKey: "0e6678e0-2bc0-40ad-9e8b-fa6fe440635e"
   machinePath: ""
   simEnabled: true
   applicationName: ""

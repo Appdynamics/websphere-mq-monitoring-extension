@@ -11,6 +11,8 @@ import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
 import com.appdynamics.extensions.metrics.Metric;
+import com.appdynamics.extensions.webspheremq.common.Constants;
+import com.appdynamics.extensions.webspheremq.common.WMQUtil;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
@@ -23,10 +25,8 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.text.ParseException;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class QueueMetricsCollector extends MetricsCollector implements Runnable {
@@ -34,8 +34,7 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 	public static final Logger logger = ExtensionsLoggerFactory.getLogger(QueueMetricsCollector.class);
 	private final String artifact = "Queues";
 
-	public QueueMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
-		this.metricsToReport = metricsToReport;
+	public QueueMetricsCollector(MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
 		this.monitorContextConfig = monitorContextConfig;
 		this.agent = agent;
 		this.metricWriteHelper = metricWriteHelper;
@@ -57,18 +56,9 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 	protected void publishMetrics() throws TaskExecutionException {
 		logger.info("Collecting queue metrics...");
 		List<Future> futures = Lists.newArrayList();
-		Map<String, WMQMetricOverride>  metricsForInquireQCmd = getMetricsToReport(InquireQCmdCollector.COMMAND);
-		if(!metricsForInquireQCmd.isEmpty()){
-			futures.add(monitorContextConfig.getContext().getExecutorService().submit("InquireQCmdCollector", new InquireQCmdCollector(this,metricsForInquireQCmd)));
-		}
-		Map<String, WMQMetricOverride>  metricsForInquireQStatusCmd = getMetricsToReport(InquireQStatusCmdCollector.COMMAND);
-		if(!metricsForInquireQStatusCmd.isEmpty()){
-			futures.add(monitorContextConfig.getContext().getExecutorService().submit("InquireQStatusCmdCollector", new InquireQStatusCmdCollector(this,metricsForInquireQStatusCmd)));
-		}
-		Map<String, WMQMetricOverride>  metricsForResetQStatsCmd = getMetricsToReport(ResetQStatsCmdCollector.COMMAND);
-		if(!metricsForResetQStatsCmd.isEmpty()){
-			futures.add(monitorContextConfig.getContext().getExecutorService().submit("ResetQStatsCmdCollector", new ResetQStatsCmdCollector(this,metricsForResetQStatsCmd)));
-		}
+		futures.add(monitorContextConfig.getContext().getExecutorService().submit("InquireQCmdCollector", new InquireQCmdCollector(this)));
+		futures.add(monitorContextConfig.getContext().getExecutorService().submit("InquireQStatusCmdCollector", new InquireQStatusCmdCollector(this)));
+		futures.add(monitorContextConfig.getContext().getExecutorService().submit("ResetQStatsCmdCollector", new ResetQStatsCmdCollector(this)));
 		for(Future f: futures){
 			try {
 				long timeout = 20;
@@ -86,31 +76,9 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 		}
 	}
 
-	private Map<String, WMQMetricOverride> getMetricsToReport(String command) {
-		Map<String, WMQMetricOverride> commandMetrics = Maps.newHashMap();
-		if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
-			logger.debug("There are no metrics configured for {}",command);
-			return commandMetrics;
-		}
-		Iterator<String> itr = getMetricsToReport().keySet().iterator();
-		while (itr.hasNext()) {
-			String metrickey = itr.next();
-			WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
-			if(wmqOverride.getIbmCommand().equalsIgnoreCase(command)){
-				commandMetrics.put(metrickey,wmqOverride);
-			}
-		}
-		return commandMetrics;
-	}
-
 	@Override
 	public String getAtrifact() {
 		return artifact;
-	}
-
-	@Override
-	public Map<String, WMQMetricOverride> getMetricsToReport() {
-		return this.metricsToReport;
 	}
 
 	protected void processPCFRequestAndPublishQMetrics(String queueGenericName, PCFMessage request, String command) throws MQException, IOException {
@@ -129,39 +97,44 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 			Set<ExcludeFilters> excludeFilters = this.queueManager.getQueueFilters().getExclude();
 			if(!isExcluded(queueName,excludeFilters)) { //check for exclude filters
 				logger.debug("Pulling out metrics for queue name {} for command {}",queueName,command);
-				Iterator<String> itr = getMetricsToReport().keySet().iterator();
+				Enumeration<PCFParameter> pcfParameters = response[i].getParameters();
 				List<Metric> metrics = Lists.newArrayList();
-				while (itr.hasNext()) {
-					String metrickey = itr.next();
-					WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
-					try{
-						PCFParameter pcfParam = response[i].getParameter(wmqOverride.getConstantValue());
-						if (pcfParam != null) {
-							if(pcfParam instanceof MQCFIN){
-								int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-								Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), queueName, metrickey);
-								metrics.add(metric);
-							}
-							else if(pcfParam instanceof MQCFIL){
-								int[] metricVals = response[i].getIntListParameterValue(wmqOverride.getConstantValue());
-								if(metricVals != null){
-									int count=0;
-									for(int val : metricVals){
-										count++;
-										Metric metric = createMetric(queueManager, metrickey+ "_" + Integer.toString(count), val, wmqOverride, getAtrifact(), queueName, metrickey+ "_" + Integer.toString(count));
-										metrics.add(metric);
-									}
+				List<Map> mqMetrics = (List<Map>) this.monitorContextConfig.getConfigYml().get("mqMetrics");
+				List<String> excludedMetrics = WMQUtil.getMetricsToExcludeFromConfigYml(mqMetrics, Constants.METRIC_TYPE_QUEUE);
+				List<String> allFoundMetrics = new ArrayList<>();
+				while (pcfParameters.hasMoreElements()) {
+					PCFParameter pcfParam = pcfParameters.nextElement();
+					String metrickey = pcfParam.getParameterName();
+					allFoundMetrics.add(metrickey);
+					if (!WMQUtil.isMetricExcluded(metrickey, excludedMetrics)) {
+						try {
+							if (pcfParam != null) {
+								// create metric objects from PCF parameter
+								metrics.addAll(createMetrics(queueManager, queueName, pcfParam));
+
+								// Below code adds current queue managers 'dead letter queue' depth. Metric key:'DLQ Depth'
+								// Added the logic here to avoid issuing PCF Queue Status command in 'Queue manger collector' class
+								if (queueName.equalsIgnoreCase("DEV.DEAD.LETTER.QUEUE") && metrickey.equalsIgnoreCase("MQIA_CURRENT_Q_DEPTH")) {
+									Metric metric = getMetricByKey(metrickey, metrics);
+									logger.info("DLQ Depth for queueManager {} is {}", WMQUtil.getQueueManagerNameFromConfig(queueManager), metric.getMetricValue());
+									Metric dlqDepthmetric = createMetric(queueManager, "DLQ Depth", metric.getMetricValue(), null, "DLQ Depth");
+									metrics.add(dlqDepthmetric);
 								}
+							} else {
+								logger.warn("PCF parameter is null in response for Queue: {} for metric: {} in command {}", queueName, metrickey, command);
 							}
-						} else {
-							logger.warn("PCF parameter is null in response for Queue: {} for metric: {} in command {}", queueName, wmqOverride.getIbmCommand(),command);
+						} catch (Exception pcfe) {
+							logger.error("Exception caught while collecting metric for Queue: {} for metric: {} in command {}", queueName, metrickey, command, pcfe);
 						}
 					}
-					catch (PCFException pcfe) {
-						logger.error("PCFException caught while collecting metric for Queue: {} for metric: {} in command {}",queueName, wmqOverride.getIbmCommand(),command, pcfe);
+					else {
+						logger.debug("Queue metric key {} is excluded.",metrickey);
 					}
-
 				}
+				Collections.sort(allFoundMetrics);
+				logger.debug("start of metrics printing...");
+				logger.debug(allFoundMetrics.toString());
+				logger.debug("end of metrics printing...");
 				publishMetrics(metrics);
 			}
 			else{

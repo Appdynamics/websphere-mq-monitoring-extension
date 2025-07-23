@@ -16,6 +16,7 @@ import com.ibm.mq.pcf.PCFMessage;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.Logger;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,8 +26,8 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnab
 
     protected static final String COMMAND = "MQCMD_INQUIRE_TOPIC_STATUS";
 
-    public InquireTStatusCmdCollector(TopicMetricsCollector collector, Map<String, WMQMetricOverride> metricsToReport){
-        super(metricsToReport,collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.countDownLatch);
+    public InquireTStatusCmdCollector(TopicMetricsCollector collector){
+        super(collector.monitorContextConfig,collector.agent,collector.queueManager,collector.metricWriteHelper, collector.countDownLatch);
     }
 
     public void run() {
@@ -41,10 +42,6 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnab
     protected void publishMetrics() throws TaskExecutionException {
         long entryTime = System.currentTimeMillis();
 
-        if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
-            logger.debug("Topic metrics to report from the config is null or empty, nothing to publish for command {}",COMMAND);
-            return;
-        }
         Set<String> topicGenericNames = this.queueManager.getTopicFilters().getInclude();
         for(String topicGenericName : topicGenericNames){
             // Request: https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.ref.adm.doc/q088140_.htm
@@ -55,7 +52,7 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnab
             try {
                 processPCFRequestAndPublishQMetrics(topicGenericName, request,COMMAND);
             } catch (PCFException pcfe) {
-                logger.error("PCFException caught while collecting metric for Queue: {} for command {}",topicGenericName,COMMAND, pcfe);
+                logger.error("PCFException caught while collecting metric for Topic: {} for command {}",topicGenericName,COMMAND, pcfe);
                 PCFMessage[] msgs = (PCFMessage[]) pcfe.exceptionSource;
                 for (int i = 0; i < msgs.length; i++) {
                     logger.error(msgs[i].toString());

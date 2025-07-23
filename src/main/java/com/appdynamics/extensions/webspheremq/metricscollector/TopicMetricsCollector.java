@@ -11,6 +11,8 @@ import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
 import com.appdynamics.extensions.metrics.Metric;
+import com.appdynamics.extensions.webspheremq.common.Constants;
+import com.appdynamics.extensions.webspheremq.common.WMQUtil;
 import com.appdynamics.extensions.webspheremq.config.ExcludeFilters;
 import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.appdynamics.extensions.webspheremq.config.WMQMetricOverride;
@@ -23,18 +25,14 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class TopicMetricsCollector extends MetricsCollector implements Runnable {
     public static final Logger logger = ExtensionsLoggerFactory.getLogger(TopicMetricsCollector.class);
     private final String artifact = "Topics";
 
-    public TopicMetricsCollector(Map<String, WMQMetricOverride> metricsToReport, MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
-        this.metricsToReport = metricsToReport;
+    public TopicMetricsCollector(MonitorContextConfiguration monitorContextConfig, PCFMessageAgent agent, QueueManager queueManager, MetricWriteHelper metricWriteHelper, CountDownLatch countDownLatch) {
         this.monitorContextConfig = monitorContextConfig;
         this.agent = agent;
         this.metricWriteHelper = metricWriteHelper;
@@ -56,10 +54,8 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
         logger.info("Collecting Topic metrics...");
         List<Future> futures = Lists.newArrayList();
 
-        Map<String, WMQMetricOverride>  metricsForInquireTStatusCmd = getMetricsToReport(InquireTStatusCmdCollector.COMMAND);
-        if(!metricsForInquireTStatusCmd.isEmpty()){
-            futures.add(monitorContextConfig.getContext().getExecutorService().submit("Topic Status Cmd Collector", new InquireTStatusCmdCollector(this, metricsForInquireTStatusCmd)));
-        }
+        futures.add(monitorContextConfig.getContext().getExecutorService().submit("Topic Status Cmd Collector", new InquireTStatusCmdCollector(this)));
+
         for(Future f: futures){
             try {
                 long timeout = 20;
@@ -93,23 +89,28 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
             Set<ExcludeFilters> excludeFilters = this.queueManager.getTopicFilters().getExclude();
             if(!isExcluded(topicString,excludeFilters)) { //check for exclude filters
                 logger.debug("Pulling out metrics for topic name {} for command {}",topicString,command);
-                Iterator<String> itr = getMetricsToReport().keySet().iterator();
+                Enumeration<PCFParameter> pcfParameters = response[i].getParameters();
                 List<Metric> metrics = Lists.newArrayList();
-                while (itr.hasNext()) {
-                    String metrickey = itr.next();
-                    WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
-                    try{
-                        PCFParameter pcfParam = response[i].getParameter(wmqOverride.getConstantValue());
-                        if(pcfParam instanceof MQCFIN){
-                            int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-                            Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), topicString, metrickey);
-                            metrics.add(metric);
+                List<Map> mqMetrics = (List<Map>) this.monitorContextConfig.getConfigYml().get("mqMetrics");
+                List<String> excludedMetrics = WMQUtil.getMetricsToExcludeFromConfigYml(mqMetrics, Constants.METRIC_TYPE_TOPIC);
+                while (pcfParameters.hasMoreElements()) {
+                    PCFParameter pcfParam = pcfParameters.nextElement();
+                    String metrickey = pcfParam.getParameterName();
+                    if (!WMQUtil.isMetricExcluded(metrickey, excludedMetrics)) {
+                        try {
+                            if (pcfParam != null) {
+                                // create metric objects from PCF parameter
+                                metrics.addAll(createMetrics(queueManager, topicString, pcfParam));
+                            } else {
+                                logger.warn("PCF parameter is null in response for Topic: {} for metric: {} in command {}", topicString, metrickey, command);
+                            }
+                        } catch (Exception pcfe) {
+                            logger.error("PCFException caught while collecting metric for Topic: {} for metric: {} in command {}", topicString, metrickey, command, pcfe);
                         }
                     }
-                    catch (PCFException pcfe) {
-                        logger.error("PCFException caught while collecting metric for Topic: {} for metric: {} in command {}",topicString, wmqOverride.getIbmCommand(),command, pcfe);
+                    else {
+                        logger.debug("Topic metric key {} is excluded.",metrickey);
                     }
-
                 }
                 publishMetrics(metrics);
             }
@@ -120,28 +121,7 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
 
     }
 
-    private Map<String, WMQMetricOverride> getMetricsToReport(String command) {
-        Map<String, WMQMetricOverride> commandMetrics = Maps.newHashMap();
-        if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
-            logger.debug("There are no metrics configured for {}",command);
-            return commandMetrics;
-        }
-        Iterator<String> itr = getMetricsToReport().keySet().iterator();
-        while (itr.hasNext()) {
-            String metrickey = itr.next();
-            WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
-            if(wmqOverride.getIbmCommand().equalsIgnoreCase(command)){
-                commandMetrics.put(metrickey,wmqOverride);
-            }
-        }
-        return commandMetrics;
-    }
-
     public String getAtrifact() {
         return artifact;
-    }
-
-    public Map<String, WMQMetricOverride> getMetricsToReport() {
-        return this.metricsToReport;
     }
 }
