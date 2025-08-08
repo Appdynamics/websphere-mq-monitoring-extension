@@ -50,7 +50,8 @@ class InquireQCmdCollector extends QueueMetricsCollector implements Runnable {
             return;
         }
 
-        int[] attrs = getIntAttributesArray(CMQC.MQCA_Q_NAME);
+        // Build attribute list only from configured metrics; do not include MQCA_Q_NAME
+        int[] attrs = getIntAttributesArray();
         logger.debug("Attributes being sent along PCF agent request to query queue metrics: {} for command {}",Arrays.toString(attrs),COMMAND);
 
         Set<String> queueGenericNames = this.queueManager.getQueueFilters().getInclude();

@@ -82,16 +82,36 @@ public class QueueManagerMetricsCollector extends MetricsCollector implements Ru
 			}
 			Iterator<String> overrideItr = getMetricsToReport().keySet().iterator();
 			List<Metric> metrics = Lists.newArrayList();
-			while (overrideItr.hasNext()) {
-				String metrickey = overrideItr.next();
-				WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
-				int metricVal = responses[0].getIntParameterValue(wmqOverride.getConstantValue());
-				if (logger.isDebugEnabled()) {
-					logger.debug("Metric: " + metrickey + "=" + metricVal);
-				}
-				Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, metrickey);
-				metrics.add(metric);
-			}
+            while (overrideItr.hasNext()) {
+                String metrickey = overrideItr.next();
+                WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
+                try {
+                    int metricVal = responses[0].getIntParameterValue(wmqOverride.getConstantValue());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Metric: " + metrickey + "=" + metricVal);
+                    }
+                    Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, metrickey);
+                    metrics.add(metric);
+                } catch (Exception notInt) {
+                    try {
+                        String str = responses[0].getStringParameterValue(wmqOverride.getConstantValue());
+                        Integer parsed = null;
+                        String lower = metrickey.toLowerCase();
+                        if (lower.contains("date")) {
+                            parsed = parseDateStringToInt(str);
+                        } else if (lower.contains("time")) {
+                            parsed = parseTimeStringToInt(str);
+                        }
+                        if (parsed != null) {
+                            metrics.add(createMetric(queueManager, metrickey, parsed, wmqOverride, metrickey));
+                        } else {
+                            metrics.add(createInfoMetricFromString(queueManager, metrickey, str, wmqOverride, metrickey));
+                        }
+                    } catch (Exception ignore) {
+                        logger.debug("Metric {} not available as int or string for queue manager", metrickey);
+                    }
+                }
+            }
 			publishMetrics(metrics);
 		} catch (Exception e) {
 			logger.error(e.getMessage());

@@ -80,6 +80,52 @@ public abstract class MetricsCollector implements Runnable {
 		return metric;
 	}
 
+    /**
+     * Creates a numeric metric from a string value by embedding the string into
+     * the metric name and using a constant value of 1.
+     */
+    protected Metric createInfoMetricFromString(QueueManager queueManager,
+                                                String baseMetricName,
+                                                String stringValue,
+                                                WMQMetricOverride wmqOverride,
+                                                String... pathelements) {
+        String safe = stringValue == null ? "" : stringValue.trim();
+        safe = safe.replace('|', '/');
+        String metricName = baseMetricName + ": " + safe;
+        return createMetric(queueManager, metricName, 1, wmqOverride, pathelements);
+    }
+
+    protected Integer parseDateStringToInt(String dateString) {
+        if (dateString == null) {
+            return null;
+        }
+        String digits = dateString.replaceAll("[^0-9]", "");
+        if (digits.length() >= 8) {
+            // Use first 8 digits as YYYYMMDD
+            try {
+                return Integer.parseInt(digits.substring(0, 8));
+            } catch (NumberFormatException ignore) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    protected Integer parseTimeStringToInt(String timeString) {
+        if (timeString == null) {
+            return null;
+        }
+        String digits = timeString.replaceAll("[^0-9]", "");
+        if (digits.length() >= 6) {
+            try {
+                return Integer.parseInt(digits.substring(0, 6));
+            } catch (NumberFormatException ignore) {
+                return null;
+            }
+        }
+        return null;
+    }
+
 	protected void publishMetrics(List<Metric> metrics) {
 		metricWriteHelper.transformAndPrintMetrics(metrics);
 	}
@@ -235,20 +281,27 @@ public abstract class MetricsCollector implements Runnable {
 		return filteredList;
 	}
 
-	protected int[] getIntAttributesArray(int... inputAttrs) {
-		int[] attrs = new int[inputAttrs.length+getMetricsToReport().size()];
-		// fill input attrs
-		for(int i=0 ; i< inputAttrs.length; i++){
-			attrs[i]=inputAttrs[i];
-		}
-		//fill attrs from metrics to report.
-		Iterator<String> overrideItr = getMetricsToReport().keySet().iterator();
-		for (int count = inputAttrs.length; overrideItr.hasNext() && count < attrs.length; count++) {
-			String metrickey = overrideItr.next();
-			WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
-			attrs[count] = wmqOverride.getConstantValue();
-		}
-		return attrs;
-		
-	}
+    protected int[] getIntAttributesArray(int... inputAttrs) {
+        int[] temp = new int[inputAttrs.length + getMetricsToReport().size()];
+        int idx = 0;
+        for (int in : inputAttrs) temp[idx++] = in;
+
+        Iterator<String> overrideItr = getMetricsToReport().keySet().iterator();
+        while (overrideItr.hasNext()) {
+            String metricKey = overrideItr.next();
+            WMQMetricOverride override = getMetricsToReport().get(metricKey);
+            int selector = override.getConstantValue();
+            // Exclude MQCA_Q_NAME (string selector) from attribute list to avoid 3026 selector errors
+            try {
+                // CMQC may not be imported everywhere; use value match to skip 2016 when present
+                if (selector == 2016) { // CMQC.MQCA_Q_NAME
+                    continue;
+                }
+            } catch (Exception ignore) {}
+            temp[idx++] = selector;
+        }
+        int[] attrs = new int[idx];
+        System.arraycopy(temp, 0, attrs, 0, idx);
+        return attrs;
+    }
 }

@@ -100,18 +100,38 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 						logger.debug("Pulling out metrics for channel name {}",channelName);
 						Iterator<String> itr = getMetricsToReport().keySet().iterator();
 						List<Metric> metrics = Lists.newArrayList();
-						while (itr.hasNext()) {
-							String metrickey = itr.next();
-							WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
-							int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-							Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), channelName, metrickey);
-							metrics.add(metric);
-							if ("Status".equals(metrickey)) {
-								if (metricVal == 3) {
-									activeChannels.add(channelName);
-								}
-							}
-						}
+                        while (itr.hasNext()) {
+                            String metrickey = itr.next();
+                            WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
+                            try {
+                                int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
+                                Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), channelName, metrickey);
+                                metrics.add(metric);
+                                if ("Status".equals(metrickey)) {
+                                    if (metricVal == 3) {
+                                        activeChannels.add(channelName);
+                                    }
+                                }
+                            } catch (Exception notInt) {
+                                try {
+                                    String str = response[i].getStringParameterValue(wmqOverride.getConstantValue());
+                                    Integer parsed = null;
+                                    String lower = metrickey.toLowerCase();
+                                    if (lower.contains("date")) {
+                                        parsed = parseDateStringToInt(str);
+                                    } else if (lower.contains("time")) {
+                                        parsed = parseTimeStringToInt(str);
+                                    }
+                                    if (parsed != null) {
+                                        metrics.add(createMetric(queueManager, metrickey, parsed, wmqOverride, getAtrifact(), channelName, metrickey));
+                                    } else {
+                                        metrics.add(createInfoMetricFromString(queueManager, metrickey, str, wmqOverride, getAtrifact(), channelName, metrickey));
+                                    }
+                                } catch (Exception ignore) {
+                                    logger.debug("Metric {} not available as int or string for channel {}", metrickey, channelName);
+                                }
+                            }
+                        }
 						publishMetrics(metrics);
 					}
 					else{
@@ -143,7 +163,7 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 
 	}
 
-	public String getAtrifact() {
+    public String getAtrifact() {
 		return artifact;
 	}
 

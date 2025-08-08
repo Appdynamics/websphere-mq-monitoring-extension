@@ -65,8 +65,8 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			if (ibmQueueManager != null) {
 				logger.debug("MQQueueManager connection initiated for queueManager {} in thread {}", queueManagerTobeDisplayed, Thread.currentThread().getName());
 				heartBeatMetricValue = BigDecimal.ONE;
-				agent = initPCFMesageAgent(ibmQueueManager);
-				extractAndReportMetrics(agent);
+                agent = initPCFMesageAgent(ibmQueueManager);
+                extractAndReportMetrics(ibmQueueManager, agent);
 			} else {
 				logger.error("MQQueueManager connection could not be initiated for queueManager {} in thread {} ", queueManagerTobeDisplayed, Thread.currentThread().getName());
 			}
@@ -127,7 +127,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		return agent;
 	}
 
-	private void extractAndReportMetrics(PCFMessageAgent agent) {
+    private void extractAndReportMetrics(MQQueueManager ibmQueueManager, PCFMessageAgent agent) {
 		Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
 
 		CountDownLatch countDownLatch = new CountDownLatch(metricsMap.size());
@@ -147,6 +147,14 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		} else {
 			logger.warn("No channel metrics to report");
 		}
+
+        Map<String, WMQMetricOverride> channelStatsMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_CHANNEL_STATS);
+        if (channelStatsMetricsToReport != null) {
+            MetricsCollector channelStatsCollector = new ChannelStatisticsCollector(channelStatsMetricsToReport, this.monitorContextConfig, ibmQueueManager, agent, queueManager, metricWriteHelper, countDownLatch);
+            monitorContextConfig.getContext().getExecutorService().execute("ChannelStatisticsCollector", channelStatsCollector);
+        } else {
+            logger.debug("No channel statistics metrics to report");
+        }
 
 		Map<String, WMQMetricOverride> queueMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE);
 		if (queueMetricsToReport != null) {
