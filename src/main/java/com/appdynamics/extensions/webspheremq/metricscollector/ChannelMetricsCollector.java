@@ -114,13 +114,15 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 	private void collectChannelDefinitionMetrics(Set<String> channelGenericNames, 
 			Map<String, WMQMetricOverride> definitionMetrics, Set<String> allChannelNames) {
 		
-		int[] attrs = getIntAttributesArray(CMQCFC.MQCACH_CHANNEL_NAME);
+		// Build attribute array only from definition metrics constants (not including channel name selector)
+		int[] attrs = getChannelAttributesArray(definitionMetrics);
 		logger.debug("Attributes being sent for channel definition query: " + Arrays.toString(attrs));
 
 		for (String channelGenericName : channelGenericNames) {
 			PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL);
 			request.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, channelGenericName);
-			request.addParameter(CMQCFC.MQIACF_CHANNEL_ATTRS, attrs);
+			// Don't add MQIACF_CHANNEL_ATTRS parameter - get all available attributes
+			// This avoids selector validation errors and returns all channel definition data
 			
 			try {
 				logger.debug("Sending PCF request to query channel definitions for generic channel {}", channelGenericName);
@@ -159,14 +161,16 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 	private void collectChannelStatusMetrics(Set<String> channelGenericNames, 
 			Map<String, WMQMetricOverride> statusMetrics, List<String> activeChannels, Set<String> allChannelNames) {
 		
-		int[] attrs = getIntAttributesArray(CMQCFC.MQCACH_CHANNEL_NAME, CMQCFC.MQCACH_CONNECTION_NAME);
+		// Build attribute array only from status metrics constants (not including channel name selector)
+		int[] attrs = getChannelAttributesArray(statusMetrics);
 		logger.debug("Attributes being sent for channel status query: " + Arrays.toString(attrs));
 
 		for (String channelGenericName : channelGenericNames) {
 			PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS);
 			request.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, channelGenericName);
 			request.addParameter(CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE, CMQC.MQOT_CURRENT_CHANNEL);
-			request.addParameter(CMQCFC.MQIACH_CHANNEL_INSTANCE_ATTRS, attrs);
+			// Don't add MQIACH_CHANNEL_INSTANCE_ATTRS parameter - get all available attributes
+			// This avoids selector validation errors and returns all channel status data
 			
 			try {
 				logger.debug("Sending PCF request to query channel status for generic channel {}", channelGenericName);
@@ -230,8 +234,13 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 			
 			try {
 				int metricVal = pcfMessage.getIntParameterValue(wmqOverride.getConstantValue());
-				Metric metric = createMetric(queueManager, metricKey, metricVal, wmqOverride, getAtrifact(), channelName, metricKey);
-				metrics.add(metric);
+				// Skip publishing metrics with invalid values (-1, -3, etc.)
+				if (metricVal >= 0) {
+					Metric metric = createMetric(queueManager, metricKey, metricVal, wmqOverride, getAtrifact(), channelName, metricKey);
+					metrics.add(metric);
+				} else {
+					logger.debug("Skipping metric {} for channel {} with invalid value {}", metricKey, channelName, metricVal);
+				}
 			} catch (Exception notInt) {
 				try {
 					String str = pcfMessage.getStringParameterValue(wmqOverride.getConstantValue());
@@ -242,10 +251,12 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 					} else if (lower.contains("time")) {
 						parsed = parseTimeStringToInt(str);
 					}
-					if (parsed != null) {
+					if (parsed != null && parsed >= 0) {
 						metrics.add(createMetric(queueManager, metricKey, parsed, wmqOverride, getAtrifact(), channelName, metricKey));
-					} else {
+					} else if (parsed == null) {
 						metrics.add(createInfoMetricFromString(queueManager, metricKey, str, wmqOverride, getAtrifact(), channelName, metricKey));
+					} else {
+						logger.debug("Skipping parsed metric {} for channel {} with invalid value {}", metricKey, channelName, parsed);
 					}
 				} catch (Exception ignore) {
 					logger.debug("Metric {} not available as int or string for channel {}", metricKey, channelName);
@@ -254,6 +265,60 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 		}
 		
 		return metrics;
+	}
+
+	/**
+	 * Build attribute array for channel commands, excluding problematic selectors
+	 */
+	private int[] getChannelAttributesArray(Map<String, WMQMetricOverride> metrics) {
+		List<Integer> attrList = new ArrayList<>();
+		
+		for (Map.Entry<String, WMQMetricOverride> entry : metrics.entrySet()) {
+			WMQMetricOverride override = entry.getValue();
+			int selector = override.getConstantValue();
+			
+			// Skip invalid selectors that cause 3026 errors
+			// These are typically string selectors or inappropriate for the command context
+			if (isValidChannelSelector(selector)) {
+				attrList.add(selector);
+			} else {
+				logger.debug("Skipping selector {} for metric {} as it's not valid for channel command", 
+						selector, entry.getKey());
+			}
+		}
+		
+		return attrList.stream().mapToInt(i -> i).toArray();
+	}
+
+	/**
+	 * Check if selector is valid for channel commands
+	 * Using whitelist approach to only allow known safe selectors
+	 */
+	private boolean isValidChannelSelector(int selector) {
+		// Whitelist of known safe integer selectors for channel commands
+		// Only include selectors that we know work reliably
+		
+		// Safe integer selectors for channel status/definition
+		// Use a minimal set to avoid compilation errors with unknown constants
+		if (selector == CMQCFC.MQIACH_CHANNEL_TYPE ||
+		    selector == CMQCFC.MQIACH_SHARING_CONVERSATIONS ||
+		    selector == CMQCFC.MQIACH_HB_INTERVAL ||
+		    selector == CMQCFC.MQIACH_KEEP_ALIVE_INTERVAL ||
+		    selector == CMQCFC.MQIACH_MCA_STATUS ||
+		    selector == CMQCFC.MQIACH_SHORT_RETRIES_LEFT ||
+		    selector == CMQCFC.MQIACH_LONG_RETRIES_LEFT ||
+		    selector == CMQCFC.MQIACH_MSGS ||
+		    selector == CMQCFC.MQIACH_CHANNEL_STATUS ||
+		    selector == CMQCFC.MQIACH_BYTES_SENT ||
+		    selector == CMQCFC.MQIACH_BYTES_RECEIVED ||
+		    selector == CMQCFC.MQIACH_BUFFERS_SENT ||
+		    selector == CMQCFC.MQIACH_BUFFERS_RECEIVED) {
+			return true;
+		}
+		
+		// Exclude everything else to avoid 3026 errors
+		// String selectors, invalid selectors, etc. will be obtained from response
+		return false;
 	}
 
     public String getAtrifact() {
