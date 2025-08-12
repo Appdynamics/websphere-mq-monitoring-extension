@@ -50,12 +50,17 @@ public class WMQUtil {
             override.setIbmCommand((String) metricPropsMap.get("ibmCommand"));
             override.setIbmConstant((String) metricPropsMap.get("ibmConstant"));
             override.setMetricProperties(metricPropsMap);
-            if (override.getConstantValue() == -1) {
-                // Only add the metric which is valid, if constant value
-                // resolutes to -1 then it is invalid.
-                logger.warn("{} is not a valid valid metric, this metric will not be processed", override.getIbmConstant());
-            } else {
+            Object staticValObj = metricPropsMap.get("staticValue");
+            if (staticValObj instanceof String) {
+                override.setStaticValue((String) staticValObj);
+            }
+            boolean hasValidConstant = override.getIbmConstant() != null && override.getConstantValue() != -1;
+            boolean hasStatic = !Strings.isNullOrEmpty(override.getStaticValue());
+
+            if (hasValidConstant || hasStatic) {
                 overrideMap.put(metricName, override);
+            } else {
+                logger.warn("Metric '{}' skipped: neither a valid ibmConstant nor staticValue provided", metricName);
             }
             logger.debug("Override Definition: " + override.toString());
         }

@@ -95,6 +95,27 @@ public abstract class MetricsCollector implements Runnable {
         return createMetric(queueManager, metricName, 1, wmqOverride, pathelements);
     }
 
+    protected Metric createInfoMetricFromStaticValue(QueueManager queueManager,
+                                                     String baseMetricName,
+                                                     WMQMetricOverride wmqOverride,
+                                                     String... pathelements) {
+        String safe = wmqOverride == null ? "" : wmqOverride.getStaticValue();
+        if (safe == null) safe = "";
+        safe = safe.trim().replace('|', '/');
+        String metricName = baseMetricName + ": " + safe;
+        return createMetric(queueManager, metricName, 1, wmqOverride, pathelements);
+    }
+
+    protected Metric createInfoMetricEmbeddingInPath(QueueManager queueManager,
+                                                     String baseMetricName,
+                                                     String stringValue,
+                                                     WMQMetricOverride wmqOverride) {
+        String safe = stringValue == null ? "" : stringValue.trim();
+        safe = safe.replace('|', '/');
+        // Keep metric name as the base (e.g., "Platform"), embed value as extra path element
+        return createMetric(queueManager, baseMetricName, 1, wmqOverride, baseMetricName, safe);
+    }
+
     protected Integer parseDateStringToInt(String dateString) {
         if (dateString == null) {
             return null;

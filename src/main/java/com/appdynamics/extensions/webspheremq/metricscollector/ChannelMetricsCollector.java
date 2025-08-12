@@ -298,27 +298,56 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 		// Whitelist of known safe integer selectors for channel commands
 		// Only include selectors that we know work reliably
 		
-		// Safe integer selectors for channel status/definition
-		// Use a minimal set to avoid compilation errors with unknown constants
-		if (selector == CMQCFC.MQIACH_CHANNEL_TYPE ||
-		    selector == CMQCFC.MQIACH_SHARING_CONVERSATIONS ||
-		    selector == CMQCFC.MQIACH_HB_INTERVAL ||
-		    selector == CMQCFC.MQIACH_KEEP_ALIVE_INTERVAL ||
-		    selector == CMQCFC.MQIACH_MCA_STATUS ||
-		    selector == CMQCFC.MQIACH_SHORT_RETRIES_LEFT ||
-		    selector == CMQCFC.MQIACH_LONG_RETRIES_LEFT ||
-		    selector == CMQCFC.MQIACH_MSGS ||
-		    selector == CMQCFC.MQIACH_CHANNEL_STATUS ||
-		    selector == CMQCFC.MQIACH_BYTES_SENT ||
-		    selector == CMQCFC.MQIACH_BYTES_RECEIVED ||
-		    selector == CMQCFC.MQIACH_BUFFERS_SENT ||
-		    selector == CMQCFC.MQIACH_BUFFERS_RECEIVED) {
-			return true;
+		// Check against known valid selectors
+		try {
+			// Core channel selectors that are always safe
+			if (selector == CMQCFC.MQIACH_CHANNEL_TYPE ||
+			    selector == CMQCFC.MQIACH_HB_INTERVAL ||
+			    selector == CMQCFC.MQIACH_MCA_STATUS ||
+			    selector == CMQCFC.MQIACH_SHORT_RETRIES_LEFT ||
+			    selector == CMQCFC.MQIACH_LONG_RETRIES_LEFT ||
+			    selector == CMQCFC.MQIACH_MSGS ||
+			    selector == CMQCFC.MQIACH_CHANNEL_STATUS ||
+			    selector == CMQCFC.MQIACH_BYTES_SENT ||
+			    selector == CMQCFC.MQIACH_BYTES_RECEIVED ||
+			    selector == CMQCFC.MQIACH_BUFFERS_SENT ||
+			    selector == CMQCFC.MQIACH_BUFFERS_RECEIVED ||
+			    selector == CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE ||
+			    selector == CMQCFC.MQIACH_BATCH_INTERVAL ||
+			    selector == CMQCFC.MQIACH_BATCH_DATA_LIMIT ||
+			    selector == CMQCFC.MQIACH_COMPRESSION_RATE ||
+			    selector == CMQCFC.MQIACH_COMPRESSION_TIME) {
+				return true;
+			}
+			
+			// Additional selectors that might not exist in all MQ versions
+			// Use dynamic checking to avoid compilation errors
+			if (selector == getConstantValue("MQIACH_CHANNEL_SUBSTATE") ||
+			    selector == getConstantValue("MQIACH_SHORT_RETRY") ||
+			    selector == getConstantValue("MQIACH_LONG_RETRY") ||
+			    selector == getConstantValue("MQIACH_MONITORING") ||
+			    selector == getConstantValue("MQIACH_SHARING_CONVERSATIONS") ||
+			    selector == getConstantValue("MQIACH_KEEP_ALIVE_INTERVAL")) {
+				return selector > 0; // Valid if constant exists
+			}
+		} catch (Exception e) {
+			logger.debug("Error checking selector validity for {}: {}", selector, e.getMessage());
 		}
 		
 		// Exclude everything else to avoid 3026 errors
-		// String selectors, invalid selectors, etc. will be obtained from response
 		return false;
+	}
+	
+	/**
+	 * Helper method to get constant value dynamically
+	 */
+	private int getConstantValue(String constantName) {
+		try {
+			return (Integer) CMQCFC.class.getDeclaredField(constantName).get(null);
+		} catch (Exception e) {
+			logger.debug("Constant {} not found in CMQCFC", constantName);
+			return -1;
+		}
 	}
 
     public String getAtrifact() {

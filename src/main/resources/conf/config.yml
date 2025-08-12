@@ -19,9 +19,9 @@ metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|WebsphereMQ|"
 #encryptionKey: ""
 
 queueManagers:
-  - displayName: ""
+  - displayName: "QM1"
     # displayName (optional). This will be your QM name that will show up in AppD metric path.
-    host: "localhost"
+    host: "localhost"  # Will work after port mapping
     port: 1414
 
     #Actual name of the queue manager
@@ -30,16 +30,16 @@ queueManagers:
     #The transport type for the queue manager connection, the default is "Bindings" for a binding type connection
     #For bindings type, connection WMQ extension (i.e machine agent) need to be on the same machine on which WebbsphereMQ server is running
     #For client type, connection change it to "Client".
-    transportType: "Bindings"
+    transportType: "Client"
 
     #Channel name of the queue manager, channel should be server-conn type.
     #This field is not required in case of transportType: Bindings
-    #channelName: "SYSTEM.ADMIN.SVRCONN"
+    channelName: "DEV.ADMIN.SVRCONN"
 
     #for user access level, please check "Access Permissions" section on the extensions page
     #comment out the username and password in case of transportType: Bindings.
-    #username: ""
-    #password: ""
+    username: "admin"
+    password: "root"
 
     #Uncomment only if encryption of passwords is wanted.
     #encryptedPassword: ""
@@ -47,7 +47,7 @@ queueManagers:
     #PCF requests are always sent to SYSTEM.ADMIN.COMMAND.QUEUE. The PCF responses to these requests are sent to the default reply-to queue called
     #SYSTEM.DEFAULT.MODEL.QUEUE. However, you can override this behavior and send it to a temporary dynamic queue by changing the modelQueueName and replyQueuePrefix fields.
     #For more details around this https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q083240_.htm & https://www.ibm.com/support/knowledgecenter/SSFKSJ_8.0.0/com.ibm.mq.adm.doc/q020010_.htm
-    #modelQueueName: ""
+    modelQueueName: "Q1"
     #replyQueuePrefix: ""
 
 
@@ -118,9 +118,50 @@ mqMetrics:
             alias: "Queue Manager Name"
             ibmConstant: "com.ibm.mq.constants.CMQC.MQCA_Q_MGR_NAME"
             ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - Platform:
             alias: "Platform"
             ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_PLATFORM"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - MQVersion:
+            alias: "MQ Version"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_VERSION"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - CCSID:
+            alias: "Character Set ID"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_CODED_CHAR_SET_ID"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - MaxHandles:
+            alias: "Max Handles"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_HANDLES"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - MaxMessageLength:
+            alias: "Max Message Length"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_MSG_LENGTH"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - MonitoringQueue:
+            alias: "Queue Monitoring Level"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MONITORING_Q"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - MonitoringChannel:
+            alias: "Channel Monitoring Level"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MONITORING_CHANNEL"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - CommandLevel:
+            alias: "Command Level"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_COMMAND_LEVEL"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - MaxPriority:
+            alias: "Max Priority"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_PRIORITY"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - MaxUncommittedMsgs:
+            alias: "Max Uncommitted Messages"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MAX_UNCOMMITTED_MSGS"
+            ibmCommand: "MQCMD_INQUIRE_Q_MGR"
+        - TriggerInterval:
+            alias: "Trigger Interval"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_TRIGGER_INTERVAL"
             ibmCommand: "MQCMD_INQUIRE_Q_MGR"
         ###################
         - Status:
@@ -139,9 +180,10 @@ mqMetrics:
       include:
         ################### Added metrics
         - QueueName:
-            alias: "Queue Name"
+            alias: "Queue Name" 
             ibmConstant: "com.ibm.mq.constants.CMQC.MQCA_Q_NAME"
             ibmCommand: "MQCMD_INQUIRE_Q"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - OldestMsgAge:
             alias: "Oldest Message Age"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACF_OLDEST_MSG_AGE"
@@ -150,18 +192,24 @@ mqMetrics:
             alias: "Last Get Date"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACF_LAST_GET_DATE"
             ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - LastGetTime:
             alias: "Last Get Time"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACF_LAST_GET_TIME"
             ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - LastPutDate:
             alias: "Last Put Date"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACF_LAST_PUT_DATE"
             ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - LastPutTime:
             alias: "Last Put Time"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACF_LAST_PUT_TIME"
             ibmCommand: "MQCMD_INQUIRE_Q_STATUS"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
+        # Note: May return -3 for system queues or queues where monitoring is not applicable
+        # -3 = Not applicable, 0 = Off, 1 = Low, 2 = Medium, 3 = High
         - QueueMonitoring:
             alias: "Queue Monitoring"
             ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_MONITORING_Q"
@@ -170,9 +218,17 @@ mqMetrics:
             alias: "Queue Description"
             ibmConstant: "com.ibm.mq.constants.CMQC.MQCA_Q_DESC"
             ibmCommand: "MQCMD_INQUIRE_Q"
-        ################### This was commented
-        # Duplicate of OldestMsgAge retained above with correct constant
-        ###################
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
+        # Queue timing and depth metrics
+        - QueueDepthHigh:
+            alias: "Queue Depth High Limit"
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_Q_DEPTH_HIGH_LIMIT"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+        - QueueDepthLow:
+            alias: "Queue Depth Low Limit" 
+            ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_Q_DEPTH_LOW_LIMIT"
+            ibmCommand: "MQCMD_INQUIRE_Q"
+   
         - GetStatus:
             alias: "Get Status"
             ibmConstant: "com.ibm.mq.constants.CMQC.MQIA_INHIBIT_GET"
@@ -238,6 +294,7 @@ mqMetrics:
             alias: "Channel Name"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACH_CHANNEL_NAME"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - ChannelInstType:
             alias: "Channel Instance Type"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE"
@@ -246,13 +303,10 @@ mqMetrics:
             alias: "Channel Type"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_TYPE"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL"
-        - CurrentActionState:
-            alias: "Current Action State"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_INSTANCE_STATUS"
-            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
-        - CurrentSharingConversations:
-            alias: "Current Sharing Conversations"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_SHARING_CONVERSATIONS"
+        # Alternative to CurrentActionState - using Channel Substate instead
+        - ChannelSubstate:
+            alias: "Channel Substate"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_SUBSTATE"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
         - HeartbeatInterval:
             alias: "Heartbeat Interval"
@@ -262,22 +316,30 @@ mqMetrics:
             alias: "Keep Alive Interval"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_KEEP_ALIVE_INTERVAL"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+        - CurrentSharingConversations:
+            alias: "Current Sharing Conversations"
+            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_SHARING_CONVERSATIONS"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL"
         - LastMessageDate:
             alias: "Last Message Date"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACH_LAST_MSG_DATE"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - LastMessageTime:
             alias: "Last Message Time"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACH_LAST_MSG_TIME"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - LocalAddress:
             alias: "Local Address"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACH_LOCAL_ADDRESS"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - MCAUserID:
             alias: "MCA User ID"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACH_MCA_USER_ID"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - MCAStatus:
             alias: "MCA Status"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MCA_STATUS"
@@ -286,14 +348,17 @@ mqMetrics:
             alias: "Remote Queue Manager Name"
             ibmConstant: "com.ibm.mq.constants.CMQC.MQCA_REMOTE_Q_MGR_NAME"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - XmitQName:
             alias: "Xmit Queue Name"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACH_XMIT_Q_NAME"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - ConnectionName:
             alias: "Connection Name"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACH_CONNECTION_NAME"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
         - ShortRetriesLeft:
             alias: "Short Retries Left"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_SHORT_RETRIES_LEFT"
@@ -330,14 +395,24 @@ mqMetrics:
             alias: "SSL Short Peer Name"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQCACH_SSL_SHORT_PEER_NAME"
             ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
+            # STRING VALUE - Will be handled in code: incorporate into metric path, value = 1
+
+
+        # Channel Monitoring level (similar to Queue Monitoring) - MQIACH_MONITORING not available in this MQ version
+        # - ChannelMonitoring:
+        #     alias: "Channel Monitoring"
+        #     ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MONITORING"
+        #     ibmCommand: "MQCMD_INQUIRE_CHANNEL"
         ###################
         - Messages:
             alias: "Messages"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_MSGS"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
           
         - Status:
             alias: "Status"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_CHANNEL_STATUS"  #http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
             aggregationType: "OBSERVATION"
             timeRollUpType: "AVERAGE"
             clusterRollUpType: "INDIVIDUAL"
@@ -345,42 +420,31 @@ mqMetrics:
         - ByteSent:
             alias: "Byte Sent"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_SENT"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
           
         - ByteReceived:
             alias: "Byte Received"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BYTES_RECEIVED"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
           
         - BuffersSent:
             alias: "Buffers Sent"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_SENT"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
           
         - BuffersReceived:
             alias: "Buffers Received"
             ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BUFFERS_RECEIVED"
+            ibmCommand: "MQCMD_INQUIRE_CHANNEL_STATUS"
 
 
+  # Channel Statistics metrics section - removed duplicates that are already in channelMetrics
+  # This section would be for metrics collected from SYSTEM.ADMIN.STATISTICS.QUEUE
+  # which requires MQ statistics to be enabled (MONCHL/STATINT)
   - metricsType: "channelStatsMetrics"
     metrics:
       include:
-        # Placeholders for statistics constants; ensure MQ statistics are enabled on the QM
-        - ShortTermBatchSize:
-            alias: "Short Term Batch Size"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BATCH_INTERVAL"
-        - LongTermBatchSize:
-            alias: "Long Term Batch Size"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_BATCH_DATA_LIMIT"
-        - ShortTermCompressionRate:
-            alias: "Short Term Compression Rate"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_COMPRESSION_RATE"
-        - LongTermCompressionRate:
-            alias: "Long Term Compression Rate"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_COMPRESSION_RATE"
-        - ShortTermCompressionTime:
-            alias: "Short Term Compression Time"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_COMPRESSION_TIME"
-        - LongTermCompressionTime:
-            alias: "Long Term Compression Time"
-            ibmConstant: "com.ibm.mq.constants.CMQCFC.MQIACH_COMPRESSION_TIME"
+        # Add any channel statistics-specific metrics here that are not in channelMetrics
 
   - metricsType: "listenerMetrics"
     metrics:
