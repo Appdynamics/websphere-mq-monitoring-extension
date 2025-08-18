@@ -100,7 +100,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
                 }
             }
             catch (Exception e) {
-                logger.error("Unexpected Error occoured while collecting metrics for listener " + listenerGenericName, e);
+                logger.error("Unexpected error occurred while collecting metrics for listener " + listenerGenericName, e);
             }
         }
         if (!allMetrics.isEmpty()) {

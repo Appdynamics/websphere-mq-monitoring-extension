@@ -70,10 +70,10 @@ class InquireQCmdCollector extends QueueMetricsCollector implements Runnable {
                 for (int i = 0; i < msgs.length; i++) {
                     logger.error(msgs[i].toString());
                 }
-                // Dont throw exception as it will stop queuemetric colloection
+                // Don't throw exception as it will stop queue metric collection
             } catch (Exception mqe) {
                 logger.error("MQException caught", mqe);
-                // Dont throw exception as it will stop queuemetric colloection
+                // Don't throw exception as it will stop queue metric collection
             }
         }
         long exitTime = System.currentTimeMillis() - entryTime;

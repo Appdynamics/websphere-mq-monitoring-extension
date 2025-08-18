@@ -120,7 +120,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			if(queueManager.getEncoding() != Integer.MIN_VALUE){
 				agent.setEncoding(queueManager.getEncoding());
 			}
-			logger.debug("Intialized PCFMessageAgent for queueManager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
+			logger.debug("Initialized PCFMessageAgent for queueManager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 		} catch (MQException mqe) {
 			logger.error(mqe.getMessage(), mqe);
 		}
@@ -201,7 +201,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 				agent.disconnect();
 				logger.debug("PCFMessageAgent disconnected for queueManager {} in thread {}", qMgrName, Thread.currentThread().getName());
 			} catch (Exception e) {
-				logger.error("Error occoured  while disconnting PCFMessageAgent for queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
+				logger.error("Error occurred while disconnecting PCFMessageAgent for queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
 			}
 		}
 
@@ -210,9 +210,9 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		if (ibmQueueManager != null) {
 			try {
 				ibmQueueManager.disconnect();
-				//logger.debug("Connection diconnected for queue manager {} in thread {}", ibmQueueManager.getName(), Thread.currentThread().getName());
+				//logger.debug("Connection disconnected for queue manager {} in thread {}", ibmQueueManager.getName(), Thread.currentThread().getName());
 			} catch (Exception e) {
-				logger.error("Error occoured while disconnting queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
+				logger.error("Error occurred while disconnecting queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
 			}
 		}
 	}

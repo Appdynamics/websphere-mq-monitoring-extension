@@ -16,8 +16,6 @@ public class Constants {
 	public static final String METRIC_TYPE_TOPIC = "topicMetrics";
 	
 	public static final String TRANSPORT_TYPE_CLIENT = "Client";
-	// Kept for backward compatibility; correct constant is TRANSPORT_TYPE_BINDINGS
-	public static final String TRANSPORT_TYPE_BINGINGS = "Bindings";
 	public static final String TRANSPORT_TYPE_BINDINGS = "Bindings";
 
 }
