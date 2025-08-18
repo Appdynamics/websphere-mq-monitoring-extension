@@ -65,7 +65,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			if (ibmQueueManager != null) {
 				logger.debug("MQQueueManager connection initiated for queueManager {} in thread {}", queueManagerTobeDisplayed, Thread.currentThread().getName());
 				heartBeatMetricValue = BigDecimal.ONE;
-                agent = initPCFMesageAgent(ibmQueueManager);
+                agent = initPCFMessageAgent(ibmQueueManager);
                 extractAndReportMetrics(ibmQueueManager, agent);
 			} else {
 				logger.error("MQQueueManager connection could not be initiated for queueManager {} in thread {} ", queueManagerTobeDisplayed, Thread.currentThread().getName());
@@ -99,7 +99,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		return ibmQueueManager;
 	}
 
-	private PCFMessageAgent initPCFMesageAgent(MQQueueManager ibmQueueManager) {
+	private PCFMessageAgent initPCFMessageAgent(MQQueueManager ibmQueueManager) {
 		PCFMessageAgent agent = null;
 		try {
 			if(!Strings.isNullOrEmpty(queueManager.getModelQueueName()) && !Strings.isNullOrEmpty(queueManager.getReplyQueuePrefix())){
