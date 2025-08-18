@@ -46,6 +46,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 	private Map<String, ?> configMap;
 	private MetricWriteHelper metricWriteHelper;
 	private BigDecimal heartBeatMetricValue = BigDecimal.ZERO;
+	private MQQueueManager ibmQueueManager;
 
 	public WMQMonitorTask(TasksExecutionServiceProvider tasksExecutionServiceProvider, MonitorContextConfiguration monitorContextConfig, QueueManager queueManager) {
 		this.monitorContextConfig = monitorContextConfig;
@@ -62,11 +63,12 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		PCFMessageAgent agent = null;
 		try {
 			ibmQueueManager = initMQQueueManager();
+			this.ibmQueueManager = ibmQueueManager;
 			if (ibmQueueManager != null) {
 				logger.debug("MQQueueManager connection initiated for queueManager {} in thread {}", queueManagerTobeDisplayed, Thread.currentThread().getName());
 				heartBeatMetricValue = BigDecimal.ONE;
                 agent = initPCFMessageAgent(ibmQueueManager);
-                extractAndReportMetrics(ibmQueueManager, agent);
+                extractAndReportMetrics(agent);
 			} else {
 				logger.error("MQQueueManager connection could not be initiated for queueManager {} in thread {} ", queueManagerTobeDisplayed, Thread.currentThread().getName());
 			}
@@ -127,7 +129,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		return agent;
 	}
 
-    private void extractAndReportMetrics(MQQueueManager ibmQueueManager, PCFMessageAgent agent) {
+    private void extractAndReportMetrics(PCFMessageAgent agent) {
 		Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
 
 		CountDownLatch countDownLatch = new CountDownLatch(metricsMap.size());
@@ -150,7 +152,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 
         Map<String, WMQMetricOverride> channelStatsMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_CHANNEL_STATS);
         if (channelStatsMetricsToReport != null) {
-            MetricsCollector channelStatsCollector = new ChannelStatisticsCollector(channelStatsMetricsToReport, this.monitorContextConfig, ibmQueueManager, agent, queueManager, metricWriteHelper, countDownLatch);
+            MetricsCollector channelStatsCollector = new ChannelStatisticsCollector(channelStatsMetricsToReport, this.monitorContextConfig, this.ibmQueueManager, agent, queueManager, metricWriteHelper, countDownLatch);
             monitorContextConfig.getContext().getExecutorService().execute("ChannelStatisticsCollector", channelStatsCollector);
         } else {
             logger.debug("No channel statistics metrics to report");
