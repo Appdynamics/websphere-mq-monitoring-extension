@@ -71,6 +71,7 @@ public class ChannelStatisticsCollector extends MetricsCollector implements Runn
             gmo.options = CMQC.MQGMO_NO_WAIT | CMQC.MQGMO_CONVERT | CMQC.MQGMO_PROPERTIES_IN_HANDLE;
 
             int polled = 0;
+            List<Metric> aggregate = Lists.newArrayList();
             while (polled < 20) { // bounded read per cycle
                 polled++;
                 MQMessage msg = new MQMessage();
@@ -91,7 +92,7 @@ public class ChannelStatisticsCollector extends MetricsCollector implements Runn
                         logger.debug("Decoded channel statistics PCF message: {}", pcf);
                     }
                     String channelName = safeString(pcf.getStringParameterValue(CMQCFC.MQCACH_CHANNEL_NAME));
-                    if (channelName == null || channelName.isEmpty()) {
+                    if (channelName.isEmpty()) {
                         continue;
                     }
                     Iterator<String> itr = getMetricsToReport().keySet().iterator();
@@ -113,10 +114,13 @@ public class ChannelStatisticsCollector extends MetricsCollector implements Runn
                             }
                         }
                     }
-                    publishMetrics(toPublish);
+                    aggregate.addAll(toPublish);
                 } catch (Exception ex) {
                     logger.debug("Failed to decode statistics message", ex);
                 }
+            }
+            if (!aggregate.isEmpty()) {
+                publishMetrics(aggregate);
             }
         } catch (Exception e) {
             logger.error("ChannelStatisticsCollector error", e);

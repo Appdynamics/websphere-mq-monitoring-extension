@@ -308,14 +308,15 @@ public abstract class MetricsCollector implements Runnable {
         for (int in : inputAttrs) temp[idx++] = in;
 
         Iterator<String> overrideItr = getMetricsToReport().keySet().iterator();
+        final int MQCA_Q_NAME_SELECTOR = 2016; // CMQC.MQCA_Q_NAME
         while (overrideItr.hasNext()) {
             String metricKey = overrideItr.next();
             WMQMetricOverride override = getMetricsToReport().get(metricKey);
             int selector = override.getConstantValue();
             // Exclude MQCA_Q_NAME (string selector) from attribute list to avoid 3026 selector errors
             try {
-                // CMQC may not be imported everywhere; use value match to skip 2016 when present
-                if (selector == 2016) { // CMQC.MQCA_Q_NAME
+                // CMQC may not be imported everywhere; use value match to skip constant when present
+                if (selector == MQCA_Q_NAME_SELECTOR) { // CMQC.MQCA_Q_NAME
                     continue;
                 }
             } catch (Exception ignore) {}

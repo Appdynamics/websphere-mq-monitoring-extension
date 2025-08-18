@@ -53,7 +53,8 @@ public class WMQContext {
             addEnvProperty(env, CMQC.SSL_CERT_STORE_PROPERTY, queueManager.getSslKeyRepository());
             addEnvProperty(env, CMQC.SSL_CIPHER_SUITE_PROPERTY, queueManager.getCipherSuite());
             addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES_CLIENT);
-        } else if (Constants.TRANSPORT_TYPE_BINGINGS.equalsIgnoreCase(queueManager.getTransportType())) {
+        } else if (Constants.TRANSPORT_TYPE_BINDINGS.equalsIgnoreCase(queueManager.getTransportType())
+                || Constants.TRANSPORT_TYPE_BINGINGS.equalsIgnoreCase(queueManager.getTransportType())) {
             // For bindings we only provide the transport type; MQ java libs will
             // connect locally using installation libraries.
             addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES_BINDINGS);
@@ -100,7 +101,8 @@ public class WMQContext {
 					errorMsg.append("Channel cannot be null or empty for client type connection. ");
 				}
 			}
-            if (Constants.TRANSPORT_TYPE_BINGINGS.equalsIgnoreCase(queueManager.getTransportType())) {
+            if (Constants.TRANSPORT_TYPE_BINDINGS.equalsIgnoreCase(queueManager.getTransportType())
+                    || Constants.TRANSPORT_TYPE_BINGINGS.equalsIgnoreCase(queueManager.getTransportType())) {
 				if (!StringUtils.hasText(queueManager.getName())) {
 					validArgs = false;
 					errorMsg.append("queuemanager cannot be null or empty for bindings type connection. ");

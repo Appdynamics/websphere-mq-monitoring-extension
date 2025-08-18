@@ -74,7 +74,7 @@ public class ListenerMetricsCollectorTest {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireListenerStatusCmd());
         classUnderTest = new ListenerMetricsCollector(listenerMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
         classUnderTest.publishMetrics();
-        verify(metricWriteHelper, times(2)).transformAndPrintMetrics(pathCaptor.capture());
+        verify(metricWriteHelper, times(1)).transformAndPrintMetrics(pathCaptor.capture());
         List<String> metricPathsList = Lists.newArrayList();
         metricPathsList.add("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QM1|Listeners|DEV.DEFAULT.LISTENER.TCP|Status");
         metricPathsList.add("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QM1|Listeners|DEV.LISTENER.TCP|Status");

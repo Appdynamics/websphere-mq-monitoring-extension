@@ -40,6 +40,34 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 	public static final Logger logger = ExtensionsLoggerFactory.getLogger(ChannelMetricsCollector.class);
 	private final String artifact = "Channels";
 
+	private static final Set<Integer> VALID_CHANNEL_SELECTORS = new HashSet<>(Arrays.asList(
+			CMQCFC.MQIACH_CHANNEL_TYPE,
+			CMQCFC.MQIACH_HB_INTERVAL,
+			CMQCFC.MQIACH_MCA_STATUS,
+			CMQCFC.MQIACH_SHORT_RETRIES_LEFT,
+			CMQCFC.MQIACH_LONG_RETRIES_LEFT,
+			CMQCFC.MQIACH_MSGS,
+			CMQCFC.MQIACH_CHANNEL_STATUS,
+			CMQCFC.MQIACH_BYTES_SENT,
+			CMQCFC.MQIACH_BYTES_RECEIVED,
+			CMQCFC.MQIACH_BUFFERS_SENT,
+			CMQCFC.MQIACH_BUFFERS_RECEIVED,
+			CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE,
+			CMQCFC.MQIACH_BATCH_INTERVAL,
+			CMQCFC.MQIACH_BATCH_DATA_LIMIT,
+			CMQCFC.MQIACH_COMPRESSION_RATE,
+			CMQCFC.MQIACH_COMPRESSION_TIME
+	));
+
+	private static final List<String> DYNAMIC_CHANNEL_SELECTORS = Arrays.asList(
+			"MQIACH_CHANNEL_SUBSTATE",
+			"MQIACH_SHORT_RETRY",
+			"MQIACH_LONG_RETRY",
+			"MQIACH_MONITORING",
+			"MQIACH_SHARING_CONVERSATIONS",
+			"MQIACH_KEEP_ALIVE_INTERVAL"
+	);
+
 	/*
 	 * The Channel Status values are mentioned here http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
 	 */
@@ -93,26 +121,32 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 		List<String> activeChannels = Lists.newArrayList();
 		Set<String> allChannelNames = new HashSet<>();
 
+
+		// Aggregate metrics across all channels and publish once
+		List<Metric> allMetrics = Lists.newArrayList();
+
 		// First, collect channel definition metrics (static attributes)
 		if (!definitionMetrics.isEmpty()) {
-			collectChannelDefinitionMetrics(channelGenericNames, definitionMetrics, allChannelNames);
+			collectChannelDefinitionMetrics(channelGenericNames, definitionMetrics, allChannelNames, allMetrics);
 		}
 
 		// Then, collect channel status metrics (running instance attributes)
 		if (!statusMetrics.isEmpty()) {
-			collectChannelStatusMetrics(channelGenericNames, statusMetrics, activeChannels, allChannelNames);
+			collectChannelStatusMetrics(channelGenericNames, statusMetrics, activeChannels, allChannelNames, allMetrics);
 		}
 
 		logger.info("Active Channels in queueManager {} are {}", WMQUtil.getQueueManagerNameFromConfig(queueManager), activeChannels);
 		Metric activeChannelsCountMetric = createMetric(queueManager,"ActiveChannelsCount", activeChannels.size(), null, getAtrifact(), "ActiveChannelsCount");
-		publishMetrics(Arrays.asList(activeChannelsCountMetric));
+		allMetrics.add(activeChannelsCountMetric);
+
+		publishMetrics(allMetrics);
 
 		long exitTime = System.currentTimeMillis() - entryTime;
 		logger.debug("Time taken to publish metrics for all channels is {} milliseconds", exitTime);
 	}
 
 	private void collectChannelDefinitionMetrics(Set<String> channelGenericNames, 
-			Map<String, WMQMetricOverride> definitionMetrics, Set<String> allChannelNames) {
+			Map<String, WMQMetricOverride> definitionMetrics, Set<String> allChannelNames, List<Metric> aggregate) {
 		
 		// Build attribute array only from definition metrics constants (not including channel name selector)
 		int[] attrs = getChannelAttributesArray(definitionMetrics);
@@ -141,11 +175,11 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 					allChannelNames.add(channelName);
 					
 					Set<ExcludeFilters> excludeFilters = this.queueManager.getChannelFilters().getExclude();
-					if (!isExcluded(channelName, excludeFilters)) {
-						logger.debug("Collecting definition metrics for channel {}", channelName);
-						List<Metric> metrics = extractChannelMetrics(pcfMessage, channelName, definitionMetrics);
-						publishMetrics(metrics);
-					} else {
+						if (!isExcluded(channelName, excludeFilters)) {
+							logger.debug("Collecting definition metrics for channel {}", channelName);
+							List<Metric> metrics = extractChannelMetrics(pcfMessage, channelName, definitionMetrics);
+							aggregate.addAll(metrics);
+						} else {
 						logger.debug("Channel name {} is excluded", channelName);
 					}
 				}
@@ -159,7 +193,7 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 	}
 
 	private void collectChannelStatusMetrics(Set<String> channelGenericNames, 
-			Map<String, WMQMetricOverride> statusMetrics, List<String> activeChannels, Set<String> allChannelNames) {
+			Map<String, WMQMetricOverride> statusMetrics, List<String> activeChannels, Set<String> allChannelNames, List<Metric> aggregate) {
 		
 		// Build attribute array only from status metrics constants (not including channel name selector)
 		int[] attrs = getChannelAttributesArray(statusMetrics);
@@ -192,7 +226,7 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 					if (!isExcluded(channelName, excludeFilters)) {
 						logger.debug("Collecting status metrics for channel {}", channelName);
 						List<Metric> metrics = extractChannelMetrics(pcfMessage, channelName, statusMetrics);
-						publishMetrics(metrics);
+						aggregate.addAll(metrics);
 						
 						// Check if channel is active for active channels count
 						try {
@@ -295,46 +329,18 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 	 * Using whitelist approach to only allow known safe selectors
 	 */
 	private boolean isValidChannelSelector(int selector) {
-		// Whitelist of known safe integer selectors for channel commands
-		// Only include selectors that we know work reliably
-		
-		// Check against known valid selectors
+		if (VALID_CHANNEL_SELECTORS.contains(selector)) {
+			return true;
+		}
 		try {
-			// Core channel selectors that are always safe
-			if (selector == CMQCFC.MQIACH_CHANNEL_TYPE ||
-			    selector == CMQCFC.MQIACH_HB_INTERVAL ||
-			    selector == CMQCFC.MQIACH_MCA_STATUS ||
-			    selector == CMQCFC.MQIACH_SHORT_RETRIES_LEFT ||
-			    selector == CMQCFC.MQIACH_LONG_RETRIES_LEFT ||
-			    selector == CMQCFC.MQIACH_MSGS ||
-			    selector == CMQCFC.MQIACH_CHANNEL_STATUS ||
-			    selector == CMQCFC.MQIACH_BYTES_SENT ||
-			    selector == CMQCFC.MQIACH_BYTES_RECEIVED ||
-			    selector == CMQCFC.MQIACH_BUFFERS_SENT ||
-			    selector == CMQCFC.MQIACH_BUFFERS_RECEIVED ||
-			    selector == CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE ||
-			    selector == CMQCFC.MQIACH_BATCH_INTERVAL ||
-			    selector == CMQCFC.MQIACH_BATCH_DATA_LIMIT ||
-			    selector == CMQCFC.MQIACH_COMPRESSION_RATE ||
-			    selector == CMQCFC.MQIACH_COMPRESSION_TIME) {
-				return true;
-			}
-			
-			// Additional selectors that might not exist in all MQ versions
-			// Use dynamic checking to avoid compilation errors
-			if (selector == getConstantValue("MQIACH_CHANNEL_SUBSTATE") ||
-			    selector == getConstantValue("MQIACH_SHORT_RETRY") ||
-			    selector == getConstantValue("MQIACH_LONG_RETRY") ||
-			    selector == getConstantValue("MQIACH_MONITORING") ||
-			    selector == getConstantValue("MQIACH_SHARING_CONVERSATIONS") ||
-			    selector == getConstantValue("MQIACH_KEEP_ALIVE_INTERVAL")) {
-				return selector > 0; // Valid if constant exists
+			for (String constantName : DYNAMIC_CHANNEL_SELECTORS) {
+				if (selector == getConstantValue(constantName)) {
+					return selector > 0;
+				}
 			}
 		} catch (Exception e) {
 			logger.debug("Error checking selector validity for {}: {}", selector, e.getMessage());
 		}
-		
-		// Exclude everything else to avoid 3026 errors
 		return false;
 	}
 	
