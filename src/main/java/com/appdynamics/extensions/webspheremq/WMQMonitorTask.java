@@ -46,6 +46,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 	private Map<String, ?> configMap;
 	private MetricWriteHelper metricWriteHelper;
 	private BigDecimal heartBeatMetricValue = BigDecimal.ZERO;
+	private MQQueueManager ibmQueueManager;
 
 	public WMQMonitorTask(TasksExecutionServiceProvider tasksExecutionServiceProvider, MonitorContextConfiguration monitorContextConfig, QueueManager queueManager) {
 		this.monitorContextConfig = monitorContextConfig;
@@ -62,11 +63,12 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		PCFMessageAgent agent = null;
 		try {
 			ibmQueueManager = initMQQueueManager();
+			this.ibmQueueManager = ibmQueueManager;
 			if (ibmQueueManager != null) {
 				logger.debug("MQQueueManager connection initiated for queueManager {} in thread {}", queueManagerTobeDisplayed, Thread.currentThread().getName());
 				heartBeatMetricValue = BigDecimal.ONE;
-				agent = initPCFMesageAgent(ibmQueueManager);
-				extractAndReportMetrics(agent);
+                agent = initPCFMessageAgent(ibmQueueManager);
+                extractAndReportMetrics(agent);
 			} else {
 				logger.error("MQQueueManager connection could not be initiated for queueManager {} in thread {} ", queueManagerTobeDisplayed, Thread.currentThread().getName());
 			}
@@ -99,7 +101,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		return ibmQueueManager;
 	}
 
-	private PCFMessageAgent initPCFMesageAgent(MQQueueManager ibmQueueManager) {
+	private PCFMessageAgent initPCFMessageAgent(MQQueueManager ibmQueueManager) {
 		PCFMessageAgent agent = null;
 		try {
 			if(!Strings.isNullOrEmpty(queueManager.getModelQueueName()) && !Strings.isNullOrEmpty(queueManager.getReplyQueuePrefix())){
@@ -120,14 +122,14 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			if(queueManager.getEncoding() != Integer.MIN_VALUE){
 				agent.setEncoding(queueManager.getEncoding());
 			}
-			logger.debug("Intialized PCFMessageAgent for queueManager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
+			logger.debug("Initialized PCFMessageAgent for queueManager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 		} catch (MQException mqe) {
 			logger.error(mqe.getMessage(), mqe);
 		}
 		return agent;
 	}
 
-	private void extractAndReportMetrics(PCFMessageAgent agent) {
+    private void extractAndReportMetrics(PCFMessageAgent agent) {
 		Map<String, Map<String, WMQMetricOverride>> metricsMap = WMQUtil.getMetricsToReportFromConfigYml((List<Map>) configMap.get("mqMetrics"));
 
 		CountDownLatch countDownLatch = new CountDownLatch(metricsMap.size());
@@ -147,6 +149,14 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		} else {
 			logger.warn("No channel metrics to report");
 		}
+
+        Map<String, WMQMetricOverride> channelStatsMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_CHANNEL_STATS);
+        if (channelStatsMetricsToReport != null) {
+            MetricsCollector channelStatsCollector = new ChannelStatisticsCollector(channelStatsMetricsToReport, this.monitorContextConfig, this.ibmQueueManager, agent, queueManager, metricWriteHelper, countDownLatch);
+            monitorContextConfig.getContext().getExecutorService().execute("ChannelStatisticsCollector", channelStatsCollector);
+        } else {
+            logger.debug("No channel statistics metrics to report");
+        }
 
 		Map<String, WMQMetricOverride> queueMetricsToReport = metricsMap.get(Constants.METRIC_TYPE_QUEUE);
 		if (queueMetricsToReport != null) {
@@ -193,7 +203,7 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 				agent.disconnect();
 				logger.debug("PCFMessageAgent disconnected for queueManager {} in thread {}", qMgrName, Thread.currentThread().getName());
 			} catch (Exception e) {
-				logger.error("Error occoured  while disconnting PCFMessageAgent for queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
+				logger.error("Error occurred while disconnecting PCFMessageAgent for queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
 			}
 		}
 
@@ -202,9 +212,9 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 		if (ibmQueueManager != null) {
 			try {
 				ibmQueueManager.disconnect();
-				//logger.debug("Connection diconnected for queue manager {} in thread {}", ibmQueueManager.getName(), Thread.currentThread().getName());
+				//logger.debug("Connection disconnected for queue manager {} in thread {}", ibmQueueManager.getName(), Thread.currentThread().getName());
 			} catch (Exception e) {
-				logger.error("Error occoured while disconnting queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
+				logger.error("Error occurred while disconnecting queueManager {} in thread {}", queueManager.getName(), Thread.currentThread().getName(), e);
 			}
 		}
 	}

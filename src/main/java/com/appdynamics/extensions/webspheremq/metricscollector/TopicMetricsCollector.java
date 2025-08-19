@@ -52,7 +52,7 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
         }
     }
 
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
         logger.info("Collecting Topic metrics...");
         List<Future> futures = Lists.newArrayList();
 
@@ -88,6 +88,7 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
             logger.debug("Unexpected Error while PCFMessage.send() for command {}, response is either null or empty",command);
             return;
         }
+        List<Metric> allMetrics = Lists.newArrayList();
         for (int i = 0; i < response.length; i++) {
             String topicString = response[i].getStringParameterValue(CMQC.MQCA_TOPIC_STRING).trim();
             Set<ExcludeFilters> excludeFilters = this.queueManager.getTopicFilters().getExclude();
@@ -111,11 +112,14 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
                     }
 
                 }
-                publishMetrics(metrics);
+                allMetrics.addAll(metrics);
             }
             else{
                 logger.debug("Topic name {} is excluded.",topicString);
             }
+        }
+        if (!allMetrics.isEmpty()) {
+            publishMetrics(allMetrics);
         }
 
     }

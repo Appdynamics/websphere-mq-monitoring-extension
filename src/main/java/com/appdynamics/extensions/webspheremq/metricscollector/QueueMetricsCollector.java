@@ -54,7 +54,7 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 	}
 
 	@Override
-	protected void publishMetrics() throws TaskExecutionException {
+	protected void collectAndPublish() throws TaskExecutionException {
 		logger.info("Collecting queue metrics...");
 		List<Future> futures = Lists.newArrayList();
 		Map<String, WMQMetricOverride>  metricsForInquireQCmd = getMetricsToReport(InquireQCmdCollector.COMMAND);
@@ -152,6 +152,21 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 										metrics.add(metric);
 									}
 								}
+                            }
+                            else if (pcfParam instanceof MQCFST) {
+                                String str = response[i].getStringParameterValue(wmqOverride.getConstantValue());
+                                Integer parsed = null;
+                                String lower = metrickey.toLowerCase();
+                                if (lower.contains("date")) {
+                                    parsed = parseDateStringToInt(str);
+                                } else if (lower.contains("time")) {
+                                    parsed = parseTimeStringToInt(str);
+                                }
+                                if (parsed != null) {
+                                    metrics.add(createMetric(queueManager, metrickey, parsed, wmqOverride, getAtrifact(), queueName, metrickey));
+                                } else {
+                                    metrics.add(createInfoMetricFromString(queueManager, metrickey, str, wmqOverride, getAtrifact(), queueName, metrickey));
+                                }
 							}
 						} else {
 							logger.warn("PCF parameter is null in response for Queue: {} for metric: {} in command {}", queueName, wmqOverride.getIbmCommand(),command);
@@ -162,7 +177,22 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 					}
 
 				}
-				publishMetrics(metrics);
+                // Derived metric: QFull%
+                Integer maxDepth = null;
+                Integer curDepth = null;
+                for (Metric m : metrics) {
+                    if ("Max Queue Depth".equals(m.getMetricName()) || "MaxQueueDepth".equals(m.getMetricName())) {
+                        try { maxDepth = Integer.valueOf(m.getMetricValue()); } catch (Exception ignore) {}
+                    }
+                    if ("Current Queue Depth".equals(m.getMetricName()) || "CurrentQueueDepth".equals(m.getMetricName())) {
+                        try { curDepth = Integer.valueOf(m.getMetricValue()); } catch (Exception ignore) {}
+                    }
+                }
+                if (maxDepth != null && maxDepth > 0 && curDepth != null) {
+                    int pct = (int) Math.round((curDepth * 100.0) / maxDepth);
+                    metrics.add(createMetric(queueManager, "QFull%", pct, null, getAtrifact(), queueName, "QFull%"));
+                }
+                publishMetrics(metrics);
 			}
 			else{
 				logger.debug("Queue name {} is excluded.",queueName);

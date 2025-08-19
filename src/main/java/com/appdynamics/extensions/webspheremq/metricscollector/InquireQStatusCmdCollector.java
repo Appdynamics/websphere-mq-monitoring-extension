@@ -33,13 +33,13 @@ class InquireQStatusCmdCollector extends QueueMetricsCollector implements Runnab
     public void run() {
         try {
             logger.info("Collecting metrics for command {}",COMMAND);
-            publishMetrics();
+            collectAndPublish();
         } catch (TaskExecutionException e) {
             logger.error("Something unforeseen has happened ",e);
         }
     }
 
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
 		/*
 		 * attrs = { CMQC.MQCA_Q_NAME, MQIACF_OLDEST_MSG_AGE, MQIACF_Q_TIME_INDICATOR };
 		 */
@@ -67,10 +67,10 @@ class InquireQStatusCmdCollector extends QueueMetricsCollector implements Runnab
                 for (int i = 0; i < msgs.length; i++) {
                     logger.error(msgs[i].toString());
                 }
-                // Dont throw exception as it will stop queuemetric colloection
+                // Don't throw exception as it will stop queue metric collection
             } catch (Exception mqe) {
                 logger.error("MQException caught", mqe);
-                // Dont throw exception as it will stop queuemetric colloection
+                // Don't throw exception as it will stop queue metric collection
             }
         }
         long exitTime = System.currentTimeMillis() - entryTime;

@@ -40,6 +40,34 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 	public static final Logger logger = ExtensionsLoggerFactory.getLogger(ChannelMetricsCollector.class);
 	private final String artifact = "Channels";
 
+	private static final Set<Integer> VALID_CHANNEL_SELECTORS = new HashSet<>(Arrays.asList(
+			CMQCFC.MQIACH_CHANNEL_TYPE,
+			CMQCFC.MQIACH_HB_INTERVAL,
+			CMQCFC.MQIACH_MCA_STATUS,
+			CMQCFC.MQIACH_SHORT_RETRIES_LEFT,
+			CMQCFC.MQIACH_LONG_RETRIES_LEFT,
+			CMQCFC.MQIACH_MSGS,
+			CMQCFC.MQIACH_CHANNEL_STATUS,
+			CMQCFC.MQIACH_BYTES_SENT,
+			CMQCFC.MQIACH_BYTES_RECEIVED,
+			CMQCFC.MQIACH_BUFFERS_SENT,
+			CMQCFC.MQIACH_BUFFERS_RECEIVED,
+			CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE,
+			CMQCFC.MQIACH_BATCH_INTERVAL,
+			CMQCFC.MQIACH_BATCH_DATA_LIMIT,
+			CMQCFC.MQIACH_COMPRESSION_RATE,
+			CMQCFC.MQIACH_COMPRESSION_TIME
+	));
+
+	private static final List<String> DYNAMIC_CHANNEL_SELECTORS = Arrays.asList(
+			"MQIACH_CHANNEL_SUBSTATE",
+			"MQIACH_SHORT_RETRY",
+			"MQIACH_LONG_RETRY",
+			"MQIACH_MONITORING",
+			"MQIACH_SHARING_CONVERSATIONS",
+			"MQIACH_KEEP_ALIVE_INTERVAL"
+	);
+
 	/*
 	 * The Channel Status values are mentioned here http://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q090880_.htm
 	 */
@@ -64,7 +92,7 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 	}
 
 	@Override
-	protected void publishMetrics() throws TaskExecutionException {
+	protected void collectAndPublish() throws TaskExecutionException {
 		long entryTime = System.currentTimeMillis();
 
 		if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
@@ -72,78 +100,263 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 			return;
 		}
 
-		int[] attrs = getIntAttributesArray(CMQCFC.MQCACH_CHANNEL_NAME, CMQCFC.MQCACH_CONNECTION_NAME);
-		logger.debug("Attributes being sent along PCF agent request to query channel metrics: " + Arrays.toString(attrs));
+		// Separate metrics by command type
+		Map<String, WMQMetricOverride> statusMetrics = new HashMap<>();
+		Map<String, WMQMetricOverride> definitionMetrics = new HashMap<>();
+		
+		for (Map.Entry<String, WMQMetricOverride> entry : getMetricsToReport().entrySet()) {
+			WMQMetricOverride override = entry.getValue();
+			if (override.getIbmCommand() != null && override.getIbmCommand().equals("MQCMD_INQUIRE_CHANNEL")) {
+				definitionMetrics.put(entry.getKey(), override);
+			} else {
+				// Default to status metrics for backward compatibility
+				statusMetrics.put(entry.getKey(), override);
+			}
+		}
+
+		logger.debug("Channel status metrics count: {}, Channel definition metrics count: {}", 
+				statusMetrics.size(), definitionMetrics.size());
 
 		Set<String> channelGenericNames = this.queueManager.getChannelFilters().getInclude();
-
 		List<String> activeChannels = Lists.newArrayList();
-		for(String channelGenericName : channelGenericNames){
-			PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS);
-			request.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, channelGenericName);
-			request.addParameter(CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE, CMQC.MQOT_CURRENT_CHANNEL);
-			request.addParameter(CMQCFC.MQIACH_CHANNEL_INSTANCE_ATTRS, attrs);
-			try {
-				logger.debug("sending PCF agent request to query metrics for generic channel {}", channelGenericName);
-				long startTime = System.currentTimeMillis();
-				PCFMessage[] response = agent.send(request);
-				long endTime = System.currentTimeMillis() - startTime;
-				logger.debug("PCF agent queue metrics query response for generic queue {} received in {} milliseconds", channelGenericName, endTime);
-				if (response == null || response.length <= 0) {
-					logger.debug("Unexpected Error while PCFMessage.send(), response is either null or empty");
-					return;
-				}
-				for (int i = 0; i < response.length; i++) {
-					String channelName = response[i].getStringParameterValue(CMQCFC.MQCACH_CHANNEL_NAME).trim();
-					Set<ExcludeFilters> excludeFilters = this.queueManager.getChannelFilters().getExclude();
-					if(!isExcluded(channelName,excludeFilters)) { //check for exclude filters
-						logger.debug("Pulling out metrics for channel name {}",channelName);
-						Iterator<String> itr = getMetricsToReport().keySet().iterator();
-						List<Metric> metrics = Lists.newArrayList();
-						while (itr.hasNext()) {
-							String metrickey = itr.next();
-							WMQMetricOverride wmqOverride = getMetricsToReport().get(metrickey);
-							int metricVal = response[i].getIntParameterValue(wmqOverride.getConstantValue());
-							Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), channelName, metrickey);
-							metrics.add(metric);
-							if ("Status".equals(metrickey)) {
-								if (metricVal == 3) {
-									activeChannels.add(channelName);
-								}
-							}
-						}
-						publishMetrics(metrics);
-					}
-					else{
-						logger.debug("Channel name {} is excluded.",channelName);
-					}
-				}
-			}
-			catch (PCFException pcfe) {
-				String errorMsg = "";
-				if (pcfe.getReason() == MQConstants.MQRCCF_CHL_STATUS_NOT_FOUND) {
-					errorMsg = "Channel- " + channelGenericName + " :";
-					errorMsg += "Could not collect channel information as channel is stopped or inactive: Reason '3065'\n";
-					errorMsg += "If the channel type is MQCHT_RECEIVER, MQCHT_SVRCONN or MQCHT_CLUSRCVR, then the only action is to enable the channel, not start it.";
-					logger.error(errorMsg,pcfe);
-				} else if (pcfe.getReason() == MQConstants.MQRC_SELECTOR_ERROR) {
-					logger.error("Invalid metrics passed while collecting channel metrics, check config.yaml: Reason '2067'",pcfe);
-				}
-			} catch (Exception e) {
-				logger.error("Unexpected Error occoured while collecting metrics for channel " + channelGenericName, e);
-			}
+		Set<String> allChannelNames = new HashSet<>();
+
+
+		// Aggregate metrics across all channels and publish once
+		List<Metric> allMetrics = Lists.newArrayList();
+
+		// First, collect channel definition metrics (static attributes)
+		if (!definitionMetrics.isEmpty()) {
+			collectChannelDefinitionMetrics(channelGenericNames, definitionMetrics, allChannelNames, allMetrics);
+		}
+
+		// Then, collect channel status metrics (running instance attributes)
+		if (!statusMetrics.isEmpty()) {
+			collectChannelStatusMetrics(channelGenericNames, statusMetrics, activeChannels, allChannelNames, allMetrics);
 		}
 
 		logger.info("Active Channels in queueManager {} are {}", WMQUtil.getQueueManagerNameFromConfig(queueManager), activeChannels);
 		Metric activeChannelsCountMetric = createMetric(queueManager,"ActiveChannelsCount", activeChannels.size(), null, getAtrifact(), "ActiveChannelsCount");
-		publishMetrics(Arrays.asList(activeChannelsCountMetric));
+		allMetrics.add(activeChannelsCountMetric);
+
+		publishMetrics(allMetrics);
 
 		long exitTime = System.currentTimeMillis() - entryTime;
 		logger.debug("Time taken to publish metrics for all channels is {} milliseconds", exitTime);
-
 	}
 
-	public String getAtrifact() {
+	private void collectChannelDefinitionMetrics(Set<String> channelGenericNames, 
+			Map<String, WMQMetricOverride> definitionMetrics, Set<String> allChannelNames, List<Metric> aggregate) {
+		
+		// Build attribute array only from definition metrics constants (not including channel name selector)
+		int[] attrs = getChannelAttributesArray(definitionMetrics);
+		logger.debug("Attributes being sent for channel definition query: " + Arrays.toString(attrs));
+
+		for (String channelGenericName : channelGenericNames) {
+			PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL);
+			request.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, channelGenericName);
+			// Don't add MQIACF_CHANNEL_ATTRS parameter - get all available attributes
+			// This avoids selector validation errors and returns all channel definition data
+			
+			try {
+				logger.debug("Sending PCF request to query channel definitions for generic channel {}", channelGenericName);
+				long startTime = System.currentTimeMillis();
+				PCFMessage[] response = agent.send(request);
+				long endTime = System.currentTimeMillis() - startTime;
+				logger.debug("PCF channel definition query response for {} received in {} ms", channelGenericName, endTime);
+				
+				if (response == null || response.length <= 0) {
+					logger.debug("No channel definitions found for pattern {}", channelGenericName);
+					continue;
+				}
+				
+				for (PCFMessage pcfMessage : response) {
+					String channelName = pcfMessage.getStringParameterValue(CMQCFC.MQCACH_CHANNEL_NAME).trim();
+					allChannelNames.add(channelName);
+					
+					Set<ExcludeFilters> excludeFilters = this.queueManager.getChannelFilters().getExclude();
+						if (!isExcluded(channelName, excludeFilters)) {
+							logger.debug("Collecting definition metrics for channel {}", channelName);
+							List<Metric> metrics = extractChannelMetrics(pcfMessage, channelName, definitionMetrics);
+							aggregate.addAll(metrics);
+						} else {
+						logger.debug("Channel name {} is excluded", channelName);
+					}
+				}
+			} catch (PCFException pcfe) {
+				logger.error("PCF Exception while collecting channel definition metrics for {}: Reason '{}'", 
+						channelGenericName, pcfe.getReason(), pcfe);
+			} catch (Exception e) {
+				logger.error("Unexpected error while collecting channel definition metrics for " + channelGenericName, e);
+			}
+		}
+	}
+
+	private void collectChannelStatusMetrics(Set<String> channelGenericNames, 
+			Map<String, WMQMetricOverride> statusMetrics, List<String> activeChannels, Set<String> allChannelNames, List<Metric> aggregate) {
+		
+		// Build attribute array only from status metrics constants (not including channel name selector)
+		int[] attrs = getChannelAttributesArray(statusMetrics);
+		logger.debug("Attributes being sent for channel status query: " + Arrays.toString(attrs));
+
+		for (String channelGenericName : channelGenericNames) {
+			PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS);
+			request.addParameter(CMQCFC.MQCACH_CHANNEL_NAME, channelGenericName);
+			request.addParameter(CMQCFC.MQIACH_CHANNEL_INSTANCE_TYPE, CMQC.MQOT_CURRENT_CHANNEL);
+			// Don't add MQIACH_CHANNEL_INSTANCE_ATTRS parameter - get all available attributes
+			// This avoids selector validation errors and returns all channel status data
+			
+			try {
+				logger.debug("Sending PCF request to query channel status for generic channel {}", channelGenericName);
+				long startTime = System.currentTimeMillis();
+				PCFMessage[] response = agent.send(request);
+				long endTime = System.currentTimeMillis() - startTime;
+				logger.debug("PCF channel status query response for {} received in {} ms", channelGenericName, endTime);
+				
+				if (response == null || response.length <= 0) {
+					logger.debug("No active channel instances found for pattern {}", channelGenericName);
+					continue;
+				}
+				
+				for (PCFMessage pcfMessage : response) {
+					String channelName = pcfMessage.getStringParameterValue(CMQCFC.MQCACH_CHANNEL_NAME).trim();
+					allChannelNames.add(channelName);
+					
+					Set<ExcludeFilters> excludeFilters = this.queueManager.getChannelFilters().getExclude();
+					if (!isExcluded(channelName, excludeFilters)) {
+						logger.debug("Collecting status metrics for channel {}", channelName);
+						List<Metric> metrics = extractChannelMetrics(pcfMessage, channelName, statusMetrics);
+						aggregate.addAll(metrics);
+						
+						// Check if channel is active for active channels count
+						try {
+							int status = pcfMessage.getIntParameterValue(CMQCFC.MQIACH_CHANNEL_STATUS);
+							if (status == 3) { // RUNNING
+								activeChannels.add(channelName);
+							}
+						} catch (Exception e) {
+							logger.debug("Could not determine status for channel {}", channelName);
+						}
+					} else {
+						logger.debug("Channel name {} is excluded", channelName);
+					}
+				}
+			} catch (PCFException pcfe) {
+				if (pcfe.getReason() == MQConstants.MQRCCF_CHL_STATUS_NOT_FOUND) {
+					String errorMsg = "Channel " + channelGenericName + ": Could not collect channel status as channel is stopped or inactive: Reason '3065'. ";
+					errorMsg += "If the channel type is MQCHT_RECEIVER, MQCHT_SVRCONN or MQCHT_CLUSRCVR, then the only action is to enable the channel, not start it.";
+					logger.debug(errorMsg); // Reduced to debug level since this is expected for inactive channels
+				} else if (pcfe.getReason() == MQConstants.MQRC_SELECTOR_ERROR) {
+					logger.error("Invalid metrics passed while collecting channel status metrics, check config.yaml: Reason '2067'", pcfe);
+				} else {
+					logger.error("PCF Exception while collecting channel status metrics for {}: Reason '{}'", 
+							channelGenericName, pcfe.getReason(), pcfe);
+				}
+			} catch (Exception e) {
+				logger.error("Unexpected error while collecting channel status metrics for " + channelGenericName, e);
+			}
+		}
+	}
+
+	private List<Metric> extractChannelMetrics(PCFMessage pcfMessage, String channelName, 
+			Map<String, WMQMetricOverride> metricsToExtract) {
+		List<Metric> metrics = Lists.newArrayList();
+		
+		for (Map.Entry<String, WMQMetricOverride> entry : metricsToExtract.entrySet()) {
+			String metricKey = entry.getKey();
+			WMQMetricOverride wmqOverride = entry.getValue();
+			
+			try {
+				int metricVal = pcfMessage.getIntParameterValue(wmqOverride.getConstantValue());
+				// Skip publishing metrics with invalid values (-1, -3, etc.)
+				if (metricVal >= 0) {
+					Metric metric = createMetric(queueManager, metricKey, metricVal, wmqOverride, getAtrifact(), channelName, metricKey);
+					metrics.add(metric);
+				} else {
+					logger.debug("Skipping metric {} for channel {} with invalid value {}", metricKey, channelName, metricVal);
+				}
+			} catch (Exception notInt) {
+				try {
+					String str = pcfMessage.getStringParameterValue(wmqOverride.getConstantValue());
+					Integer parsed = null;
+					String lower = metricKey.toLowerCase();
+					if (lower.contains("date")) {
+						parsed = parseDateStringToInt(str);
+					} else if (lower.contains("time")) {
+						parsed = parseTimeStringToInt(str);
+					}
+					if (parsed != null && parsed >= 0) {
+						metrics.add(createMetric(queueManager, metricKey, parsed, wmqOverride, getAtrifact(), channelName, metricKey));
+					} else if (parsed == null) {
+						metrics.add(createInfoMetricFromString(queueManager, metricKey, str, wmqOverride, getAtrifact(), channelName, metricKey));
+					} else {
+						logger.debug("Skipping parsed metric {} for channel {} with invalid value {}", metricKey, channelName, parsed);
+					}
+				} catch (Exception ignore) {
+					logger.debug("Metric {} not available as int or string for channel {}", metricKey, channelName);
+				}
+			}
+		}
+		
+		return metrics;
+	}
+
+	/**
+	 * Build attribute array for channel commands, excluding problematic selectors
+	 */
+	private int[] getChannelAttributesArray(Map<String, WMQMetricOverride> metrics) {
+		List<Integer> attrList = new ArrayList<>();
+		
+		for (Map.Entry<String, WMQMetricOverride> entry : metrics.entrySet()) {
+			WMQMetricOverride override = entry.getValue();
+			int selector = override.getConstantValue();
+			
+			// Skip invalid selectors that cause 3026 errors
+			// These are typically string selectors or inappropriate for the command context
+			if (isValidChannelSelector(selector)) {
+				attrList.add(selector);
+			} else {
+				logger.debug("Skipping selector {} for metric {} as it's not valid for channel command", 
+						selector, entry.getKey());
+			}
+		}
+		
+		return attrList.stream().mapToInt(i -> i).toArray();
+	}
+
+	/**
+	 * Check if selector is valid for channel commands
+	 * Using whitelist approach to only allow known safe selectors
+	 */
+	private boolean isValidChannelSelector(int selector) {
+		if (VALID_CHANNEL_SELECTORS.contains(selector)) {
+			return true;
+		}
+		try {
+			for (String constantName : DYNAMIC_CHANNEL_SELECTORS) {
+				if (selector == getConstantValue(constantName)) {
+					return selector > 0;
+				}
+			}
+		} catch (Exception e) {
+			logger.debug("Error checking selector validity for {}: {}", selector, e.getMessage());
+		}
+		return false;
+	}
+	
+	/**
+	 * Helper method to get constant value dynamically
+	 */
+	private int getConstantValue(String constantName) {
+		try {
+			return (Integer) CMQCFC.class.getDeclaredField(constantName).get(null);
+		} catch (Exception e) {
+			logger.debug("Constant {} not found in CMQCFC", constantName);
+			return -1;
+		}
+	}
+
+    public String getAtrifact() {
 		return artifact;
 	}
 

@@ -42,7 +42,7 @@ public abstract class MetricsCollector implements Runnable {
 
 	public static final Logger logger = ExtensionsLoggerFactory.getLogger(MetricsCollector.class);
 
-	protected abstract void publishMetrics() throws TaskExecutionException;
+	protected abstract void collectAndPublish() throws TaskExecutionException;
 
 	public abstract String getAtrifact();
 
@@ -55,7 +55,7 @@ public abstract class MetricsCollector implements Runnable {
 	 * @throws TaskExecutionException
 	 */
 	public final void process() throws TaskExecutionException {
-		publishMetrics();
+		collectAndPublish();
 	}
 
 	protected String getMetricsName(String qmNameToBeDisplayed, String... pathelements) {
@@ -79,6 +79,73 @@ public abstract class MetricsCollector implements Runnable {
 		}
 		return metric;
 	}
+
+    /**
+     * Creates a numeric metric from a string value by embedding the string into
+     * the metric name and using a constant value of 1.
+     */
+    protected Metric createInfoMetricFromString(QueueManager queueManager,
+                                                String baseMetricName,
+                                                String stringValue,
+                                                WMQMetricOverride wmqOverride,
+                                                String... pathelements) {
+        String safe = stringValue == null ? "" : stringValue.trim();
+        safe = safe.replace('|', '/');
+        String metricName = baseMetricName + ": " + safe;
+        return createMetric(queueManager, metricName, 1, wmqOverride, pathelements);
+    }
+
+    protected Metric createInfoMetricFromStaticValue(QueueManager queueManager,
+                                                     String baseMetricName,
+                                                     WMQMetricOverride wmqOverride,
+                                                     String... pathelements) {
+        String safe = wmqOverride == null ? "" : wmqOverride.getStaticValue();
+        if (safe == null) safe = "";
+        safe = safe.trim().replace('|', '/');
+        String metricName = baseMetricName + ": " + safe;
+        return createMetric(queueManager, metricName, 1, wmqOverride, pathelements);
+    }
+
+    protected Metric createInfoMetricEmbeddingInPath(QueueManager queueManager,
+                                                     String baseMetricName,
+                                                     String stringValue,
+                                                     WMQMetricOverride wmqOverride) {
+        String safe = stringValue == null ? "" : stringValue.trim();
+        safe = safe.replace('|', '/');
+        // Keep metric name as the base (e.g., "Platform"), embed value as extra path element
+        return createMetric(queueManager, baseMetricName, 1, wmqOverride, baseMetricName, safe);
+    }
+
+    protected Integer parseDateStringToInt(String dateString) {
+        if (dateString == null) {
+            return null;
+        }
+        String digits = dateString.replaceAll("[^0-9]", "");
+        if (digits.length() >= 8) {
+            // Use first 8 digits as YYYYMMDD
+            try {
+                return Integer.parseInt(digits.substring(0, 8));
+            } catch (NumberFormatException ignore) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    protected Integer parseTimeStringToInt(String timeString) {
+        if (timeString == null) {
+            return null;
+        }
+        String digits = timeString.replaceAll("[^0-9]", "");
+        if (digits.length() >= 6) {
+            try {
+                return Integer.parseInt(digits.substring(0, 6));
+            } catch (NumberFormatException ignore) {
+                return null;
+            }
+        }
+        return null;
+    }
 
 	protected void publishMetrics(List<Metric> metrics) {
 		metricWriteHelper.transformAndPrintMetrics(metrics);
@@ -235,20 +302,28 @@ public abstract class MetricsCollector implements Runnable {
 		return filteredList;
 	}
 
-	protected int[] getIntAttributesArray(int... inputAttrs) {
-		int[] attrs = new int[inputAttrs.length+getMetricsToReport().size()];
-		// fill input attrs
-		for(int i=0 ; i< inputAttrs.length; i++){
-			attrs[i]=inputAttrs[i];
-		}
-		//fill attrs from metrics to report.
-		Iterator<String> overrideItr = getMetricsToReport().keySet().iterator();
-		for (int count = inputAttrs.length; overrideItr.hasNext() && count < attrs.length; count++) {
-			String metrickey = overrideItr.next();
-			WMQMetricOverride wmqOverride = (WMQMetricOverride) getMetricsToReport().get(metrickey);
-			attrs[count] = wmqOverride.getConstantValue();
-		}
-		return attrs;
-		
-	}
+    protected int[] getIntAttributesArray(int... inputAttrs) {
+        int[] temp = new int[inputAttrs.length + getMetricsToReport().size()];
+        int idx = 0;
+        for (int in : inputAttrs) temp[idx++] = in;
+
+        Iterator<String> overrideItr = getMetricsToReport().keySet().iterator();
+        final int MQCA_Q_NAME_SELECTOR = 2016; // CMQC.MQCA_Q_NAME
+        while (overrideItr.hasNext()) {
+            String metricKey = overrideItr.next();
+            WMQMetricOverride override = getMetricsToReport().get(metricKey);
+            int selector = override.getConstantValue();
+            // Exclude MQCA_Q_NAME (string selector) from attribute list to avoid 3026 selector errors
+            try {
+                // CMQC may not be imported everywhere; use value match to skip constant when present
+                if (selector == MQCA_Q_NAME_SELECTOR) { // CMQC.MQCA_Q_NAME
+                    continue;
+                }
+            } catch (Exception ignore) {}
+            temp[idx++] = selector;
+        }
+        int[] attrs = new int[idx];
+        System.arraycopy(temp, 0, attrs, 0, idx);
+        return attrs;
+    }
 }

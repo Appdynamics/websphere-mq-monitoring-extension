@@ -49,7 +49,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
         }
     }
 
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
         long entryTime = System.currentTimeMillis();
 
         if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
@@ -59,6 +59,9 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
 
         int[] attrs = getIntAttributesArray(CMQCFC.MQCACH_LISTENER_NAME);
         logger.debug("Attributes being sent along PCF agent request to query channel metrics: " + Arrays.toString(attrs));
+
+        // Aggregate metrics across all listeners and publish once
+        List<Metric> allMetrics = Lists.newArrayList();
 
         Set<String> listenerGenericNames = this.queueManager.getListenerFilters().getInclude();
         for(String listenerGenericName : listenerGenericNames){
@@ -89,7 +92,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
                             Metric metric = createMetric(queueManager, metrickey, metricVal, wmqOverride, getAtrifact(), listenerName, metrickey);
                             metrics.add(metric);
                         }
-                        publishMetrics(metrics);
+                        allMetrics.addAll(metrics);
                     }
                     else{
                         logger.debug("Listener name {} is excluded.",listenerName);
@@ -97,8 +100,11 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
                 }
             }
             catch (Exception e) {
-                logger.error("Unexpected Error occoured while collecting metrics for listener " + listenerGenericName, e);
+                logger.error("Unexpected error occurred while collecting metrics for listener " + listenerGenericName, e);
             }
+        }
+        if (!allMetrics.isEmpty()) {
+            publishMetrics(allMetrics);
         }
         long exitTime = System.currentTimeMillis() - entryTime;
         logger.debug("Time taken to publish metrics for all listener is {} milliseconds", exitTime);

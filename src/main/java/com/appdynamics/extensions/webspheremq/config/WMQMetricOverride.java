@@ -18,6 +18,8 @@ public class WMQMetricOverride {
 	String ibmCommand;
 	int constantValue = -1;
 	Map<String, ?> metricProperties;
+	// Optional: allows configuring static string values from config.yml
+	String staticValue;
 	public static final Logger logger = ExtensionsLoggerFactory.getLogger(WMQMetricOverride.class);
 
 	public String getIbmConstant() {
@@ -38,6 +40,14 @@ public class WMQMetricOverride {
 
 	public void setMetricProperties(Map<String, ?> metricProperties) {
 		this.metricProperties = metricProperties;
+	}
+
+	public String getStaticValue() {
+		return staticValue;
+	}
+
+	public void setStaticValue(String staticValue) {
+		this.staticValue = staticValue;
 	}
 
 	public void setIbmCommand(String ibmCommand) {

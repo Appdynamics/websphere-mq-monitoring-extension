@@ -41,24 +41,26 @@ public class WMQContext {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Hashtable getMQEnvironment() {
 		Hashtable env = new Hashtable();
-		addEnvProperty(env, CMQC.HOST_NAME_PROPERTY, queueManager.getHost());
-		addEnvProperty(env, CMQC.PORT_PROPERTY, queueManager.getPort());
-		addEnvProperty(env, CMQC.CHANNEL_PROPERTY, queueManager.getChannelName());
-		addEnvProperty(env, CMQC.USER_ID_PROPERTY, queueManager.getUsername());
-		addEnvProperty(env, CMQC.PASSWORD_PROPERTY, getPassword());
-		addEnvProperty(env, CMQC.SSL_CERT_STORE_PROPERTY, queueManager.getSslKeyRepository());
-		addEnvProperty(env, CMQC.SSL_CIPHER_SUITE_PROPERTY, queueManager.getCipherSuite());
-		//TODO: investigate on CIPHER_SPEC property No Available in MQ 7.5 Jar
-
-		if (Constants.TRANSPORT_TYPE_CLIENT.equalsIgnoreCase(queueManager.getTransportType())) {
-			addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES_CLIENT);
-		}
-		else if (Constants.TRANSPORT_TYPE_BINGINGS.equalsIgnoreCase(queueManager.getTransportType())) {
-			addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES_BINDINGS);
-		}
-		else {
-			addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES);
-		}
+        // Only set network properties when using Client transport. Supplying
+        // host/port with bindings mode causes a forced TCP connection attempt
+        // and results in 2538 (connection refused).
+        if (Constants.TRANSPORT_TYPE_CLIENT.equalsIgnoreCase(queueManager.getTransportType())) {
+            addEnvProperty(env, CMQC.HOST_NAME_PROPERTY, queueManager.getHost());
+            addEnvProperty(env, CMQC.PORT_PROPERTY, queueManager.getPort());
+            addEnvProperty(env, CMQC.CHANNEL_PROPERTY, queueManager.getChannelName());
+            addEnvProperty(env, CMQC.USER_ID_PROPERTY, queueManager.getUsername());
+            addEnvProperty(env, CMQC.PASSWORD_PROPERTY, getPassword());
+            addEnvProperty(env, CMQC.SSL_CERT_STORE_PROPERTY, queueManager.getSslKeyRepository());
+            addEnvProperty(env, CMQC.SSL_CIPHER_SUITE_PROPERTY, queueManager.getCipherSuite());
+            addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES_CLIENT);
+        } else if (Constants.TRANSPORT_TYPE_BINDINGS.equalsIgnoreCase(queueManager.getTransportType())) {
+            // For bindings we only provide the transport type; MQ java libs will
+            // connect locally using installation libraries.
+            addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES_BINDINGS);
+        } else {
+            // Default MQ transport
+            addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES);
+        }
 
 		logger.debug("Transport property is " + env.get(CMQC.TRANSPORT_PROPERTY));
 		return env;
@@ -98,11 +100,15 @@ public class WMQContext {
 					errorMsg.append("Channel cannot be null or empty for client type connection. ");
 				}
 			}
-			if (Constants.TRANSPORT_TYPE_BINGINGS.equalsIgnoreCase(queueManager.getTransportType())) {
+            if (Constants.TRANSPORT_TYPE_BINDINGS.equalsIgnoreCase(queueManager.getTransportType())) {
 				if (!StringUtils.hasText(queueManager.getName())) {
 					validArgs = false;
 					errorMsg.append("queuemanager cannot be null or empty for bindings type connection. ");
 				}
+                // Ensure we are not accidentally providing network props in bindings mode
+                if (StringUtils.hasText(queueManager.getHost()) || queueManager.getPort() != -1 || StringUtils.hasText(queueManager.getChannelName())) {
+                    logger.warn("Host/port/channel are ignored for bindings transport; remove them from config to avoid confusion.");
+                }
 			}
 		}
 

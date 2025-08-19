@@ -34,13 +34,13 @@ class ResetQStatsCmdCollector extends QueueMetricsCollector implements Runnable{
     public void run() {
         try {
             logger.info("Collecting metrics for command {}",COMMAND);
-            publishMetrics();
+            collectAndPublish();
         } catch (TaskExecutionException e) {
             logger.error("Something unforeseen has happened ",e);
         }
     }
 
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
 		/*
 		 * attrs = { CMQC.MQCA_Q_NAME, MQIA_HIGH_Q_DEPTH,MQIA_MSG_DEQ_COUNT, MQIA_MSG_ENQ_COUNT };
 		 */
@@ -67,10 +67,10 @@ class ResetQStatsCmdCollector extends QueueMetricsCollector implements Runnable{
                 for (int i = 0; i < msgs.length; i++) {
                     logger.error(msgs[i].toString());
                 }
-                // Dont throw exception as it will stop queuemetric colloection
+                // Don't throw exception as it will stop queue metric collection
             } catch (Exception mqe) {
                 logger.error("MQException caught", mqe);
-                // Dont throw exception as it will stop queuemetric colloection
+                // Don't throw exception as it will stop queue metric collection
             }
         }
         long exitTime = System.currentTimeMillis() - entryTime;

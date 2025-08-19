@@ -33,13 +33,13 @@ class InquireQCmdCollector extends QueueMetricsCollector implements Runnable {
     public void run() {
         try {
             logger.info("Collecting metrics for command {}",COMMAND);
-            publishMetrics();
+            collectAndPublish();
         } catch (TaskExecutionException e) {
             logger.error("Something unforeseen has happened ",e);
         }
     }
 
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
 		/*
 		 * attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH, CMQC.MQIA_MAX_Q_DEPTH, CMQC.MQIA_OPEN_INPUT_COUNT, CMQC.MQIA_OPEN_OUTPUT_COUNT };
 		 */
@@ -50,7 +50,8 @@ class InquireQCmdCollector extends QueueMetricsCollector implements Runnable {
             return;
         }
 
-        int[] attrs = getIntAttributesArray(CMQC.MQCA_Q_NAME);
+        // Build attribute list only from configured metrics; do not include MQCA_Q_NAME
+        int[] attrs = getIntAttributesArray();
         logger.debug("Attributes being sent along PCF agent request to query queue metrics: {} for command {}",Arrays.toString(attrs),COMMAND);
 
         Set<String> queueGenericNames = this.queueManager.getQueueFilters().getInclude();
@@ -69,10 +70,10 @@ class InquireQCmdCollector extends QueueMetricsCollector implements Runnable {
                 for (int i = 0; i < msgs.length; i++) {
                     logger.error(msgs[i].toString());
                 }
-                // Dont throw exception as it will stop queuemetric colloection
+                // Don't throw exception as it will stop queue metric collection
             } catch (Exception mqe) {
                 logger.error("MQException caught", mqe);
-                // Dont throw exception as it will stop queuemetric colloection
+                // Don't throw exception as it will stop queue metric collection
             }
         }
         long exitTime = System.currentTimeMillis() - entryTime;
