@@ -78,7 +78,7 @@ public class QueueManagerMetricsCollectorTest {
     public void testProcessPCFRequestAndPublishQMetricsForInquireQStatusCmd() throws MQException, IOException, TaskExecutionException {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireQMgrStatusCmd());
         classUnderTest = new QueueManagerMetricsCollector(queueMgrMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
-        classUnderTest.publishMetrics();
+        classUnderTest.collectAndPublish();
         verify(metricWriteHelper, times(1)).transformAndPrintMetrics(pathCaptor.capture());
         List<String> metricPathsList = Lists.newArrayList();
         metricPathsList.add("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QM1|Status");
@@ -149,7 +149,7 @@ public class QueueManagerMetricsCollectorTest {
     public void testDisplayName() throws MQException, IOException, TaskExecutionException {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireQMgrStatusCmd());
         classUnderTest = new QueueManagerMetricsCollector(queueMgrMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
-        classUnderTest.publishMetrics();
+        classUnderTest.collectAndPublish();
         verify(metricWriteHelper, times(1)).transformAndPrintMetrics(pathCaptor.capture());
         List<String> metricPathsList = Lists.newArrayList();
         for (List<Metric> metricList : pathCaptor.getAllValues()) {

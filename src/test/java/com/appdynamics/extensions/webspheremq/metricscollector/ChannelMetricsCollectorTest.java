@@ -73,7 +73,7 @@ public class ChannelMetricsCollectorTest {
     public void testpublishMetrics() throws MQException, IOException, TaskExecutionException {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireChannelStatusCmd());
         classUnderTest = new ChannelMetricsCollector(channelMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
-        classUnderTest.publishMetrics();
+        classUnderTest.collectAndPublish();
         verify(metricWriteHelper, times(1)).transformAndPrintMetrics(pathCaptor.capture());
         List<String> metricPathsList = Lists.newArrayList();
         metricPathsList.add("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QM1|Channels|DEV.ADMIN.SVRCONN|Status");

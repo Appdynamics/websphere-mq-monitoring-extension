@@ -63,7 +63,7 @@ public class ChannelStatisticsCollector extends MetricsCollector implements Runn
     }
 
     @Override
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
         MQQueue queue = null;
         try {
             queue = ibmQueueManager.accessQueue("SYSTEM.ADMIN.STATISTICS.QUEUE", CMQC.MQOO_INPUT_AS_Q_DEF | CMQC.MQOO_INQUIRE);

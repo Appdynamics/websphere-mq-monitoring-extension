@@ -32,13 +32,13 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnab
     public void run() {
         try {
             logger.info("Collecting metrics for command {}",COMMAND);
-            publishMetrics();
+            collectAndPublish();
         } catch (TaskExecutionException e) {
             logger.error("Something unforeseen has happened ",e);
         }
     }
 
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
         long entryTime = System.currentTimeMillis();
 
         if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {

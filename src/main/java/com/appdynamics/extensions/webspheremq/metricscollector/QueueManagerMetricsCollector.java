@@ -61,7 +61,7 @@ public class QueueManagerMetricsCollector extends MetricsCollector implements Ru
 		}
 	}
 
-    public void publishMetrics() throws TaskExecutionException {
+    public void collectAndPublish() throws TaskExecutionException {
         long entryTime = System.currentTimeMillis();
         logger.debug("publishMetrics entry time for queuemanager {} is {} milliseconds", agent.getQManagerName(), entryTime);
 

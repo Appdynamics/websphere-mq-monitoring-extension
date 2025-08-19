@@ -92,7 +92,7 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 	}
 
 	@Override
-	protected void publishMetrics() throws TaskExecutionException {
+	protected void collectAndPublish() throws TaskExecutionException {
 		long entryTime = System.currentTimeMillis();
 
 		if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {

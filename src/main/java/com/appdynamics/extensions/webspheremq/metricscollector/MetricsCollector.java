@@ -42,7 +42,7 @@ public abstract class MetricsCollector implements Runnable {
 
 	public static final Logger logger = ExtensionsLoggerFactory.getLogger(MetricsCollector.class);
 
-	protected abstract void publishMetrics() throws TaskExecutionException;
+	protected abstract void collectAndPublish() throws TaskExecutionException;
 
 	public abstract String getAtrifact();
 
@@ -55,7 +55,7 @@ public abstract class MetricsCollector implements Runnable {
 	 * @throws TaskExecutionException
 	 */
 	public final void process() throws TaskExecutionException {
-		publishMetrics();
+		collectAndPublish();
 	}
 
 	protected String getMetricsName(String qmNameToBeDisplayed, String... pathelements) {

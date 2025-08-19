@@ -33,13 +33,13 @@ class InquireQCmdCollector extends QueueMetricsCollector implements Runnable {
     public void run() {
         try {
             logger.info("Collecting metrics for command {}",COMMAND);
-            publishMetrics();
+            collectAndPublish();
         } catch (TaskExecutionException e) {
             logger.error("Something unforeseen has happened ",e);
         }
     }
 
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
 		/*
 		 * attrs = { CMQC.MQCA_Q_NAME, CMQC.MQIA_CURRENT_Q_DEPTH, CMQC.MQIA_MAX_Q_DEPTH, CMQC.MQIA_OPEN_INPUT_COUNT, CMQC.MQIA_OPEN_OUTPUT_COUNT };
 		 */

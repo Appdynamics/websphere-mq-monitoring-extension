@@ -75,7 +75,7 @@ public class TopicMetricsCollectorTest {
     public void testpublishMetrics() throws MQException, IOException, TaskExecutionException {
         when(pcfMessageAgent.send(any(PCFMessage.class))).thenReturn(createPCFResponseForInquireTopicStatusCmd());
         classUnderTest = new TopicMetricsCollector(topicMetricsToReport, monitorContextConfig, pcfMessageAgent, queueManager, metricWriteHelper, Mockito.mock(CountDownLatch.class));
-        classUnderTest.publishMetrics();
+        classUnderTest.collectAndPublish();
         verify(metricWriteHelper, times(1)).transformAndPrintMetrics(pathCaptor.capture());
         List<String> metricPathsList = Lists.newArrayList();
         metricPathsList.add("Server|Component:Tier1|Custom Metrics|WebsphereMQ|QM1|Topics|test|PublishCount");

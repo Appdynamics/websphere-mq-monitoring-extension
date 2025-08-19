@@ -33,13 +33,13 @@ class InquireQStatusCmdCollector extends QueueMetricsCollector implements Runnab
     public void run() {
         try {
             logger.info("Collecting metrics for command {}",COMMAND);
-            publishMetrics();
+            collectAndPublish();
         } catch (TaskExecutionException e) {
             logger.error("Something unforeseen has happened ",e);
         }
     }
 
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
 		/*
 		 * attrs = { CMQC.MQCA_Q_NAME, MQIACF_OLDEST_MSG_AGE, MQIACF_Q_TIME_INDICATOR };
 		 */

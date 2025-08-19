@@ -52,7 +52,7 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
         }
     }
 
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
         logger.info("Collecting Topic metrics...");
         List<Future> futures = Lists.newArrayList();
 

@@ -49,7 +49,7 @@ public class ListenerMetricsCollector extends MetricsCollector implements Runnab
         }
     }
 
-    protected void publishMetrics() throws TaskExecutionException {
+    protected void collectAndPublish() throws TaskExecutionException {
         long entryTime = System.currentTimeMillis();
 
         if (getMetricsToReport() == null || getMetricsToReport().isEmpty()) {
