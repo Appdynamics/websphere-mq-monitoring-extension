@@ -1,4 +1,8 @@
 
+### Version 7.0.7
+* Updating appd-exts-commons to v2.2.17 to fix security vulnerabilities.
+* Added additional metrics
+
 ### Version 7.0.6
 * Updating appd-exts-commons to v2.2.13 to fix security vulnerabilities.
 
