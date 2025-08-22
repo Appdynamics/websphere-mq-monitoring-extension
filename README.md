@@ -366,6 +366,54 @@ The metrics will be reported under the tree ```Application Infrastructure Perfor
 <td class='confluenceTd'> Status </td>
 <td class='confluenceTd'> 1 - starting, 2 - running, 3 - quiescing </td>
 </tr>
+<tr>
+<td class='confluenceTd'> MQManagerName </td>
+<td class='confluenceTd'> Name of the queue manager </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Channel Monitoring Level </td>
+<td class='confluenceTd'> Queue manager default channel monitoring level </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Character Set ID </td>
+<td class='confluenceTd'> Default CCSID configured on the queue manager </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Command Level </td>
+<td class='confluenceTd'> MQ command level supported by the queue manager </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Connection Count </td>
+<td class='confluenceTd'> Current number of active connections </td>
+</tr>
+<tr>
+<td class='confluenceTd'> HeartBeat </td>
+<td class='confluenceTd'> Queue manager heartbeat interval </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Max Handles </td>
+<td class='confluenceTd'> Maximum number of handles allowed </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Max Message Length </td>
+<td class='confluenceTd'> Maximum message length allowed </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Max Priority </td>
+<td class='confluenceTd'> Maximum message priority supported </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Max Uncommited Messages </td>
+<td class='confluenceTd'> Maximum uncommitted messages limit </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Platform </td>
+<td class='confluenceTd'> Platform type (e.g., UNIX, Windows, AIX) </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Queue Monitoring Level </td>
+<td class='confluenceTd'> Queue manager default queue monitoring level </td>
+</tr>
 </tbody>
 </table>
 
@@ -393,6 +441,74 @@ This metrics below are only for the local queues, as these metrics are irrelevan
 <tr>
 <td class='confluenceTd'> OpenOutputCount </td>
 <td class='confluenceTd'> Number of MQOPEN calls that have the queue open for output </td>
+</tr>
+<tr>
+<td class='confluenceTd'> QueueName </td>
+<td class='confluenceTd'> Name of the queue </td>
+</tr>
+<tr>
+<td class='confluenceTd'> MaxQDepth </td>
+<td class='confluenceTd'> Maximum depth configured for the queue </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Depth </td>
+<td class='confluenceTd'> Current number of messages on the queue </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Trigger Interval </td>
+<td class='confluenceTd'> Interval for trigger monitoring (if enabled) </td>
+</tr>
+<tr>
+<td class='confluenceTd'> QFull% </td>
+<td class='confluenceTd'> Percentage of queue usage relative to max depth </td>
+</tr>
+<tr>
+<td class='confluenceTd'> OldestMsgAge </td>
+<td class='confluenceTd'> Age of the oldest message </td>
+</tr>
+<tr>
+<td class='confluenceTd'> UncommittedMsgs </td>
+<td class='confluenceTd'> Number of uncommitted changes pending </td>
+</tr>
+<tr>
+<td class='confluenceTd'> GetStatus </td>
+<td class='confluenceTd'> Status of GET operations (if reported) </td>
+</tr>
+<tr>
+<td class='confluenceTd'> PutStatus </td>
+<td class='confluenceTd'> Status of PUT operations (if reported) </td>
+</tr>
+<tr>
+<td class='confluenceTd'> InputOpens </td>
+<td class='confluenceTd'> Number of times queue opened for input </td>
+</tr>
+<tr>
+<td class='confluenceTd'> OutputOpens </td>
+<td class='confluenceTd'> Number of times queue opened for output </td>
+</tr>
+<tr>
+<td class='confluenceTd'> LastGetDate_Time </td>
+<td class='confluenceTd'> Timestamp of last GET (date/time as reported) </td>
+</tr>
+<tr>
+<td class='confluenceTd'> LastPutDate_Time </td>
+<td class='confluenceTd'> Timestamp of last PUT (date/time as reported) </td>
+</tr>
+<tr>
+<td class='confluenceTd'> QueueMonitoring </td>
+<td class='confluenceTd'> Queue-level monitoring setting </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Queue Depth High Limit </td>
+<td class='confluenceTd'> High depth threshold configured for the queue </td>
+</tr>
+<tr>
+<td class='confluenceTd'> Queue Depth Low Limit </td>
+<td class='confluenceTd'> Low depth threshold configured for the queue </td>
+</tr>
+<tr>
+<td class='confluenceTd'> QueueDescription </td>
+<td class='confluenceTd'> Description text of the queue </td>
 </tr>
 </tbody>
 </table>
@@ -470,6 +586,70 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 <tr>
 <td class='confluenceTd'> BuffersReceived </td>
 <td class='confluenceTd'> Number of buffers received </td>
+</tr>
+<tr>
+<td class='confluenceTd'> ChannelName </td>
+<td class='confluenceTd'> Name of the channel instance </td>
+</tr>
+<tr>
+<td class='confluenceTd'> ChannelInstType </td>
+<td class='confluenceTd'> Channel instance type (e.g., SVRCONN, SDR, RCVR) </td>
+</tr>
+<tr>
+<td class='confluenceTd'> ChannelType </td>
+<td class='confluenceTd'> Configured channel type </td>
+</tr>
+<tr>
+<td class='confluenceTd'> CurrentActionState </td>
+<td class='confluenceTd'> Current action state of the channel </td>
+</tr>
+<tr>
+<td class='confluenceTd'> SSLShortPeerName </td>
+<td class='confluenceTd'> Short name of SSL peer </td>
+</tr>
+<tr>
+<td class='confluenceTd'> HeartbeatInterval </td>
+<td class='confluenceTd'> Channel heartbeat interval (seconds) </td>
+</tr>
+<tr>
+<td class='confluenceTd'> LastMessageDate_Time </td>
+<td class='confluenceTd'> Timestamp of last message (date/time as reported) </td>
+</tr>
+<tr>
+<td class='confluenceTd'> LocalAddress </td>
+<td class='confluenceTd'> Local IP address and port </td>
+</tr>
+<tr>
+<td class='confluenceTd'> MCAUserID </td>
+<td class='confluenceTd'> MCA user ID </td>
+</tr>
+<tr>
+<td class='confluenceTd'> MCAStatus </td>
+<td class='confluenceTd'> MCA status </td>
+</tr>
+<tr>
+<td class='confluenceTd'> RemoteQmgrName </td>
+<td class='confluenceTd'> Remote queue manager name </td>
+</tr>
+<tr>
+<td class='confluenceTd'> XmitQName </td>
+<td class='confluenceTd'> Transmission queue name </td>
+</tr>
+<tr>
+<td class='confluenceTd'> ConnectionName </td>
+<td class='confluenceTd'> Remote connection name (host/port) </td>
+</tr>
+<tr>
+<td class='confluenceTd'> ShortRetriesLeft </td>
+<td class='confluenceTd'> Remaining short retry attempts </td>
+</tr>
+<tr>
+<td class='confluenceTd'> LongRetriesLeft </td>
+<td class='confluenceTd'> Remaining long retry attempts </td>
+</tr>
+<tr>
+<td class='confluenceTd'> KeepAliveInterval </td>
+<td class='confluenceTd'> TCP keepalive interval (seconds) </td>
 </tr>
 </tbody>
 </table>
@@ -558,8 +738,9 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 |          Name            | Version                                                                                                 |
 |--------------------------|---------------------------------------------------------------------------------------------------------|
 |Extension Version         | 7.0.7                                                                                                   |
+|Extension Version         | 7.0.7                                                                                                   |
 |IBM MQ Version tested On  | 7.x, 8.x, 9.x and Windows, Unix, AIX                                                                    |
-|Last Update               | 08/22/2025                                                                                              |
+|Last Update               | 22/09/2025                                                                                              |
 |List of Changes| [Change Log](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md) |
 	
 **Note**: While extensions are maintained and supported by customers under the open-source licensing model, they interact with agents and Controllers that are subject to [AppDynamics’ maintenance and support policy](https://docs.appdynamics.com/latest/en/product-and-release-announcements/maintenance-support-for-software-versions). Some extensions have been tested with AppDynamics 4.5.13+ artifacts, but you are strongly recommended against using versions that are no longer supported.
