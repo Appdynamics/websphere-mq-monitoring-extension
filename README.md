@@ -738,6 +738,7 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 |          Name            | Version                                                                                                 |
 |--------------------------|---------------------------------------------------------------------------------------------------------|
 |Extension Version         | 7.0.7                                                                                                   |
+|Extension Version         | 7.0.7                                                                                                   |
 |IBM MQ Version tested On  | 7.x, 8.x, 9.x and Windows, Unix, AIX                                                                    |
 |Last Update               | 22/09/2025                                                                                              |
 |List of Changes| [Change Log](https://github.com/Appdynamics/websphere-mq-monitoring-extension/blob/master/CHANGELOG.md) |
