@@ -131,6 +131,12 @@
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <filters>
                         <filter>
+                            <artifact>com.appdynamics:appd-exts-commons</artifact>
+                            <excludes>
+                                <exclude>workbench/lib/jquery/jquery-2.2.1.min.js</exclude>
+                            </excludes>
+                        </filter>
+                        <filter>
                             <artifact>*:*</artifact>
                             <excludes>
                                 <exclude>META-INF/*.SF</exclude>
@@ -165,6 +171,21 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.6</version>
                 <executions>
+                    <execution>
+                        <id>download-new-jquery</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.build.outputDirectory}/workbench/lib/jquery"/>
+                                <get src="https://code.jquery.com/jquery-3.7.1.min.js"
+                                     dest="${project.build.outputDirectory}/workbench/lib/jquery/jquery-3.7.1.min.js"
+                                     skipexisting="true"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
                     <execution>
                         <id>install</id>
                         <phase>install</phase>
