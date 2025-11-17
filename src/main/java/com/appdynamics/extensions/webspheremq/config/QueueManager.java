@@ -7,6 +7,7 @@
 
 package com.appdynamics.extensions.webspheremq.config;
 
+import com.appdynamics.extensions.util.StringUtils;
 import java.util.List;
 
 /**
@@ -107,6 +108,16 @@ public class QueueManager {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public String describeAuthIdentity() {
+		if (StringUtils.hasText(username)) {
+			return username;
+		}
+		if (StringUtils.hasText(channelName)) {
+			return "channel MCAUSER for " + channelName;
+		}
+		return "channel MCAUSER";
 	}
 
 

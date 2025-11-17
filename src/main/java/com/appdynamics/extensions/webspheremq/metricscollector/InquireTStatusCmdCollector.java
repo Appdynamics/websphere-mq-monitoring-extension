@@ -55,14 +55,15 @@ class InquireTStatusCmdCollector extends TopicMetricsCollector implements Runnab
             try {
                 processPCFRequestAndPublishQMetrics(topicGenericName, request,COMMAND);
             } catch (PCFException pcfe) {
-                logger.error("PCFException caught while collecting metric for Queue: {} for command {}",topicGenericName,COMMAND, pcfe);
+                logger.error("PCFException caught while collecting metric for Queue: {} for command {} while authenticated as {}",
+                        topicGenericName, COMMAND, describeAuthIdentity(), pcfe);
                 PCFMessage[] msgs = (PCFMessage[]) pcfe.exceptionSource;
                 for (int i = 0; i < msgs.length; i++) {
                     logger.error(msgs[i].toString());
                 }
                 // Don't throw exception as it will stop queue metric collection
             } catch (Exception mqe) {
-                logger.error("MQException caught", mqe);
+                logger.error("MQException caught while authenticated as {}", describeAuthIdentity(), mqe);
                 // Don't throw exception as it will stop queue metric collection
             }
         }

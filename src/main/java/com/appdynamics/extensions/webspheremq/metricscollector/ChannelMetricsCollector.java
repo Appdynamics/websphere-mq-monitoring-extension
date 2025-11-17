@@ -184,10 +184,11 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 					}
 				}
 			} catch (PCFException pcfe) {
-				logger.error("PCF Exception while collecting channel definition metrics for {}: Reason '{}'", 
-						channelGenericName, pcfe.getReason(), pcfe);
+				logger.error("PCF Exception while collecting channel definition metrics for {}: Reason '{}' while authenticated as {}",
+						channelGenericName, pcfe.getReason(), describeAuthIdentity(), pcfe);
 			} catch (Exception e) {
-				logger.error("Unexpected error while collecting channel definition metrics for " + channelGenericName, e);
+				logger.error("Unexpected error while collecting channel definition metrics for {} while authenticated as {}",
+						channelGenericName, describeAuthIdentity(), e);
 			}
 		}
 	}
@@ -249,11 +250,12 @@ public class ChannelMetricsCollector extends MetricsCollector implements Runnabl
 				} else if (pcfe.getReason() == MQConstants.MQRC_SELECTOR_ERROR) {
 					logger.error("Invalid metrics passed while collecting channel status metrics, check config.yaml: Reason '2067'", pcfe);
 				} else {
-					logger.error("PCF Exception while collecting channel status metrics for {}: Reason '{}'", 
-							channelGenericName, pcfe.getReason(), pcfe);
+					logger.error("PCF Exception while collecting channel status metrics for {}: Reason '{}' while authenticated as {}",
+							channelGenericName, pcfe.getReason(), describeAuthIdentity(), pcfe);
 				}
 			} catch (Exception e) {
-				logger.error("Unexpected error while collecting channel status metrics for " + channelGenericName, e);
+				logger.error("Unexpected error while collecting channel status metrics for {} while authenticated as {}",
+						channelGenericName, describeAuthIdentity(), e);
 			}
 		}
 	}

@@ -326,4 +326,8 @@ public abstract class MetricsCollector implements Runnable {
         System.arraycopy(temp, 0, attrs, 0, idx);
         return attrs;
     }
+
+    protected String describeAuthIdentity() {
+        return queueManager == null ? "unknown user" : queueManager.describeAuthIdentity();
+    }
 }

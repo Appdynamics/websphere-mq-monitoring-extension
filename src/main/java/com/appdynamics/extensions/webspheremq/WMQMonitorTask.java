@@ -95,7 +95,15 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 				ibmQueueManager = new MQQueueManager(queueManager.getName());
 			}
 		} catch (MQException mqe) {
-			logger.error(mqe.getMessage(), mqe);
+			if (mqe.reasonCode == 2035) {
+				String osUser = System.getProperty("user.name");
+				logger.error("MQ 2035 (not authorized) while connecting to queueManager {} as {}. JVM user={}."
+						+ " Verify that MQSC user {} has the required +connect/+dsp permissions and that the supplied credentials are valid.",
+						queueManager.getName(), queueManager.describeAuthIdentity(), osUser, queueManager.describeAuthIdentity(), mqe);
+			} else {
+				logger.error("MQException while connecting to queueManager {} as {}: {}", queueManager.getName(),
+						queueManager.describeAuthIdentity(), mqe.getMessage(), mqe);
+			}
 			throw new TaskExecutionException(mqe.getMessage());
 		}
 		return ibmQueueManager;
@@ -124,7 +132,8 @@ public class WMQMonitorTask implements AMonitorTaskRunnable {
 			}
 			logger.debug("Initialized PCFMessageAgent for queueManager {} in thread {}", agent.getQManagerName(), Thread.currentThread().getName());
 		} catch (MQException mqe) {
-			logger.error(mqe.getMessage(), mqe);
+			logger.error("MQException while initializing PCF agent for {} as {}: {}", queueManager.getName(),
+					queueManager.describeAuthIdentity(), mqe.getMessage(), mqe);
 		}
 		return agent;
 	}

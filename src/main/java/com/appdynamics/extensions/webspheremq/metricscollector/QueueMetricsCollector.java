@@ -173,7 +173,8 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 						}
 					}
 					catch (PCFException pcfe) {
-						logger.error("PCFException caught while collecting metric for Queue: {} for metric: {} in command {}",queueName, wmqOverride.getIbmCommand(),command, pcfe);
+						logger.error("PCFException caught while collecting metric for Queue: {} for metric: {} in command {} while authenticated as {}",
+								queueName, wmqOverride.getIbmCommand(),command, describeAuthIdentity(), pcfe);
 					}
 
 				}
