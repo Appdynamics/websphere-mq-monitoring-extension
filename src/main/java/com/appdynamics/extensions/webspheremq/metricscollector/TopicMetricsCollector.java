@@ -108,7 +108,8 @@ public class TopicMetricsCollector extends MetricsCollector implements Runnable 
                         }
                     }
                     catch (PCFException pcfe) {
-                        logger.error("PCFException caught while collecting metric for Topic: {} for metric: {} in command {}",topicString, wmqOverride.getIbmCommand(),command, pcfe);
+                        logger.error("PCFException caught while collecting metric for Topic: {} for metric: {} in command {} while authenticated as {}",
+                                topicString, wmqOverride.getIbmCommand(),command, describeAuthIdentity(), pcfe);
                     }
 
                 }

@@ -16,9 +16,9 @@ import com.appdynamics.extensions.webspheremq.config.QueueManager;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.ibm.mq.constants.CMQC;
-import org.slf4j.Logger;
-
+import com.ibm.msg.client.wmq.WMQConstants;
 import java.util.Hashtable;
+import org.slf4j.Logger;
 
 /**
  * Takes care of websphere mq connection, authentication, SSL, Cipher spec, certificate based authorization.<br>
@@ -31,7 +31,15 @@ import java.util.Hashtable;
 public class WMQContext {
 
 	public static final Logger logger = ExtensionsLoggerFactory.getLogger(WMQContext.class);
+	private static final String MQCSP_PROPERTY = "com.ibm.mq.cfg.useMQCSPAuthentication";
 	private QueueManager queueManager;
+
+	static {
+		// Force MQ Java layer to consider MQCSP credentials even before any connections are created.
+		if (!Boolean.getBoolean(MQCSP_PROPERTY)) {
+			System.setProperty(MQCSP_PROPERTY, "true");
+		}
+	}
 
 	public WMQContext(QueueManager queueManager) {
 		this.queueManager = queueManager;
@@ -48,8 +56,7 @@ public class WMQContext {
             addEnvProperty(env, CMQC.HOST_NAME_PROPERTY, queueManager.getHost());
             addEnvProperty(env, CMQC.PORT_PROPERTY, queueManager.getPort());
             addEnvProperty(env, CMQC.CHANNEL_PROPERTY, queueManager.getChannelName());
-            addEnvProperty(env, CMQC.USER_ID_PROPERTY, queueManager.getUsername());
-            addEnvProperty(env, CMQC.PASSWORD_PROPERTY, getPassword());
+            configureCredentials(env);
             addEnvProperty(env, CMQC.SSL_CERT_STORE_PROPERTY, queueManager.getSslKeyRepository());
             addEnvProperty(env, CMQC.SSL_CIPHER_SUITE_PROPERTY, queueManager.getCipherSuite());
             addEnvProperty(env, CMQC.TRANSPORT_PROPERTY, CMQC.TRANSPORT_MQSERIES_CLIENT);
@@ -131,5 +138,31 @@ public class WMQContext {
 			return CryptoUtils.getPassword(cryptoMap);
 		}
 		return null;
+	}
+
+	private void configureCredentials(Hashtable env) {
+		String configuredUser = queueManager.getUsername();
+		String resolvedPassword = getPassword();
+		boolean hasUser = StringUtils.hasText(configuredUser);
+		boolean hasPassword = StringUtils.hasText(resolvedPassword);
+		
+		if (hasUser && hasPassword) {
+			// Explicitly enable MQCSP authentication (instead of OS user adoption)
+			addEnvProperty(env, CMQC.USE_MQCSP_AUTHENTICATION_PROPERTY, Boolean.TRUE);
+			addEnvProperty(env, CMQC.USER_ID_PROPERTY, configuredUser);
+			addEnvProperty(env, CMQC.PASSWORD_PROPERTY, resolvedPassword);
+			// Also mirror onto the WMQ JMS constants to support any layers that inspect JMS properties.
+			addEnvProperty(env, WMQConstants.USERID, configuredUser);
+			addEnvProperty(env, WMQConstants.PASSWORD, resolvedPassword);
+			addEnvProperty(env, WMQConstants.USER_AUTHENTICATION_MQCSP, Boolean.TRUE);
+			String osUser = System.getProperty("user.name");
+			logger.info("Queue manager {} configured for MQCSP authentication with user {} (password length: {}, jvm user: {})",
+					queueManager.getName(), configuredUser, resolvedPassword.length(), osUser);
+		} else if (hasUser ^ hasPassword) {
+			logger.warn("Username/password mismatch for queue manager {}. Credentials will not be sent; ensure channel MCAUSER is configured.",
+				queueManager.getName());
+		} else {
+			logger.info("No credentials configured for queue manager {}. Connection will use channel MCAUSER.", queueManager.getName());
+		}
 	}
 }
