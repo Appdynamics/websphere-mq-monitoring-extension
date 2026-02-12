@@ -7,6 +7,19 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.slf4j.Logger;
+
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
@@ -18,16 +31,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.ibm.mq.MQException;
 import com.ibm.mq.constants.CMQC;
-import com.ibm.mq.pcf.*;
+import com.ibm.mq.pcf.MQCFIL;
+import com.ibm.mq.pcf.MQCFIN;
+import com.ibm.mq.pcf.MQCFST;
+import com.ibm.mq.pcf.PCFException;
+import com.ibm.mq.pcf.PCFMessage;
+import com.ibm.mq.pcf.PCFMessageAgent;
+import com.ibm.mq.pcf.PCFParameter;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
-import org.slf4j.Logger;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.*;
 
 public class QueueMetricsCollector extends MetricsCollector implements Runnable {
 
@@ -113,13 +124,38 @@ public class QueueMetricsCollector extends MetricsCollector implements Runnable 
 		return this.metricsToReport;
 	}
 
+	// Visible for testing
+	static PCFMessage[] normalizeResponse(Object rawResponse) {
+		if (rawResponse == null) {
+			return null;
+		}
+		if (rawResponse instanceof PCFMessage) {
+			return new PCFMessage[]{ (PCFMessage) rawResponse };
+		}
+		if (rawResponse instanceof PCFMessage[]) {
+			return (PCFMessage[]) rawResponse;
+		}
+		return null;
+	}
+
 	protected void processPCFRequestAndPublishQMetrics(String queueGenericName, PCFMessage request, String command) throws MQException, IOException {
 		PCFMessage[] response;
 		logger.debug("sending PCF agent request to query metrics for generic queue {} for command {}",queueGenericName,command);
 		long startTime = System.currentTimeMillis();
-		response = agent.send(request);
+		Object rawResponse = agent.send(request);
 		long endTime = System.currentTimeMillis() - startTime;
 		logger.debug("PCF agent queue metrics query response for generic queue {} for command {} received in {} milliseconds", queueGenericName, command,endTime);
+		// Handle both single PCFMessage and PCFMessage[] responses (wildcards may return single message)
+		if (rawResponse == null) {
+			logger.debug("Unexpected Error while PCFMessage.send() for command {}, response is null", command);
+			return;
+		}
+		response = normalizeResponse(rawResponse);
+		if (response == null) {
+			logger.warn("Unexpected response type from PCF agent for command {} and queue pattern {}: {}",
+					command, queueGenericName, rawResponse.getClass().getName());
+			return;
+		}
 		if (response == null || response.length <= 0) {
 			logger.debug("Unexpected Error while PCFMessage.send() for command {}, response is either null or empty",command);
 			return;
