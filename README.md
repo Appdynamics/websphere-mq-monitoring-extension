@@ -603,7 +603,7 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 
 ### [ChannelMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087560_.htm)
 
-**Value in controller:** Counts and bytes (Messages, ByteSent, ByteReceived, BuffersSent, BuffersReceived) are integers. **Status** is an integer (0–9); see the Channel Status table below for the meaning of each value. String attributes (e.g., **ChannelName**, ChannelInstType, ChannelType, SSLShortPeerName, RemoteQmgrName, XmitQName, ConnectionName, MCAUserID) are reported as **value 1** with the string in the metric name or path.
+**Value in controller:** Counts and bytes (Messages, ByteSent, ByteReceived, BuffersSent, BuffersReceived) are integers. **Status** is an integer; see the Channel Status table below. Values 11, 12, 15–20 are not in the current IBM MQ 9.4 MQCHS reference; if the queue manager returns them, the extension reports them as-is (they may be version-specific or reserved). String attributes (e.g., **ChannelName**, ChannelInstType, ChannelType, SSLShortPeerName, RemoteQmgrName, XmitQName, ConnectionName, MCAUserID) are reported as **value 1** with the string in the metric name or path.
 
 **Channel Status (integer → meaning):**
 
@@ -619,6 +619,11 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 | 7 | MQCHS_REQUESTING | Requesting |
 | 8 | MQCHS_PAUSED | Paused |
 | 9 | MQCHS_DISCONNECTED | Disconnected |
+| 10 | MQCHS_DOUBT | In-doubt (Stopped and Indoubt — channel uncertain about message delivery after communication loss) |
+| 13 | MQCHS_INITIALIZING | Initializing (channel initiator attempting to start the channel) |
+| 14 | MQCHS_SWITCHING | Switching (channel is switching transmission queues) |
+
+Values **11, 12, 15–20** are not defined in the current IBM MQ 9.4 MQCHS constants table; the extension reports whatever integer MQ returns for Status.
 
 - **ChannelName**: The controller cannot store the channel name as a metric value. The name is sent in two ways: (1) as part of the **metric path** (e.g. `...|Channels|DEV.ADMIN.SVRCONN|Status`), and (2) if "Channel Name" is included in your channel metrics config, as a separate metric whose **name** is `Channel Name: <name>` and whose **value is always 1** (e.g. `Channel Name: DEV.ADMIN.SVRCONN` = 1). Use the metric name or path to see the channel name; do not treat 1 as a count.
 - **Last Message Date** and **Last Message Time**: The controller cannot store date/time strings. The extension converts them to integers: **Last Message Date** → **YYYYMMDD** (e.g. 20250218), **Last Message Time** → **HHMMSS** (e.g. 205312 = 20:53:12). So a value in the **20k range** (e.g. 205000) is a valid time (20:50:00). When you see **value 1**, the PCF value from MQ could not be parsed (e.g. empty, blank, or fewer than 6 digits after stripping non-numeric characters). That often happens for channels with no recent message activity or for some channel types (e.g. sender SDR). In that case the **raw string is in the metric name** (e.g. `Last Message Time: ` or `Last Message Time: 0`)—use the metric name to see what MQ returned; do not treat 1 as a time.
@@ -637,7 +642,7 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 </tr>
 <tr>
 <td class='confluenceTd'> Status </td>
-<td class='confluenceTd'> Channel status. Integer value in controller: 0 = Inactive, 1 = Binding, 2 = Starting, 3 = Running, 4 = Stopping, 5 = Retrying, 6 = Stopped, 7 = Requesting, 8 = Paused, 9 = Disconnected (MQCHS_INACTIVE, MQCHS_BINDING, MQCHS_STARTING, MQCHS_RUNNING, MQCHS_STOPPING, MQCHS_RETRYING, MQCHS_STOPPED, MQCHS_REQUESTING, MQCHS_PAUSED, MQCHS_DISCONNECTED). </td>
+<td class='confluenceTd'> Channel status. Integer value in controller: 0–10, 13, 14 documented in Channel Status table above (MQCHS_*). Values 11, 12, 15–20 not in current IBM MQ 9.4 reference; reported as-is if returned. </td>
 </tr>
 <tr>
 <td class='confluenceTd'> ByteSent </td>
