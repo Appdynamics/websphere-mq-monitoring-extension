@@ -355,7 +355,50 @@ The user connecting to the queueManager should have the inquire, get, put (since
 ## Metrics
 The metrics will be reported under the tree ```Application Infrastructure Performance|$TIER|Custom Metrics|WebsphereMQ```
 
-### [QueueManagerMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087850_.htm)
+### Understanding metric values (string vs. integer)
+
+**The AppDynamics controller accepts only numeric (integer) values for metrics.** It cannot store or display string values as the metric value. This extension therefore converts any non-numeric values as follows:
+
+| Situation | How it is reported | How to read it in the controller |
+|-----------|--------------------|-----------------------------------|
+| **Numeric metrics** (counts, depths, status codes) | The integer is sent as the metric value. | Use the metric value as-is (e.g., `Current Queue Depth` = 42). |
+| **Status/code metrics** (e.g., Queue Manager Status, Channel Status, Listener Status) | The IBM MQ integer constant is sent as the metric value. | See the mapping tables below for each status metric (e.g., 1 = starting, 2 = running). |
+| **String-like values** (e.g., Platform name, queue name in a dimension, description text) | The string is embedded in the **metric name** (or path), and the **value sent to the controller is always `1`**. | The meaning is in the metric name/path (e.g., metric name `Platform: Windows` with value `1`). Do not treat `1` as a count; it is a placeholder so the controller can display the metric. |
+| **Date/time strings** | Converted to integers (e.g., YYYYMMDD or HHMMSS) when possible and sent as the metric value. | Use the value as a numeric date/time (e.g., 20250218, 143052). |
+
+So when you see a metric whose **value is `1`** and the **name** contains a colon and text (e.g., `Platform: Windows`, `ChannelType: SVRCONN`), the meaningful information is the text in the name, not the number 1.
+
+The tables below list each reported metric, its description, and—for status or string-derived metrics—what integer values mean or how the value is represented. You can extend or correct these lists to match exactly what your extension reports.
+
+#### Quick reference: metric value types
+
+| Category | Metrics reported (value type) |
+|----------|------------------------------|
+| **Queue Manager** | Status (int: 1/2/3), ConnectionCount (int), Platform (string→1), MQManagerName (string→1), Channel Monitoring Level, Character Set ID, Command Level, HeartBeat, Max Handles, Max Message Length, Max Priority, Max Uncommited Messages, Queue Monitoring Level (all int). Other definition/status attributes: int or string→1 or parsed date/time. |
+| **Queue** | MaxQueueDepth, CurrentQueueDepth, OpenInputCount, OpenOutputCount (int). OldestMsgAge, OnQTime, UncommittedMsgs (int). HighQDepth, MsgDeqCount, MsgEnqCount (int). QFull% (int). String attributes (e.g. queue name in path): value 1 with name in path. |
+| **Channel** | Messages, Status (int: 0–9, see Channel Status table below), ByteSent, ByteReceived, BuffersSent, BuffersReceived (int). ActiveChannelsCount (int). **Last Message Date** = YYYYMMDD int, **Last Message Time** = HHMMSS int. String attributes (ChannelName, ChannelType, etc.): value 1 with string in metric name. |
+| **Listener** | Status (int: 1 = starting, 2 = running, 3 = stopping). |
+| **Topic** | PublishCount, SubscriptionCount (int). |
+
+#### Queue Manager metrics — value in controller
+
+| Metric Name | Description | Value in controller |
+|-------------|-------------|---------------------|
+| Status | Queue manager status | **Integer**: 1 = starting, 2 = running, 3 = quiescing |
+| MQManagerName / QueueManagerName | Name of the queue manager | **Always 1**; name appears in metric name/path (string-derived) |
+| Channel Monitoring Level | Queue manager default channel monitoring level | Integer (use as-is) |
+| Character Set ID | Default CCSID configured on the queue manager | Integer (use as-is) |
+| Command Level | MQ command level supported by the queue manager | Integer (use as-is) |
+| Connection Count | Current number of active connections | Integer (use as-is) |
+| HeartBeat | Queue manager heartbeat interval | Integer (use as-is) |
+| Max Handles | Maximum number of handles allowed | Integer (use as-is) |
+| Max Message Length | Maximum message length allowed | Integer (use as-is) |
+| Max Priority | Maximum message priority supported | Integer (use as-is) |
+| Max Uncommited Messages | Maximum uncommitted messages limit | Integer (use as-is) |
+| Platform | Platform type (e.g., UNIX, Windows, AIX) | **Always 1**; platform name in metric name (e.g. `Platform: Windows`) (string-derived) |
+| Queue Monitoring Level | Queue manager default queue monitoring level | Integer (use as-is) |
+
+### [QueueManagerMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087850_.htm) — reference
 
 <table><tbody>
 <tr>
@@ -367,8 +410,8 @@ The metrics will be reported under the tree ```Application Infrastructure Perfor
 <td class='confluenceTd'> 1 - starting, 2 - running, 3 - quiescing </td>
 </tr>
 <tr>
-<td class='confluenceTd'> MQManagerName </td>
-<td class='confluenceTd'> Name of the queue manager </td>
+<td class='confluenceTd'> QueueManagerName (MQManagerName) </td>
+<td class='confluenceTd'> Name of the queue manager. Value in controller: always 1; name appears in metric name/path (string-derived). </td>
 </tr>
 <tr>
 <td class='confluenceTd'> Channel Monitoring Level </td>
@@ -408,7 +451,7 @@ The metrics will be reported under the tree ```Application Infrastructure Perfor
 </tr>
 <tr>
 <td class='confluenceTd'> Platform </td>
-<td class='confluenceTd'> Platform type (e.g., UNIX, Windows, AIX) </td>
+<td class='confluenceTd'> Platform type (e.g., UNIX, Windows, AIX) — reported as value 1 with name in metric name </td>
 </tr>
 <tr>
 <td class='confluenceTd'> Queue Monitoring Level </td>
@@ -421,6 +464,8 @@ The metrics will be reported under the tree ```Application Infrastructure Perfor
 
 #### [QueueMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087810_.htm)
 This metrics below are only for the local queues, as these metrics are irrelevant for [other queues](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.explorer.doc/e_queues.htm).
+
+**Value in controller:** Counts, depths, and percentages are sent as integers. Any attribute that is a string (e.g., QueueName, QueueDescription, LastGetDate_Time, LastPutDate_Time) is reported as **value 1** with the string in the metric name or path.
 <table><tbody>
 <tr>
 <th align="left"> Metric Name </th>
@@ -444,7 +489,7 @@ This metrics below are only for the local queues, as these metrics are irrelevan
 </tr>
 <tr>
 <td class='confluenceTd'> QueueName </td>
-<td class='confluenceTd'> Name of the queue </td>
+<td class='confluenceTd'> Name of the queue. Value in controller: the queue name appears in the metric path (e.g. ...|Queues|DEV.QUEUE.1|CurrentQueueDepth). If reported as a separate metric, value is always 1 with the name in the metric name. </td>
 </tr>
 <tr>
 <td class='confluenceTd'> MaxQDepth </td>
@@ -471,12 +516,12 @@ This metrics below are only for the local queues, as these metrics are irrelevan
 <td class='confluenceTd'> Number of uncommitted changes pending </td>
 </tr>
 <tr>
-<td class='confluenceTd'> GetStatus </td>
-<td class='confluenceTd'> Status of GET operations (if reported) </td>
+<td class='confluenceTd'> GetStatus (Get Status) </td>
+<td class='confluenceTd'> Inhibit Get: 0 = GET allowed, 1 = GET inhibited (MQIA_INHIBIT_GET) </td>
 </tr>
 <tr>
-<td class='confluenceTd'> PutStatus </td>
-<td class='confluenceTd'> Status of PUT operations (if reported) </td>
+<td class='confluenceTd'> PutStatus (Put Status) </td>
+<td class='confluenceTd'> Inhibit Put: 0 = PUT allowed, 1 = PUT inhibited (MQIA_INHIBIT_PUT) </td>
 </tr>
 <tr>
 <td class='confluenceTd'> InputOpens </td>
@@ -487,12 +532,12 @@ This metrics below are only for the local queues, as these metrics are irrelevan
 <td class='confluenceTd'> Number of times queue opened for output </td>
 </tr>
 <tr>
-<td class='confluenceTd'> LastGetDate_Time </td>
-<td class='confluenceTd'> Timestamp of last GET (date/time as reported) </td>
+<td class='confluenceTd'> LastGetDate / LastGetTime (Last Get Date / Last Get Time) </td>
+<td class='confluenceTd'> Timestamp of last GET. Often reported as <strong>value 1</strong> with the date/time string in the metric name (controller cannot store strings). If the PCF value parses to digits, Last Get Date is sent as YYYYMMDD (int) and Last Get Time as HHMMSS (int); otherwise value 1 and the raw string appear in the metric name. </td>
 </tr>
 <tr>
-<td class='confluenceTd'> LastPutDate_Time </td>
-<td class='confluenceTd'> Timestamp of last PUT (date/time as reported) </td>
+<td class='confluenceTd'> LastPutDate / LastPutTime (Last Put Date / Last Put Time) </td>
+<td class='confluenceTd'> Timestamp of last PUT. Often reported as <strong>value 1</strong> with the date/time string in the metric name (controller cannot store strings). If the PCF value parses to digits, Last Put Date is sent as YYYYMMDD (int) and Last Put Time as HHMMSS (int); otherwise value 1 and the raw string appear in the metric name. </td>
 </tr>
 <tr>
 <td class='confluenceTd'> QueueMonitoring </td>
@@ -508,7 +553,7 @@ This metrics below are only for the local queues, as these metrics are irrelevan
 </tr>
 <tr>
 <td class='confluenceTd'> QueueDescription </td>
-<td class='confluenceTd'> Description text of the queue </td>
+<td class='confluenceTd'> Description text of the queue. Value in controller: always 1; the text appears in the metric name. </td>
 </tr>
 </tbody>
 </table>
@@ -558,6 +603,34 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 
 ### [ChannelMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087560_.htm)
 
+**Value in controller:** Counts and bytes (Messages, ByteSent, ByteReceived, BuffersSent, BuffersReceived) are integers. **Status** is an integer; see the Channel Status table below. Values 11, 12, 15–20 are not in the current IBM MQ 9.4 MQCHS reference; if the queue manager returns them, the extension reports them as-is (they may be version-specific or reserved). String attributes (e.g., **ChannelName**, ChannelInstType, ChannelType, SSLShortPeerName, RemoteQmgrName, XmitQName, ConnectionName, MCAUserID) are reported as **value 1** with the string in the metric name or path.
+
+**Channel Status (integer → meaning):**
+
+| Integer | Constant | Meaning |
+|---------|----------|---------|
+| 0 | MQCHS_INACTIVE | Inactive |
+| 1 | MQCHS_BINDING | Binding |
+| 2 | MQCHS_STARTING | Starting |
+| 3 | MQCHS_RUNNING | Running |
+| 4 | MQCHS_STOPPING | Stopping |
+| 5 | MQCHS_RETRYING | Retrying |
+| 6 | MQCHS_STOPPED | Stopped |
+| 7 | MQCHS_REQUESTING | Requesting |
+| 8 | MQCHS_PAUSED | Paused |
+| 9 | MQCHS_DISCONNECTED | Disconnected |
+| 10 | MQCHS_DOUBT | In-doubt (Stopped and Indoubt — channel uncertain about message delivery after communication loss) |
+| 13 | MQCHS_INITIALIZING | Initializing (channel initiator attempting to start the channel) |
+| 14 | MQCHS_SWITCHING | Switching (channel is switching transmission queues) |
+
+Values **11, 12, 15–20** are not defined in the current IBM MQ 9.4 MQCHS constants table; the extension reports whatever integer MQ returns for Status.
+
+- **ChannelName**: The controller cannot store the channel name as a metric value. The name is sent in two ways: (1) as part of the **metric path** (e.g. `...|Channels|DEV.ADMIN.SVRCONN|Status`), and (2) if "Channel Name" is included in your channel metrics config, as a separate metric whose **name** is `Channel Name: <name>` and whose **value is always 1** (e.g. `Channel Name: DEV.ADMIN.SVRCONN` = 1). Use the metric name or path to see the channel name; do not treat 1 as a count.
+- **Last Message Date** and **Last Message Time**: The controller cannot store date/time strings. The extension converts them to integers: **Last Message Date** → **YYYYMMDD** (e.g. 20250218), **Last Message Time** → **HHMMSS** (e.g. 205312 = 20:53:12). So a value in the **20k range** (e.g. 205000) is a valid time (20:50:00). When you see **value 1**, the PCF value from MQ could not be parsed (e.g. empty, blank, or fewer than 6 digits after stripping non-numeric characters). That often happens for channels with no recent message activity or for some channel types (e.g. sender SDR). In that case the **raw string is in the metric name** (e.g. `Last Message Time: ` or `Last Message Time: 0`)—use the metric name to see what MQ returned; do not treat 1 as a time.
+- **MCAUserID**: The MCA (Message Channel Agent) user ID is a string from MQ. The controller cannot store it as a metric value. It is reported as **value 1** with the user ID in the metric name (e.g. `MCAUserID: mqm` = 1). Use the metric name to see the actual user ID; do not treat 1 as a count.
+
+- **SSLShortPeerName**: The short name of the SSL peer (e.g. certificate CN) is a string from MQ. The controller cannot store it as a metric value. It is reported as **value 1** with the peer name in the metric name (e.g. `SSLShortPeerName: myhost.example.com` = 1). Use the metric name to see the actual SSL peer name; do not treat 1 as a count. Empty or blank when the channel is not using SSL.
+
 <table><tbody>
 <tr>
 <th align="left"> Metric Name </th>
@@ -569,7 +642,7 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 </tr>
 <tr>
 <td class='confluenceTd'> Status </td>
-<td class='confluenceTd'> 1 - binding, 2 - starting, 3 - running, 4 - stopping, 5 - retrying, 6 - stopped, 7 - requesting, 8 - paused, 13 - initializing, 14 - switching </td>
+<td class='confluenceTd'> Channel status. Integer value in controller: 0–10, 13, 14 documented in Channel Status table above (MQCHS_*). Values 11, 12, 15–20 not in current IBM MQ 9.4 reference; reported as-is if returned. </td>
 </tr>
 <tr>
 <td class='confluenceTd'> ByteSent </td>
@@ -588,8 +661,12 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 <td class='confluenceTd'> Number of buffers received </td>
 </tr>
 <tr>
+<td class='confluenceTd'> ActiveChannelsCount </td>
+<td class='confluenceTd'> Number of active channel instances (aggregate per queue manager) </td>
+</tr>
+<tr>
 <td class='confluenceTd'> ChannelName </td>
-<td class='confluenceTd'> Name of the channel instance </td>
+<td class='confluenceTd'> Name of the channel instance. Value in controller: always 1; name appears in metric path and, if configured, in metric name (e.g. "Channel Name: DEV.ADMIN.SVRCONN"). </td>
 </tr>
 <tr>
 <td class='confluenceTd'> ChannelInstType </td>
@@ -604,24 +681,28 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 <td class='confluenceTd'> Current action state of the channel </td>
 </tr>
 <tr>
+<td class='confluenceTd'> Channel Substate (ChannelSubstate) </td>
+<td class='confluenceTd'> Channel substate (MQ integer constant, MQIACH_CHANNEL_SUBSTATE) </td>
+</tr>
+<tr>
 <td class='confluenceTd'> SSLShortPeerName </td>
-<td class='confluenceTd'> Short name of SSL peer </td>
+<td class='confluenceTd'> Short name of SSL peer (e.g. certificate CN). Value in controller: always 1; the peer name appears in the metric name (e.g. "SSLShortPeerName: myhost.example.com"). Empty when the channel is not using SSL. </td>
 </tr>
 <tr>
 <td class='confluenceTd'> HeartbeatInterval </td>
 <td class='confluenceTd'> Channel heartbeat interval (seconds) </td>
 </tr>
 <tr>
-<td class='confluenceTd'> LastMessageDate_Time </td>
-<td class='confluenceTd'> Timestamp of last message (date/time as reported) </td>
+<td class='confluenceTd'> Last Message Date / Last Message Time (LastMessageDate_Time) </td>
+<td class='confluenceTd'> Timestamp of last message. Value in controller: date and time are converted to integers—<strong>Last Message Date</strong> = YYYYMMDD (e.g. 20250218), <strong>Last Message Time</strong> = HHMMSS (e.g. 205312 = 20:53:12). A value in the 20k range is a valid time. If the PCF value cannot be parsed (e.g. empty or &lt; 6 digits), value is <strong>1</strong> and the raw string is in the metric name—common for inactive channels or some types (e.g. SDR). </td>
 </tr>
 <tr>
 <td class='confluenceTd'> LocalAddress </td>
-<td class='confluenceTd'> Local IP address and port </td>
+<td class='confluenceTd'> Local IP address and port. Value in controller: always 1; the address appears in the metric name (e.g. "LocalAddress: 192.168.1.10(1414)"). </td>
 </tr>
 <tr>
 <td class='confluenceTd'> MCAUserID </td>
-<td class='confluenceTd'> MCA user ID </td>
+<td class='confluenceTd'> MCA user ID. Value in controller: always 1; the user ID appears in the metric name (e.g. "MCAUserID: mqm"). </td>
 </tr>
 <tr>
 <td class='confluenceTd'> MCAStatus </td>
@@ -629,11 +710,11 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 </tr>
 <tr>
 <td class='confluenceTd'> RemoteQmgrName </td>
-<td class='confluenceTd'> Remote queue manager name </td>
+<td class='confluenceTd'> Remote queue manager name. Value in controller: always 1; the name appears in the metric name (e.g. "RemoteQmgrName: REMOTE.QM"). </td>
 </tr>
 <tr>
 <td class='confluenceTd'> XmitQName </td>
-<td class='confluenceTd'> Transmission queue name </td>
+<td class='confluenceTd'> Transmission queue name. Value in controller: always 1; the queue name appears in the metric name (e.g. "XmitQName: SYSTEM.CHANNEL.XMITQ"). </td>
 </tr>
 <tr>
 <td class='confluenceTd'> ConnectionName </td>
@@ -656,6 +737,8 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 
 ### [ListenerMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_7.5.0/com.ibm.mq.ref.adm.doc/q087510_.htm)
 
+**Value in controller:** **Status** is an integer: 1 = starting, 2 = running, 3 = stopping.
+
 <table><tbody>
 <tr>
 <th align="left"> Metric Name </th>
@@ -669,6 +752,8 @@ The following metrics are extracted using the MQCMD_RESET_Q_STATS command which 
 </table>
 
 ### [TopicMetrics](https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_8.0.0/com.ibm.mq.ref.adm.doc/q088150_.htm)
+
+**Value in controller:** PublishCount and SubscriptionCount are integers (use as-is).
 
 <table><tbody>
 <tr>
@@ -730,6 +815,9 @@ Workbench is an inbuilt feature provided with each extension in order to assist 
    ```
     <classpath>websphere-mq-monitoring-extension.jar;com.ibm.mq.jar;com.ibm.mq.jmqi.jar;com.ibm.mq.commonservices.jar;com.ibm.mq.headers.jar;com.ibm.mq.pcf.jar;connector.jar;dhbcore.jar</classpath>
    ```
+
+7. **Last Message Date / Last Message Time shows value 1 for some channels (e.g. TO.LOOP.SDR) but a numeric value (e.g. 20xxx) for others (e.g. DEV.ADMIN.SVRCONN)**  
+   This is expected. The extension sends **Last Message Time** as HHMMSS (e.g. 205312 = 20:53:12); values in the 20k range are valid times. When MQ returns a value that cannot be parsed to 6 digits (e.g. empty, blank, or no recent message), the extension sends **1** and puts the raw string in the metric name. That often happens for channels with no recent activity or for some channel types (e.g. sender SDR). Check the metric **name** in the controller for the raw value (e.g. `Last Message Time: `); do not treat 1 as a time.
 	
 ## Contributing
 Always feel free to fork and contribute any changes directly via [GitHub](https://github.com/Appdynamics/websphere-mq-monitoring-extension).
