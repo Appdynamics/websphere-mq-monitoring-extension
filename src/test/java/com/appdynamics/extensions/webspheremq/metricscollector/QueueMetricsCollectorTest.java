@@ -7,6 +7,23 @@
 
 package com.appdynamics.extensions.webspheremq.metricscollector;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+
 import com.appdynamics.extensions.AMonitorJob;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
@@ -24,20 +41,6 @@ import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.pcf.PCFMessage;
 import com.ibm.mq.pcf.PCFMessageAgent;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-
-import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class QueueMetricsCollectorTest {
@@ -147,6 +150,17 @@ public class QueueMetricsCollectorTest {
                 }
             }
         }
+    }
+
+    @Test
+    public void testNormalizeResponseHandlesSinglePCFMessage() throws com.ibm.mq.pcf.PCFException {
+        // Single PCFMessage should be normalized to array of length 1
+        PCFMessage single = new PCFMessage(CMQCFC.MQCMD_INQUIRE_Q);
+        single.addParameter(CMQC.MQCA_Q_NAME, "DEV.QUEUE.SINGLE");
+        PCFMessage[] normalized = QueueMetricsCollector.normalizeResponse(single);
+        Assert.assertNotNull(normalized);
+        Assert.assertEquals(1, normalized.length);
+        Assert.assertEquals("DEV.QUEUE.SINGLE", normalized[0].getStringParameterValue(CMQC.MQCA_Q_NAME));
     }
 
 
